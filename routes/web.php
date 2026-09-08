@@ -1,0 +1,35 @@
+<?php
+
+use App\Http\Controllers\Admin\DatabaseConfigController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KpiExportController;
+use Illuminate\Support\Facades\Route;
+
+// ---- Public ----
+Route::get('/', fn () => redirect()->route('dashboard'));
+
+// ---- Auth ----
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
+});
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+
+// ---- Dashboard (auth required) ----
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/kpi/{code}', [DashboardController::class, 'kpi'])->name('dashboard.kpi');
+
+    // Export
+    Route::get('/dashboard/kpi/{code}/export/csv',   [KpiExportController::class, 'csv'])->name('kpi.export.csv');
+    Route::get('/dashboard/kpi/{code}/export/excel', [KpiExportController::class, 'excel'])->name('kpi.export.excel');
+    Route::get('/dashboard/kpi/{code}/export/pdf',   [KpiExportController::class, 'pdf'])->name('kpi.export.pdf');
+});
+
+// ---- Admin (auth required) ----
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/settings/database', [DatabaseConfigController::class, 'show'])->name('database.show');
+    Route::post('/settings/database', [DatabaseConfigController::class, 'update'])->name('database.update');
+    Route::post('/settings/database/test', [DatabaseConfigController::class, 'test'])->name('database.test');
+});

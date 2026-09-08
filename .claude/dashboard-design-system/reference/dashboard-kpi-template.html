@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard หน่วยงาน</title>
+
+<!-- ===== Fonts / Icons / Bootstrap grid / Chart.js — CDN เดียวกับต้นแบบ ===== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+
+<!-- ===== Design tokens + component library (คัดลอกไฟล์ tokens.css มาไว้ในนี้ตรงๆ) ===== -->
+<link rel="stylesheet" href="tokens.css">
+
+<style>
+  /* ตัวอย่างสีเฉพาะการ์ดหมวด — ใช้ gradient จาก palette.md ข้อ 4 */
+  .dash-thumb.c1 { background: linear-gradient(135deg,#10b981,#059669); }
+  .dash-thumb.c2 { background: linear-gradient(135deg,#0ea5e9,#0369a1); }
+  .dash-thumb.c3 { background: linear-gradient(135deg,#8b5cf6,#7c3aed); }
+  .dash-thumb.c4 { background: linear-gradient(135deg,#f59e0b,#d97706); }
+  .dash-thumb.c5 { background: linear-gradient(135deg,#f43f5e,#9f1239); }
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR OVERLAY (mobile) ===== -->
+<div id="sidebarOverlay" onclick="ckhCloseSidebar()" aria-hidden="true"></div>
+
+<!-- ===== SIDEBAR ===== -->
+<aside id="ckh-sidebar" aria-label="เมนูหลัก">
+  <div class="sidebar-brand">
+    <a href="#" class="brand-link">
+      <div class="brand-logo-ic"><span class="msi">apartment</span></div>
+      <div>
+        <div class="brand-title">ชื่อหน่วยงาน <span class="brand-version">V.1.0</span></div>
+        <div class="brand-sub">ระบบ KPI / Dashboard</div>
+      </div>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">เมนูหลัก</div>
+    <a href="#" class="nav-item">
+      <span class="nav-ic"><span class="msi">home</span></span><span>หน้าหลัก</span>
+    </a>
+    <a href="#" class="nav-item active">
+      <span class="nav-ic"><span class="msi">show_chart</span></span><span>Dashboard</span>
+    </a>
+
+    <div class="nav-group" data-grp="dept">
+      <button type="button" class="nav-group-head" onclick="toggleNavGroup(this)">
+        <span>หน่วยงาน/ฝ่าย</span><span class="msi nav-group-arrow">expand_more</span>
+      </button>
+      <div class="nav-group-items">
+        <a href="#" class="nav-item"><span class="nav-ic"><span class="msi">groups</span></span><span>ฝ่ายบุคคล</span></a>
+        <a href="#" class="nav-item"><span class="nav-ic"><span class="msi">payments</span></span><span>ฝ่ายการเงิน</span></a>
+        <a href="#" class="nav-item"><span class="nav-ic"><span class="msi">inventory_2</span></span><span>ฝ่ายพัสดุ</span></a>
+      </div>
+    </div>
+
+    <div class="nav-group" data-grp="settings">
+      <button type="button" class="nav-group-head" onclick="toggleNavGroup(this)">
+        <span>ตั้งค่าระบบ</span><span class="msi nav-group-arrow">expand_more</span>
+      </button>
+      <div class="nav-group-items">
+        <a href="#" class="nav-item"><span class="nav-ic"><span class="msi">tune</span></span><span>ตั้งค่าระบบ</span></a>
+        <a href="#" class="nav-item"><span class="nav-ic"><span class="msi">info</span></span><span>เกี่ยวกับระบบ</span></a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="#" id="logoutBtn" class="nav-item logout-item">
+      <span class="nav-ic"><span class="msi">logout</span></span><span>ออกจากระบบ</span>
+    </a>
+  </div>
+</aside>
+
+<!-- ===== MAIN WRAPPER ===== -->
+<div id="ckh-main">
+  <header id="ckh-topbar" role="banner">
+    <button class="topbar-toggle" onclick="ckhToggleSidebar()" aria-label="เปิด/ปิดเมนู">
+      <span class="msi">menu</span>
+    </button>
+    <nav class="topbar-breadcrumb d-none d-md-flex" aria-label="breadcrumb">
+      <a href="#"><span class="msi me-1">home</span>หน้าหลัก</a>
+      <span class="sep"><span class="msi">chevron_right</span></span>
+      <span class="current">Dashboard</span>
+    </nav>
+    <div class="topbar-right">
+      <div class="topbar-datetime d-none d-sm-block">
+        <div class="topbar-date" id="tbDate">—</div>
+        <div class="topbar-time" id="tbTime">—</div>
+      </div>
+      <button class="topbar-btn" aria-label="การแจ้งเตือน" title="การแจ้งเตือน">
+        <span class="msi">notifications</span>
+      </button>
+      <div class="topbar-user" role="button" tabindex="0">
+        <div class="user-av">ท</div>
+        <div class="d-none d-md-block">
+          <div class="user-name-label">ผู้ใช้งานตัวอย่าง</div>
+          <div class="user-role-label"><span class="role-dot"></span>เจ้าหน้าที่ระบบ</div>
+        </div>
+        <span class="msi ms-1 d-none d-md-block" style="font-size:.65rem;color:var(--muted)">expand_more</span>
+      </div>
+    </div>
+  </header>
+
+  <main id="ckh-content">
+    <div class="content-inner">
+
+      <!-- ===== WELCOME BANNER ===== -->
+      <div class="welcome-banner">
+        <div class="wb-left">
+          <div class="wb-avatar">ท</div>
+          <div>
+            <div class="wb-greeting">สวัสดีตอนเช้า</div>
+            <div class="wb-name">ผู้ใช้งานตัวอย่าง</div>
+            <div class="wb-pos"><span class="msi" style="font-size:.7rem">security</span>เจ้าหน้าที่ระบบ</div>
+          </div>
+        </div>
+        <div class="wb-right">
+          <div class="wb-date-label">วันนี้</div>
+          <div class="wb-date" id="wbDate">—</div>
+        </div>
+      </div>
+
+      <!-- ===== KPI ROW — 4 การ์ดสรุปหลัก ===== -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-sm-3">
+          <div class="kpi-card">
+            <div class="kpi-icon bg-slate"><span class="msi">checklist</span></div>
+            <div><p class="kpi-label">รายการทั้งหมด</p><p class="kpi-value">1,284</p></div>
+          </div>
+        </div>
+        <div class="col-6 col-sm-3">
+          <div class="kpi-card">
+            <div class="kpi-icon bg-amber"><span class="msi">schedule</span></div>
+            <div><p class="kpi-label">รอดำเนินการ</p><p class="kpi-value" style="color:#d97706">42</p></div>
+          </div>
+        </div>
+        <div class="col-6 col-sm-3">
+          <div class="kpi-card">
+            <div class="kpi-icon bg-green"><span class="msi">check_circle</span></div>
+            <div><p class="kpi-label">เสร็จสมบูรณ์</p><p class="kpi-value" style="color:#059669">1,198</p></div>
+          </div>
+        </div>
+        <div class="col-6 col-sm-3">
+          <div class="kpi-card">
+            <div class="kpi-icon bg-blue"><span class="msi">today</span></div>
+            <div><p class="kpi-label">วันนี้</p><p class="kpi-value" style="color:#1d4ed8">17</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TREND CHART ===== -->
+      <div class="card mb-4">
+        <div class="card-header"><span class="msi me-2" style="color:var(--blue)">stacked_line_chart</span>แนวโน้มรายเดือนแยกตามหน่วยงาน (12 เดือน)</div>
+        <div class="p-3"><canvas id="trendChart"></canvas></div>
+      </div>
+
+      <!-- ===== DEPARTMENT / MODULE SUMMARY CARDS ===== -->
+      <div class="section-head"><span class="msi" style="color:var(--blue)">grid_view</span>สรุปตามหน่วยงาน</div>
+      <div class="dash-grid mb-4">
+        <a class="dash-card" href="#">
+          <div class="dash-thumb c1"><span class="msi">groups</span></div>
+          <div class="dash-card-body">
+            <div class="dash-card-title">ฝ่ายบุคคล</div>
+            <div class="dash-card-count">386 <small>รายการ</small></div>
+            <div class="dash-stat">
+              <span><span class="dash-dot dot-ok"></span><b>350</b> เสร็จ</span>
+              <span><span class="dash-dot dot-pend"></span><b>30</b> รอ</span>
+              <span><span class="dash-dot dot-fail"></span><b>6</b> ล้ม</span>
+            </div>
+          </div>
+          <span class="msi dash-card-arrow">chevron_right</span>
+        </a>
+        <a class="dash-card" href="#">
+          <div class="dash-thumb c2"><span class="msi">payments</span></div>
+          <div class="dash-card-body">
+            <div class="dash-card-title">ฝ่ายการเงิน</div>
+            <div class="dash-card-count">512 <small>รายการ</small></div>
+            <div class="dash-stat">
+              <span><span class="dash-dot dot-ok"></span><b>480</b> เสร็จ</span>
+              <span><span class="dash-dot dot-pend"></span><b>28</b> รอ</span>
+              <span><span class="dash-dot dot-fail"></span><b>4</b> ล้ม</span>
+            </div>
+          </div>
+          <span class="msi dash-card-arrow">chevron_right</span>
+        </a>
+        <a class="dash-card" href="#">
+          <div class="dash-thumb c3"><span class="msi">inventory_2</span></div>
+          <div class="dash-card-body">
+            <div class="dash-card-title">ฝ่ายพัสดุ</div>
+            <div class="dash-card-count">386 <small>รายการ</small></div>
+            <div class="dash-stat">
+              <span><span class="dash-dot dot-ok"></span><b>368</b> เสร็จ</span>
+              <span><span class="dash-dot dot-pend"></span><b>15</b> รอ</span>
+              <span><span class="dash-dot dot-fail"></span><b>3</b> ล้ม</span>
+            </div>
+          </div>
+          <span class="msi dash-card-arrow">chevron_right</span>
+        </a>
+      </div>
+
+      <!-- ===== QUICK SHORTCUTS ===== -->
+      <div class="section-head"><span class="msi" style="color:var(--blue)">bolt</span>เมนูลัด</div>
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-4">
+          <a href="#" class="shortcut-card">
+            <div class="sc-icon"><span class="msi">summarize</span></div>
+            <div><div class="sc-title">ออกรายงาน</div><div class="sc-desc">Export Excel / PDF</div></div>
+          </a>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-4">
+          <a href="#" class="shortcut-card">
+            <div class="sc-icon"><span class="msi">person_add</span></div>
+            <div><div class="sc-title">เพิ่มรายการใหม่</div><div class="sc-desc">บันทึกข้อมูลเข้าระบบ</div></div>
+          </a>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-4">
+          <a href="#" class="shortcut-card">
+            <div class="sc-icon"><span class="msi">settings</span></div>
+            <div><div class="sc-title">ตั้งค่าระบบ</div><div class="sc-desc">ธีม · สิทธิ์การใช้งาน</div></div>
+          </a>
+        </div>
+      </div>
+
+      <!-- ===== RECENT ACTIVITY (2-col status list) ===== -->
+      <div class="section-head"><span class="msi" style="color:var(--blue)">history</span>รายการล่าสุด</div>
+      <div class="row g-3">
+        <div class="col-12 col-lg-6">
+          <div class="status-card">
+            <div class="status-card-head">
+              <span><span class="msi text-warning me-2">hourglass_empty</span>รอดำเนินการ (ล่าสุด)</span>
+              <a href="#" class="btn btn-sm btn-outline-secondary" style="font-size:.75rem;padding:3px 10px">ดูทั้งหมด</a>
+            </div>
+            <div class="status-card-body">
+              <div class="status-item">
+                <div class="status-item-dot dot-pending"></div>
+                <div><div class="status-item-name">คำขออนุมัติจัดซื้อ #1042</div><div class="status-item-meta">ฝ่ายพัสดุ · 2026-09-05</div></div>
+              </div>
+              <div class="status-item">
+                <div class="status-item-dot dot-pending"></div>
+                <div><div class="status-item-name">คำขอลาพักร้อน</div><div class="status-item-meta">ฝ่ายบุคคล · 2026-09-04</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-6">
+          <div class="status-card">
+            <div class="status-card-head">
+              <span><span class="msi text-success me-2">check_circle</span>เสร็จสมบูรณ์ล่าสุด</span>
+              <a href="#" class="btn btn-sm btn-outline-secondary" style="font-size:.75rem;padding:3px 10px">ดูทั้งหมด</a>
+            </div>
+            <div class="status-card-body">
+              <div class="status-item">
+                <div class="status-item-dot dot-sent"></div>
+                <div><div class="status-item-name">เบิกจ่ายงบประมาณ Q3</div><div class="status-item-meta">ฝ่ายการเงิน · 2026-09-06</div></div>
+              </div>
+              <div class="status-item">
+                <div class="status-item-dot dot-sent"></div>
+                <div><div class="status-item-name">รับพัสดุเข้าคลัง #889</div><div class="status-item-meta">ฝ่ายพัสดุ · 2026-09-06</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.content-inner -->
+  </main>
+</div><!-- /#ckh-main -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ===== Sidebar toggle (มือถือ) ===== */
+function ckhToggleSidebar() {
+  document.getElementById('ckh-sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+function ckhCloseSidebar() {
+  document.getElementById('ckh-sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') ckhCloseSidebar(); });
+
+/* ===== Collapsible nav group ===== */
+function toggleNavGroup(head) { head.closest('.nav-group').classList.toggle('collapsed'); }
+
+/* ===== Live clock (Thai) ===== */
+(function () {
+  const dateEl = document.getElementById('tbDate'), timeEl = document.getElementById('tbTime'), wbEl = document.getElementById('wbDate');
+  const thDays = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  const thMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  function tick() {
+    const now = new Date();
+    const day = thDays[now.getDay()], d = now.getDate(), m = thMonths[now.getMonth()], y = now.getFullYear() + 543;
+    const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0'), ss = String(now.getSeconds()).padStart(2,'0');
+    if (dateEl) dateEl.textContent = `${day}ที่ ${d} ${m} พ.ศ. ${y}`;
+    if (timeEl) timeEl.textContent = `เวลา ${hh}:${mm}:${ss} น.`;
+    if (wbEl) wbEl.textContent = `วัน${day}ที่ ${d} ${m} ${y}`;
+  }
+  tick(); setInterval(tick, 1000);
+})();
+
+/* ===== Trend chart — สีแยกตามหน่วยงาน (ดู palette.md ข้อ 4) ===== */
+new Chart(document.getElementById('trendChart'), {
+  type: 'line',
+  data: {
+    labels: ['ต.ค.','พ.ย.','ธ.ค.','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.'],
+    datasets: [
+      { label: 'ฝ่ายบุคคล',  data: [30,34,28,40,36,44,38,42,46,40,48,44], borderColor: '#059669', backgroundColor: '#05966918', tension:.3, fill:false, pointRadius:2, borderWidth:2 },
+      { label: 'ฝ่ายการเงิน', data: [42,38,46,44,50,48,52,50,54,58,55,60], borderColor: '#0369a1', backgroundColor: '#0369a118', tension:.3, fill:false, pointRadius:2, borderWidth:2 },
+      { label: 'ฝ่ายพัสดุ',   data: [20,24,22,26,24,30,28,32,30,34,32,36], borderColor: '#7c3aed', backgroundColor: '#7c3aed18', tension:.3, fill:false, pointRadius:2, borderWidth:2 },
+    ],
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+    scales: { y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.15)' } }, x: { grid: { display: false } } },
+  },
+});
+</script>
+</body>
+</html>

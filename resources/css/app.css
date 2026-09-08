@@ -1,0 +1,411 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Sarabun', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* ==========================================================================
+   RDU DESIGN TOKENS
+   Adapted from .claude/dashboard-design-system (HR-CENTER 4.0)
+   ========================================================================== */
+:root {
+    /* Card surfaces */
+    --card-shadow: 0 1px 3px rgba(15, 23, 42, .06), 0 1px 2px rgba(15, 23, 42, .04);
+    --card-shadow-hover: 0 6px 20px rgba(15, 23, 42, .10);
+
+    /* Status colors (semantic — pass/warn/fail/na) */
+    --status-pass: #059669;
+    --status-warning: #d97706;
+    --status-fail: #dc2626;
+    --status-na: #94a3b8;
+
+    /* KPI category colors (map to palette.md #4, medical-appropriate) */
+    --cat-antibiotic: #dc2626;
+    --cat-drug: #059669;
+    --cat-safety: #4f46e5;
+    --cat-chronic: #0891b2;
+}
+
+/* ==========================================================================
+   MATERIAL SYMBOLS OUTLINED — icon system
+   Load via: <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:..."/>
+   ========================================================================== */
+.msi {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 1.15em;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    vertical-align: -0.2em;
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+}
+
+.msi-o { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20; }
+.msi-2x { font-size: 2em; }
+.msi-lg { font-size: 1.5em; }
+.msi-sm { font-size: .9em; }
+
+@keyframes msi-spin { to { transform: rotate(360deg); } }
+.msi-spin { animation: msi-spin .8s linear infinite; display: inline-block; }
+
+/* ==========================================================================
+   PROGRESS BAR — animated fill
+   ========================================================================== */
+@keyframes progress-fill { from { width: 0%; } }
+
+.animate-progress { animation: progress-fill 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+/* ==========================================================================
+   SIDEBAR — collapsible with gradient background + medicine pattern
+   State controlled by html[data-sidebar="open|closed"]
+   Default: open on desktop (≥992px), closed on mobile
+   ========================================================================== */
+#rduSidebar {
+    position: fixed;
+    top: 0; bottom: 0; left: 0;
+    width: 16rem; /* w-64 */
+    z-index: 40;
+    color: #fff;
+    display: flex; flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform .35s cubic-bezier(.4, 0, .2, 1);
+    /* Two-layer background: medicine SVG pattern OVER vertical gradient */
+    background-image:
+        url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160' fill='none' stroke='rgba(255,255,255,0.055)' stroke-width='1.3'%3E%3Crect x='18' y='24' width='46' height='16' rx='8' transform='rotate(-28 41 32)'/%3E%3Cline x1='41' y1='16' x2='41' y2='48' transform='rotate(-28 41 32)' stroke='rgba(255,255,255,0.035)'/%3E%3Ccircle cx='120' cy='38' r='11'/%3E%3Cline x1='109' y1='38' x2='131' y2='38'/%3E%3Crect x='70' y='90' width='24' height='7' rx='1.5'/%3E%3Crect x='78.5' y='81.5' width='7' height='24' rx='1.5'/%3E%3Crect x='18' y='118' width='34' height='12' rx='6' transform='rotate(24 35 124)'/%3E%3Cline x1='35' y1='108' x2='35' y2='140' transform='rotate(24 35 124)' stroke='rgba(255,255,255,0.035)'/%3E%3Cpath d='M112 128 h6 l4 -8 l7 16 l4 -8 h13' stroke='rgba(255,255,255,0.06)'/%3E%3C/svg%3E"),
+        linear-gradient(180deg, #1e3a8a 0%, #172554 45%, #0f172a 100%);
+    background-repeat: repeat;
+    background-size: 160px 160px, auto;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Add a subtle overlay dark vignette on the pattern to keep contrast */
+#rduSidebar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(30,58,138,0) 0%, rgba(0,0,0,0.15) 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Ensure all sidebar content sits above the vignette overlay */
+#rduSidebar > * { position: relative; z-index: 1; }
+
+/* Open state */
+html[data-sidebar="open"] #rduSidebar {
+    transform: translateX(0);
+}
+
+/* Main area: shifts right by sidebar width when open on desktop */
+#rduMain {
+    margin-left: 0;
+    transition: margin-left .35s cubic-bezier(.4, 0, .2, 1);
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+}
+
+@media (min-width: 992px) {
+    html[data-sidebar="open"] #rduMain {
+        margin-left: 16rem;
+    }
+}
+
+/* Sidebar overlay (mobile only, when sidebar is open) */
+#sidebarOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 30;
+    cursor: pointer;
+    backdrop-filter: blur(2px);
+    animation: overlay-in .2s ease;
+}
+@keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
+
+@media (max-width: 991.98px) {
+    html[data-sidebar="open"] #sidebarOverlay { display: block; }
+}
+
+/* Sidebar scrollbar */
+.sidebar-scroll::-webkit-scrollbar { width: 4px; }
+.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: rgb(255 255 255 / 0.15); border-radius: 2px; }
+.sidebar-scroll::-webkit-scrollbar-thumb:hover { background: rgb(255 255 255 / 0.28); }
+
+/* Sidebar toggle button — animated icon rotation */
+.sidebar-toggle-icon {
+    display: inline-block;
+    transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+}
+html[data-sidebar="closed"] .sidebar-toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* ==========================================================================
+   WELCOME BANNER — hero card at top of dashboard
+   ========================================================================== */
+.welcome-banner {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 45%, #059669 100%);
+    border-radius: 16px;
+    padding: 24px 28px;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(29, 78, 216, .22);
+    position: relative;
+    overflow: hidden;
+}
+.welcome-banner::before {
+    content: "";
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .08);
+    pointer-events: none;
+}
+.welcome-banner::after {
+    content: "";
+    position: absolute;
+    bottom: -50px; right: 22%;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .06);
+    pointer-events: none;
+}
+.wb-avatar {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .18);
+    border: 3px solid rgba(255, 255, 255, .35);
+    display: grid; place-items: center;
+    font-size: 1.5rem; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+    position: relative; z-index: 1;
+}
+.wb-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255, 255, 255, .18);
+    border: 1px solid rgba(255, 255, 255, .25);
+    border-radius: 999px;
+    padding: 3px 12px;
+    font-size: .78rem;
+    margin-top: 6px;
+}
+
+/* ==========================================================================
+   SECTION HEAD — uppercase label + horizontal rule
+   ========================================================================== */
+.section-head {
+    display: flex; align-items: center; gap: 10px;
+    font-size: .78rem; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 14px;
+}
+.section-head::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+}
+.section-head .msi { color: #2563eb; }
+
+/* ==========================================================================
+   KPI CARD V2 — left border colored by status, hover lift, progress bar
+   ========================================================================== */
+.kpi-card-v2 {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-left-width: 4px;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: var(--card-shadow);
+    transition: box-shadow .2s, transform .15s, border-color .15s;
+    display: flex; flex-direction: column; gap: 8px;
+    text-decoration: none;
+    color: inherit;
+    min-height: 172px;
+}
+.kpi-card-v2:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-2px);
+}
+.kpi-card-v2.status-pass    { border-left-color: var(--status-pass); }
+.kpi-card-v2.status-warning { border-left-color: var(--status-warning); }
+.kpi-card-v2.status-fail    { border-left-color: var(--status-fail); }
+.kpi-card-v2.status-na      { border-left-color: var(--status-na); }
+
+/* ==========================================================================
+   DASH CARD — category summary card (icon + count + stats)
+   ========================================================================== */
+.dash-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow .2s, transform .15s, border-color .2s;
+}
+.dash-card:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-2px);
+    border-color: #dbeafe;
+}
+.dash-thumb {
+    width: 54px; height: 54px;
+    border-radius: 14px;
+    flex-shrink: 0;
+    display: grid; place-items: center;
+    color: #fff;
+    font-size: 1.5rem;
+}
+.dash-thumb-antibiotic { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.dash-thumb-drug       { background: linear-gradient(135deg, #10b981, #059669); }
+.dash-thumb-safety     { background: linear-gradient(135deg, #818cf8, #4f46e5); }
+.dash-thumb-chronic    { background: linear-gradient(135deg, #22d3ee, #0891b2); }
+
+/* ==========================================================================
+   SHORTCUT CARD — icon + title + desc, hover translate-y
+   ========================================================================== */
+.shortcut-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 20px 18px;
+    display: flex; align-items: flex-start; gap: 14px;
+    text-decoration: none;
+    color: #0f172a;
+    box-shadow: var(--card-shadow);
+    transition: box-shadow .2s, transform .15s, border-color .2s;
+    height: 100%;
+}
+.shortcut-card:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-2px);
+    border-color: #dbeafe;
+    color: #0f172a;
+}
+.sc-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: grid; place-items: center;
+    font-size: 1.3rem;
+    color: #2563eb;
+    background: #eff6ff;
+    flex-shrink: 0;
+}
+.sc-icon.sc-green  { color: #059669; background: #ecfdf5; }
+.sc-icon.sc-amber  { color: #d97706; background: #fffbeb; }
+.sc-icon.sc-red    { color: #dc2626; background: #fef2f2; }
+.sc-icon.sc-indigo { color: #4f46e5; background: #eef2ff; }
+.sc-icon.sc-slate  { color: #475569; background: #f1f5f9; }
+
+/* ==========================================================================
+   STATUS CARD — recent activity feed / watchlist
+   ========================================================================== */
+.status-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    height: 100%;
+    display: flex; flex-direction: column;
+}
+.status-card-head {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex; align-items: center; justify-content: space-between;
+    font-weight: 700; font-size: .9rem;
+    color: #0f172a;
+}
+.status-card-body { padding: 0; flex: 1; }
+.status-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.status-item:last-child { border-bottom: 0; }
+.status-item-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+.dot-pass    { background: #10b981; }
+.dot-warning { background: #f59e0b; }
+.dot-fail    { background: #ef4444; }
+.dot-na      { background: #94a3b8; }
+.dot-info    { background: #3b82f6; }
+.status-item-name { font-size: .87rem; font-weight: 500; line-height: 1.35; color: #0f172a; }
+.status-item-meta { font-size: .72rem; color: #64748b; margin-top: 2px; }
+.status-empty {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 32px 20px;
+    color: #94a3b8;
+    gap: 8px;
+}
+.status-empty .msi { font-size: 2rem; opacity: .5; }
+.status-empty p { font-size: .85rem; margin: 0; }
+
+/* ==========================================================================
+   STATUS BADGE — inline chip for status (pass/warning/fail/na)
+   ========================================================================== */
+.status-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.status-badge.status-pass    { background: #dcfce7; color: #166534; }
+.status-badge.status-warning { background: #fef3c7; color: #92400e; }
+.status-badge.status-fail    { background: #fee2e2; color: #991b1b; }
+.status-badge.status-na      { background: #f1f5f9; color: #475569; }
+
+/* ==========================================================================
+   CATEGORY BADGE — code prefix chip
+   ========================================================================== */
+.cat-badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-family: 'Fira Code', monospace;
+    font-size: .78rem;
+    font-weight: 600;
+    color: #fff;
+}
+.cat-badge-antibiotic { background: var(--cat-antibiotic); }
+.cat-badge-drug       { background: var(--cat-drug); }
+.cat-badge-safety     { background: var(--cat-safety); }
+.cat-badge-chronic    { background: var(--cat-chronic); }
+
+/* ==========================================================================
+   REDUCED MOTION
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .animate-progress,
+    .kpi-card-v2, .dash-card, .shortcut-card {
+        transition: none !important;
+        animation: none !important;
+    }
+    .msi-spin { animation: none !important; }
+}

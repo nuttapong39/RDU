@@ -1,0 +1,467 @@
+/* ==========================================================================
+   HR-CENTER 4.0 DESIGN TOKENS + COMPONENT LIBRARY
+   ต้นแบบจริง: MedAlert (รพ.เชียงกลาง) — partials/header.php, index.php, dashboard.php
+   วิธีใช้: copy ไฟล์นี้ทั้งไฟล์ → link ใน <head> ของ project ใหม่ (หลัง Bootstrap 5)
+   ต้อง include ก่อนหน้า: Google Fonts "Kanit" + "Material Symbols Outlined", Bootstrap 5 (grid/utilities)
+   ========================================================================== */
+
+/* ===========================
+   1) DESIGN TOKENS (CSS variables)
+   =========================== */
+:root {
+  --sw: 260px;   /* sidebar width */
+  --th: 64px;    /* topbar height */
+
+  /* ---- Accent (เปลี่ยน --blue เป็นสีแบรนด์ของหน่วยงานคุณได้ทันที ทุก component อ้างอิงจากตัวนี้) ---- */
+  --blue: #1d4ed8;
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-600: #2563eb;
+  --green: #059669;
+  --red: #dc2626;
+  --amber: #d97706;
+  --indigo: #4f46e5;
+  --teal: #0891b2;
+  --purple: #7c3aed;
+
+  /* ---- Layout / surface ---- */
+  --page-bg: #f8fafc;
+  --sidebar-bg: #ffffff;
+  --topbar-bg: #ffffff;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --muted: #64748b;
+  --section-lbl: #94a3b8;
+
+  /* ---- Component surface ---- */
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --nav-ic-bg: #f1f5f9;
+  --th-head-bg: #f8fafc;
+  --input-bg: #ffffff;
+  --card-shadow: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+  --card-shadow-hover: 0 4px 16px rgba(0,0,0,.10);
+
+  /* ---- Base font size (สลับด้วย html[data-fontsize]) ---- */
+  --fs: 16px;
+}
+
+/* ===== THEME: DARK — html[data-theme="dark"] ===== */
+html[data-theme="dark"] {
+  --blue: #60a5fa;
+  --blue-50: rgba(96,165,250,.13);
+  --blue-100: rgba(96,165,250,.22);
+  --page-bg: #0f172a;
+  --sidebar-bg: #1e293b;
+  --topbar-bg: #1e293b;
+  --border: #334155;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --section-lbl: #475569;
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --nav-ic-bg: rgba(255,255,255,.08);
+  --th-head-bg: #0f172a;
+  --input-bg: #0f172a;
+  --card-shadow: 0 1px 3px rgba(0,0,0,.3), 0 1px 2px rgba(0,0,0,.2);
+  --card-shadow-hover: 0 4px 16px rgba(0,0,0,.4);
+}
+
+/* ===== THEME: PASTEL — html[data-theme="pastel"] (โทนม่วงอ่อน) ===== */
+html[data-theme="pastel"] {
+  --blue: #7c3aed;
+  --blue-50: #f5f3ff;
+  --blue-100: #ede9fe;
+  --page-bg: #faf5ff;
+  --sidebar-bg: #fdf4ff;
+  --topbar-bg: #ffffff;
+  --border: #e9d5ff;
+  --text: #1e1b4b;
+  --muted: #6d28d9;
+  --section-lbl: #a78bfa;
+  --card-bg: #ffffff;
+  --card-border: #e9d5ff;
+  --nav-ic-bg: #faf5ff;
+  --th-head-bg: #faf5ff;
+  --input-bg: #ffffff;
+}
+
+/* ===== THEME: CLASSIC — html[data-theme="classic"] (โทนเขียว) ===== */
+html[data-theme="classic"] {
+  --blue: #059669;
+  --blue-50: #f0fdf4;
+  --blue-100: #dcfce7;
+  --page-bg: #f0fdf4;
+  --sidebar-bg: #ffffff;
+  --topbar-bg: #ffffff;
+  --border: #a7f3d0;
+  --text: #064e3b;
+  --muted: #047857;
+  --section-lbl: #6ee7b7;
+  --card-bg: #ffffff;
+  --card-border: #a7f3d0;
+  --nav-ic-bg: #ecfdf5;
+  --th-head-bg: #f0fdf4;
+  --input-bg: #ffffff;
+}
+
+/* ===== FONT SIZE SCALE — html[data-fontsize] (ต้องตั้งบน <html> ให้ Bootstrap rem สเกลตาม) ===== */
+html[data-fontsize="small"]  { font-size: 14px; --fs: 14px; }
+html[data-fontsize="normal"] { font-size: 16px; --fs: 16px; }
+html[data-fontsize="large"]  { font-size: 18px; --fs: 18px; }
+html[data-fontsize="xlarge"] { font-size: 20px; --fs: 20px; }
+
+/* ===========================
+   2) ICON SYSTEM — Material Symbols Outlined
+   โหลดฟอนต์ด้วย:
+   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+   ใช้: <span class="msi">icon_name</span>  (ชื่อไอคอนจาก fonts.google.com/icons)
+   =========================== */
+.msi {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal; font-style: normal;
+  font-size: 1.15em; line-height: 1;
+  letter-spacing: normal; text-transform: none;
+  display: inline-block; white-space: nowrap; direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  vertical-align: -0.2em;
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  user-select: none; pointer-events: none;
+}
+.msi-o { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20; } /* outline (ไม่ fill) */
+.msi-2x { font-size: 2em; }
+@keyframes msi-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.msi-spin { animation: msi-spin .8s linear infinite; display: inline-block; }
+/* ให้ user ตั้งสีไอคอนเองผ่าน settings ได้ทั้งระบบ (เขียน --icon-color + attr data-iconcolor ที่ <html>) */
+html[data-iconcolor] .msi { color: var(--icon-color) !important; }
+
+/* ===========================
+   3) BASE RESET
+   ต้องโหลดฟอนต์ก่อน:
+   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+   =========================== */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; padding: 0; }
+body {
+  font-family: "Kanit", system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: var(--fs, 16px);
+  font-weight: 300;
+  color: var(--text);
+  background: var(--page-bg);
+  -webkit-font-smoothing: antialiased;
+  transition: background .25s, color .25s;
+}
+h1, h2, h3, h4, h5, h6 { font-weight: 700; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* ===========================
+   4) LAYOUT SHELL — sidebar (fixed) + topbar (fixed) + main (offset)
+   HTML shape: #ckh-sidebar, #sidebarOverlay, #ckh-main > #ckh-topbar + #ckh-content > .content-inner
+   ดูโครง HTML เต็มใน reference/dashboard-kpi-template.html
+   =========================== */
+#ckh-sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0; width: var(--sw);
+  background: var(--sidebar-bg); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; z-index: 1040;
+  overflow-y: auto; overflow-x: hidden;
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+}
+.sidebar-brand { padding: 14px 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.brand-link { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+.brand-logo { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+.brand-logo-ic {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--blue) 0%, var(--green) 100%);
+  display: grid; place-items: center; color: #fff; font-size: 1.1rem; flex-shrink: 0;
+}
+.brand-title { font-weight: 700; font-size: .93rem; color: var(--text); line-height: 1.2; }
+.brand-version { font-size: .66rem; font-weight: 500; color: var(--muted); margin-left: 3px; }
+.brand-sub { font-size: .72rem; color: var(--muted); }
+
+.sidebar-nav { flex: 1; padding: 10px 8px 8px; overflow-y: auto; }
+.nav-group-head {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  background: none; border: 0; cursor: pointer; font-family: inherit;
+  padding: 14px 8px 4px; font-size: .68rem; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--section-lbl);
+}
+.nav-group-head:hover { color: var(--muted); }
+.nav-group-arrow { font-size: 1rem; transition: transform .2s; }
+.nav-group.collapsed .nav-group-arrow { transform: rotate(-90deg); }
+.nav-group-items { overflow: hidden; max-height: 640px; transition: max-height .25s ease; }
+.nav-group.collapsed .nav-group-items { max-height: 0; }
+.nav-badge {
+  margin-left: auto; font-size: .56rem; font-weight: 700; white-space: nowrap;
+  background: var(--blue-100); color: var(--blue); padding: 1px 7px; border-radius: 999px;
+}
+.nav-section-label {
+  padding: 14px 8px 4px; font-size: .68rem; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--section-lbl); user-select: none;
+}
+.nav-section-label:first-child { padding-top: 4px; }
+a.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px;
+  color: var(--text); text-decoration: none; font-size: .92rem; font-weight: 500;
+  transition: background .15s, color .15s; margin-bottom: 2px; border-left: 3px solid transparent;
+}
+a.nav-item:hover { background: var(--blue-50); color: var(--blue); }
+a.nav-item.active { background: var(--blue-50); color: var(--blue); border-left-color: var(--blue); font-weight: 600; }
+a.nav-item.active .nav-ic, a.nav-item:hover .nav-ic { background: var(--blue-100); }
+.nav-ic {
+  width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center;
+  font-size: .82rem; flex-shrink: 0; color: #64748b; background: var(--nav-ic-bg);
+  transition: background .15s;
+}
+.sidebar-footer { padding: 8px; border-top: 1px solid var(--border); flex-shrink: 0; }
+a.nav-item.logout-item { color: #dc2626; }
+a.nav-item.logout-item:hover { background: #fef2f2; color: #dc2626; }
+a.nav-item.logout-item .nav-ic { color: #dc2626; background: #fee2e2; }
+
+#sidebarOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1035; cursor: pointer; }
+
+#ckh-topbar {
+  position: fixed; top: 0; left: var(--sw); right: 0; height: var(--th);
+  background: var(--topbar-bg); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 20px; gap: 10px; z-index: 1030;
+  transition: left .3s cubic-bezier(.4,0,.2,1);
+}
+.topbar-toggle {
+  width: 36px; height: 36px; border-radius: 8px; border: none; background: transparent;
+  color: var(--muted); display: grid; place-items: center; cursor: pointer; font-size: 1rem;
+  transition: background .15s, color .15s; flex-shrink: 0;
+}
+.topbar-toggle:hover { background: var(--blue-50); color: var(--blue); }
+.topbar-breadcrumb { display: flex; align-items: center; gap: 6px; font-size: .82rem; color: var(--muted); }
+.topbar-breadcrumb a { color: var(--muted); text-decoration: none; }
+.topbar-breadcrumb a:hover { color: var(--blue); }
+.topbar-breadcrumb .sep { color: #cbd5e1; }
+.topbar-breadcrumb .current { color: var(--text); font-weight: 600; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.topbar-datetime { text-align: right; padding-right: 4px; line-height: 1.3; }
+.topbar-date { font-size: .8rem; font-weight: 600; color: var(--blue); }
+.topbar-time { font-size: .73rem; color: var(--muted); }
+.topbar-btn {
+  width: 36px; height: 36px; border-radius: 8px; border: none; background: transparent;
+  color: var(--muted); display: grid; place-items: center; cursor: pointer; font-size: 1rem;
+  transition: background .15s, color .15s; position: relative;
+}
+.topbar-btn:hover { background: var(--blue-50); color: var(--blue); }
+.topbar-user {
+  display: flex; align-items: center; gap: 8px; padding: 5px 10px 5px 6px; border-radius: 10px;
+  cursor: pointer; transition: background .15s; border: 1px solid transparent;
+}
+.topbar-user:hover { background: var(--blue-50); border-color: var(--blue-100); }
+.user-av {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--green));
+  color: #fff; display: grid; place-items: center; font-weight: 700; font-size: .9rem; flex-shrink: 0;
+}
+.user-av-img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.user-name-label { font-weight: 600; font-size: .85rem; color: var(--text); line-height: 1.2; }
+.user-role-label { font-size: .72rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.role-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; }
+
+#ckh-main { margin-left: var(--sw); transition: margin-left .3s cubic-bezier(.4,0,.2,1); }
+#ckh-content { padding-top: var(--th); min-height: 100vh; }
+.content-inner { padding: 24px 24px 40px; }
+
+@media (max-width: 991.98px) {
+  #ckh-sidebar { transform: translateX(calc(-1 * var(--sw))); }
+  #ckh-sidebar.open { transform: translateX(0); box-shadow: 8px 0 30px rgba(0,0,0,.12); }
+  #sidebarOverlay.show { display: block; }
+  #ckh-main { margin-left: 0; }
+  #ckh-topbar { left: 0; }
+  .content-inner { padding: 16px 16px 32px; }
+  .topbar-datetime { display: none; }
+  .user-name-label, .user-role-label { display: none; }
+  .topbar-user { padding: 5px; }
+}
+
+/* ===========================
+   5) PAGE HEADER / CARD / TABLE / STATUS BADGE
+   =========================== */
+.page-header, .page-header-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .75rem; margin-bottom: 1.25rem; flex-wrap: wrap;
+}
+.page-header h1, .page-header-row h1 { font-size: 1.3rem; font-weight: 700; margin: 0; color: var(--text); }
+
+.card {
+  border: 1px solid var(--card-border); border-radius: 12px; background: var(--card-bg);
+  box-shadow: var(--card-shadow); transition: background .25s, border-color .25s;
+}
+.card-header {
+  background: transparent; border-bottom: 1px solid var(--card-border); padding: 14px 18px;
+  font-weight: 600; color: var(--text); border-radius: 12px 12px 0 0 !important;
+}
+
+.table thead th {
+  white-space: nowrap; font-size: .8rem; color: var(--muted);
+  background: var(--th-head-bg); border-bottom: 1px solid var(--border); font-weight: 600;
+}
+.table td { font-size: .86rem; vertical-align: middle; color: var(--text); }
+.table { --bs-table-bg: transparent; color: var(--text); }
+
+.status-badge {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .22rem .6rem; border-radius: 999px; font-size: .76rem; font-weight: 600;
+}
+.status-pending { background: #fef3c7; color: #92400e; }
+.status-ok      { background: #dcfce7; color: #166534; }
+.status-fail    { background: #fee2e2; color: #991b1b; }
+
+/* ===========================
+   6) KPI CARD — ตัวเลขสรุปหัวหน้า Dashboard
+   ใช้: .kpi-card > .kpi-icon.bg-XXX + .kpi-label + .kpi-value
+   =========================== */
+.kpi-card {
+  background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px;
+  padding: 16px 18px; display: flex; gap: 14px; align-items: center;
+  box-shadow: var(--card-shadow); transition: box-shadow .2s, background .25s;
+}
+.kpi-card:hover { box-shadow: var(--card-shadow-hover); }
+.kpi-icon {
+  width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center;
+  font-size: 1.2rem; color: #fff; flex-shrink: 0;
+}
+.kpi-icon.bg-slate  { background: linear-gradient(135deg,#64748b,#334155); }
+.kpi-icon.bg-amber  { background: linear-gradient(135deg,#f59e0b,#d97706); }
+.kpi-icon.bg-green  { background: linear-gradient(135deg,#10b981,#059669); }
+.kpi-icon.bg-red    { background: linear-gradient(135deg,#ef4444,#dc2626); }
+.kpi-icon.bg-blue   { background: linear-gradient(135deg,#3b82f6,#1d4ed8); }
+.kpi-icon.bg-indigo { background: linear-gradient(135deg,#818cf8,#4f46e5); }
+.kpi-icon.bg-teal   { background: linear-gradient(135deg,#22d3ee,#0891b2); }
+.kpi-label { color: #6c757d; font-size: .78rem; margin: 0; }
+.kpi-value { font-size: 1.45rem; font-weight: 700; line-height: 1.1; margin: 0; }
+
+/* ===========================
+   7) WELCOME BANNER — hero การ์ดต้อนรับบนสุดของหน้า home/dashboard
+   =========================== */
+.welcome-banner {
+  background: linear-gradient(135deg, #1e3a8a 0%, var(--blue) 40%, var(--green) 100%);
+  border-radius: 16px; padding: 28px 32px; display: flex; align-items: center;
+  justify-content: space-between; gap: 20px; color: #fff; margin-bottom: 28px; flex-wrap: wrap;
+  box-shadow: 0 8px 32px rgba(29,78,216,.25); position: relative; overflow: hidden;
+}
+.welcome-banner::before {
+  content: ""; position: absolute; top: -40px; right: -40px; width: 220px; height: 220px;
+  border-radius: 50%; background: rgba(255,255,255,.08); pointer-events: none;
+}
+.welcome-banner::after {
+  content: ""; position: absolute; bottom: -50px; right: 20%; width: 160px; height: 160px;
+  border-radius: 50%; background: rgba(255,255,255,.06); pointer-events: none;
+}
+.wb-left { display: flex; align-items: center; gap: 18px; }
+.wb-avatar {
+  width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,.2);
+  border: 3px solid rgba(255,255,255,.4); display: grid; place-items: center;
+  font-size: 1.75rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.wb-greeting { font-size: .85rem; opacity: .9; }
+.wb-name { font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+.wb-pos {
+  display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 3px 12px;
+  font-size: .8rem; margin-top: 6px;
+}
+.wb-right { text-align: right; }
+.wb-date-label { font-size: .75rem; opacity: .8; }
+.wb-date { font-size: 1.05rem; font-weight: 600; }
+
+/* ===========================
+   8) SECTION HEADING — เส้นคั่นหัวข้อพร้อม label ตัวพิมพ์เล็ก uppercase
+   =========================== */
+.section-head {
+  font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+}
+.section-head::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+/* ===========================
+   9) SHORTCUT / MENU CARD — เมนูลัดแบบไอคอนใหญ่
+   =========================== */
+.shortcut-card {
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px;
+  padding: 22px 18px; display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+  text-decoration: none; color: var(--text); box-shadow: var(--card-shadow);
+  transition: box-shadow .2s, transform .2s, border-color .2s; height: 100%;
+}
+.shortcut-card:hover {
+  box-shadow: var(--card-shadow-hover); transform: translateY(-2px);
+  border-color: var(--blue-100); color: var(--text);
+}
+.shortcut-card:active { transform: translateY(0); }
+.sc-icon {
+  width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center;
+  font-size: 1.4rem; color: #64748b; background: var(--nav-ic-bg); flex-shrink: 0;
+}
+.sc-title { font-weight: 700; font-size: .97rem; line-height: 1.3; }
+.sc-desc { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+
+/* ===========================
+   10) STATUS / RECENT-ACTIVITY LIST CARD — feed รายการล่าสุดพร้อมจุดสี
+   =========================== */
+.status-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--card-shadow); overflow: hidden; }
+.status-card-head {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; font-weight: 700; font-size: .92rem;
+}
+.status-card-body { padding: 0; }
+.status-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 18px; border-bottom: 1px solid #f1f5f9; }
+.status-item:last-child { border-bottom: 0; }
+.status-item-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+.dot-pending { background: #f59e0b; }
+.dot-sent    { background: #10b981; }
+.status-item-name { font-size: .88rem; font-weight: 500; line-height: 1.3; }
+.status-item-meta { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+.status-empty { display: flex; flex-direction: column; align-items: center; padding: 36px 20px; color: var(--muted); gap: 10px; }
+.status-empty .msi { font-size: 2rem; opacity: .4; }
+.status-empty p { font-size: .85rem; margin: 0; }
+
+/* ===========================
+   11) MODULE / DEPARTMENT SUMMARY CARD GRID — การ์ดสรุปตัวเลขต่อหน่วยงาน/หมวด (ใช้คู่กับ palette.md)
+   =========================== */
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 16px; }
+.dash-card {
+  display: flex; align-items: center; gap: 14px; padding: 16px;
+  background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px;
+  box-shadow: var(--card-shadow); text-decoration: none; color: inherit;
+  transition: box-shadow .2s, transform .1s, border-color .2s;
+}
+.dash-card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-2px); border-color: var(--blue-100); }
+.dash-thumb {
+  width: 54px; height: 54px; border-radius: 14px; flex-shrink: 0;
+  display: grid; place-items: center; color: #fff; font-size: 1.5rem;
+  /* ตั้ง background เป็น gradient เฉพาะของแต่ละ module/department ต่อการ์ด (ดู palette.md) */
+}
+.dash-card-body { flex: 1; min-width: 0; }
+.dash-card-title {
+  font-weight: 700; font-size: .9rem; color: var(--text); line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dash-card-count { font-size: 1.6rem; font-weight: 700; line-height: 1.15; margin-top: 2px; }
+.dash-card-count small { font-size: .72rem; font-weight: 500; color: var(--muted); }
+.dash-stat { display: flex; gap: 12px; margin-top: 4px; font-size: .72rem; color: var(--muted); }
+.dash-stat b { color: var(--text); font-weight: 600; }
+.dash-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; vertical-align: middle; margin-right: 3px; }
+.dot-ok { background: #22c55e; } .dot-pend { background: #f59e0b; } .dot-fail { background: #ef4444; }
+.dash-card-arrow { color: #cbd5e1; flex-shrink: 0; }
+
+/* ===========================
+   12) DASHBOARD TOOLBAR + CHART CANVAS
+   =========================== */
+.dash-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dash-month-select {
+  border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text);
+  border-radius: 10px; padding: 8px 14px; font-family: inherit; font-size: .9rem;
+  font-weight: 500; cursor: pointer;
+}
+canvas { max-height: 340px; }
