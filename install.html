@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RDU Dashboard — คู่มือติดตั้ง (Install Guide)</title>
+<meta name="description" content="คู่มือติดตั้ง RDU Dashboard สำหรับโรงพยาบาลเชียงกลาง — Step-by-step แบบ interactive">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+tailwind.config = { theme: { extend: { fontFamily: {
+    sans: ['Sarabun', 'system-ui', 'sans-serif'],
+    mono: ['Fira Code', 'ui-monospace', 'monospace'],
+}}}};
+</script>
+
+<style>
+:root {
+    --brand-blue: #1d4ed8;
+    --brand-green: #059669;
+    --brand-navy: #0f172a;
+}
+* { -webkit-font-smoothing: antialiased; }
+body { font-family: 'Sarabun', system-ui, sans-serif; font-weight: 300; }
+.msi { font-family: 'Material Symbols Outlined'; font-weight: normal;
+       font-size: 1.15em; line-height: 1; display: inline-block;
+       vertical-align: -0.2em; user-select: none;
+       font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+.msi-o { font-variation-settings: 'FILL' 0, 'wght' 300; }
+code, pre { font-family: 'Fira Code', ui-monospace, monospace; }
+pre { font-size: 0.85rem; line-height: 1.6; }
+.hero-gradient {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 45%, #059669 100%);
+}
+.hero-gradient::before {
+    content: ""; position: absolute; top: -80px; right: -80px;
+    width: 340px; height: 340px; border-radius: 50%;
+    background: rgba(255,255,255,.08); pointer-events: none;
+}
+.hero-gradient::after {
+    content: ""; position: absolute; bottom: -50px; right: 30%;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: rgba(255,255,255,.06); pointer-events: none;
+}
+.step-active { background: linear-gradient(135deg,#dbeafe,#dcfce7); border-color:#60a5fa; }
+.step-done { background:#ecfdf5; border-color:#10b981; }
+details > summary { list-style: none; cursor: pointer; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary .msi.chevron { transition: transform .2s; }
+details[open] > summary .msi.chevron { transform: rotate(90deg); }
+.copy-btn { transition: all .15s; }
+.copy-btn.copied { background:#10b981 !important; color:#fff !important; }
+.copy-btn.copied .msi { font-variation-settings: 'FILL' 1; }
+@media (prefers-reduced-motion: reduce) { * { transition:none !important; animation:none !important; } }
+
+/* Sidebar scrollbar */
+.side-nav::-webkit-scrollbar { width: 4px; }
+.side-nav::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+
+/* Progress bar animation */
+@keyframes progressFill { from { width: 0%; } }
+.progress-bar-fill { animation: progressFill .8s cubic-bezier(.4,0,.2,1) forwards; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+<!-- ===================== HERO ===================== -->
+<header class="hero-gradient relative overflow-hidden text-white">
+    <!-- Pill watermark -->
+    <span class="msi absolute pointer-events-none select-none" aria-hidden="true"
+          style="right: 3%; top: 50%; transform: translateY(-50%) rotate(-15deg); font-size: 220px; opacity: .09; color:#fff;">
+        pill
+    </span>
+
+    <div class="max-w-6xl mx-auto px-6 py-10 md:py-14 relative z-10">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-white/20 border-2 border-white/40 flex items-center justify-center backdrop-blur-sm">
+                <span class="msi text-2xl">local_hospital</span>
+            </div>
+            <div>
+                <div class="text-xs uppercase tracking-widest opacity-90">Installation Guide</div>
+                <h1 class="text-2xl md:text-3xl font-bold">RDU Dashboard</h1>
+            </div>
+        </div>
+        <p class="text-white/90 text-base md:text-lg max-w-3xl leading-relaxed mb-5">
+            คู่มือติดตั้งระบบ Dashboard ตัวชี้วัดการใช้ยาอย่างสมเหตุผล (Rational Drug Use) 13 ตัวชี้วัด
+            สำหรับ <b>โรงพยาบาลเชียงกลาง จ.น่าน</b> — เชื่อมต่อ HOSxP แบบอ่านอย่างเดียว
+        </p>
+
+        <div class="flex flex-wrap gap-2">
+            <span class="inline-flex items-center gap-1.5 bg-white/20 border border-white/30 rounded-full px-3 py-1 text-sm backdrop-blur-sm">
+                <span class="msi text-[1rem]">verified</span> Laravel 12 + PHP 8.3
+            </span>
+            <span class="inline-flex items-center gap-1.5 bg-white/20 border border-white/30 rounded-full px-3 py-1 text-sm backdrop-blur-sm">
+                <span class="msi text-[1rem]">database</span> PostgreSQL 15+
+            </span>
+            <span class="inline-flex items-center gap-1.5 bg-white/20 border border-white/30 rounded-full px-3 py-1 text-sm backdrop-blur-sm">
+                <span class="msi text-[1rem]">lock</span> Read-Only HOSxP
+            </span>
+            <span class="inline-flex items-center gap-1.5 bg-white/20 border border-white/30 rounded-full px-3 py-1 text-sm backdrop-blur-sm">
+                <span class="msi text-[1rem]">schedule</span> ~30 นาที
+            </span>
+        </div>
+    </div>
+</header>
+
+<!-- ===================== PROGRESS BAR ===================== -->
+<div class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-6xl mx-auto px-6 py-3">
+        <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-sm text-slate-600">
+                <span class="msi text-blue-600">task_alt</span>
+                <span>ความคืบหน้า: <b id="progressText" class="text-slate-800">0/8</b> ขั้นตอน</span>
+            </div>
+            <div class="flex-1 max-w-md bg-slate-100 rounded-full h-2 overflow-hidden">
+                <div id="progressBar" class="h-2 bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-500" style="width: 0%;"></div>
+            </div>
+            <button onclick="resetProgress()" class="text-xs text-slate-400 hover:text-red-500 flex items-center gap-1 transition-colors">
+                <span class="msi text-[.9rem]">restart_alt</span> reset
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MAIN CONTENT ===================== -->
+<div class="max-w-6xl mx-auto px-6 py-8 grid lg:grid-cols-[220px_1fr] gap-8">
+
+<!-- SIDEBAR NAV -->
+<aside class="hidden lg:block">
+    <nav class="side-nav sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto text-sm space-y-1">
+        <div class="text-[.68rem] font-semibold uppercase tracking-wider text-slate-500 px-3 pb-2">
+            สารบัญ
+        </div>
+        <a href="#prereq" class="nav-link flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-700 hover:bg-blue-50 hover:text-blue-700">
+            <span class="msi text-[1rem] text-slate-400">checklist</span> Prerequisites
+        </a>
+        <a href="#step1" class="nav-link flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-700 hover:bg-blue-50 hover:text-blue-700">
+            <span class="msi text-[1rem] text-slate-400">counter_1</span> Clone from GitHub
+        </a>
+        <a href="#step2" class="nav-link flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-700 hover:bg-blue-50 hover:text-blue-700">
+            <span class="msi text-[1rem] text-slate-400">counter_2</span> Composer install
+        </a>
+        <a href="#step3" class="nav-link flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-700 hover:bg-blue-50 hover:text-blue-700">
+            <span class="msi text-[1rem] text-slate-400">counter_3</span> NPM build
+        </a>
+        <a href="#step4" class="nav-link flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-700 hover:bg-blue-50 hover:text-blue-700">
+            <span class="msi text-[1rem] text-slate-400">counter_4</span> Configure .env
+        </a>
+        <a href="#step5" class="nav-link flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-700 hover:bg-blue-50 hover:text-blue-700">
+            <span class="msi text-[1rem] text-slate-400">counter_5</span> Database + migrate
+        </a>
+        <a href="#step6" class="nav-link flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-700 hover:bg-blue-50 hover:text-blue-700">
+            <span class="msi text-[1rem] text-slate-400">counter_6</span> HOSxP config
+        </a>
+        <a href="#step7" class="nav-link flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-700 hover:bg-blue-50 hover:text-blue-700">
+            <span class="msi text-[1rem] text-slate-400">counter_7</span> Apache setup
+        </a>
+        <a href="#step8" class="nav-link flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-700 hover:bg-blue-50 hover:text-blue-700">
+            <span class="msi text-[1rem] text-slate-400">counter_8</span> Test & login
+        </a>
+        <div class="pt-3">
+            <a href="#update" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-emerald-700 hover:bg-emerald-50">
+                <span class="msi text-[1rem]">sync</span> Update flow
+            </a>
+            <a href="#troubleshoot" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-amber-700 hover:bg-amber-50">
+                <span class="msi text-[1rem]">help</span> Troubleshooting
+            </a>
+        </div>
+    </nav>
+</aside>
+
+<!-- CONTENT -->
+<main class="space-y-8 min-w-0">
+
+<!-- ===== PREREQUISITES ===== -->
+<section id="prereq" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8">
+    <div class="flex items-start gap-3 mb-5">
+        <div class="w-11 h-11 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <span class="msi text-2xl">checklist</span>
+        </div>
+        <div>
+            <h2 class="text-xl font-bold text-slate-800">Prerequisites</h2>
+            <p class="text-sm text-slate-500">ติดตั้ง software ครบก่อนเริ่มขั้นตอนต่อไป</p>
+        </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-3">
+        <label class="prereq-item flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 cursor-pointer transition-colors">
+            <input type="checkbox" class="prereq-check mt-1 w-4 h-4 rounded accent-blue-600">
+            <div class="flex-1">
+                <div class="font-semibold text-sm">XAMPP (Apache + PHP 8.3+)</div>
+                <a href="https://www.apachefriends.org/" target="_blank" class="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-0.5">
+                    <span class="msi text-[.85rem]">open_in_new</span> apachefriends.org
+                </a>
+            </div>
+        </label>
+
+        <label class="prereq-item flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 cursor-pointer transition-colors">
+            <input type="checkbox" class="prereq-check mt-1 w-4 h-4 rounded accent-blue-600">
+            <div class="flex-1">
+                <div class="font-semibold text-sm">PostgreSQL 15+</div>
+                <a href="https://www.postgresql.org/download/" target="_blank" class="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-0.5">
+                    <span class="msi text-[.85rem]">open_in_new</span> postgresql.org/download
+                </a>
+            </div>
+        </label>
+
+        <label class="prereq-item flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 cursor-pointer transition-colors">
+            <input type="checkbox" class="prereq-check mt-1 w-4 h-4 rounded accent-blue-600">
+            <div class="flex-1">
+                <div class="font-semibold text-sm">Composer 2.x</div>
+                <a href="https://getcomposer.org/download/" target="_blank" class="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-0.5">
+                    <span class="msi text-[.85rem]">open_in_new</span> getcomposer.org
+                </a>
+            </div>
+        </label>
+
+        <label class="prereq-item flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 cursor-pointer transition-colors">
+            <input type="checkbox" class="prereq-check mt-1 w-4 h-4 rounded accent-blue-600">
+            <div class="flex-1">
+                <div class="font-semibold text-sm">Node.js 20+ LTS</div>
+                <a href="https://nodejs.org/" target="_blank" class="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-0.5">
+                    <span class="msi text-[.85rem]">open_in_new</span> nodejs.org
+                </a>
+            </div>
+        </label>
+
+        <label class="prereq-item flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 cursor-pointer transition-colors">
+            <input type="checkbox" class="prereq-check mt-1 w-4 h-4 rounded accent-blue-600">
+            <div class="flex-1">
+                <div class="font-semibold text-sm">Git 2.30+</div>
+                <a href="https://git-scm.com/download/win" target="_blank" class="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-0.5">
+                    <span class="msi text-[.85rem]">open_in_new</span> git-scm.com
+                </a>
+            </div>
+        </label>
+
+        <label class="prereq-item flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 cursor-pointer transition-colors">
+            <input type="checkbox" class="prereq-check mt-1 w-4 h-4 rounded accent-blue-600">
+            <div class="flex-1">
+                <div class="font-semibold text-sm">PHP Extensions</div>
+                <div class="text-xs text-slate-500 mt-0.5">pdo_pgsql, pgsql, mbstring, openssl, xml, bcmath</div>
+            </div>
+        </label>
+    </div>
+
+    <div class="mt-5 p-3 bg-slate-50 rounded-lg text-xs text-slate-600 flex items-center gap-2">
+        <span class="msi text-slate-400">terminal</span>
+        <span>ตรวจ version ครบด้วย: <code class="bg-white px-1.5 py-0.5 rounded text-slate-800">php -v && composer -V && node -v && git --version && psql --version</code></span>
+    </div>
+</section>
+
+<!-- ===== STEP 1: CLONE ===== -->
+<section id="step1" data-step="1" class="step-section bg-white rounded-2xl border-2 border-slate-200 shadow-sm p-6 md:p-8 transition-colors">
+    <div class="flex items-start gap-3 mb-4">
+        <button onclick="toggleStep(1)" class="step-checkbox w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center flex-shrink-0 hover:bg-blue-100 hover:text-blue-600 transition-colors">
+            <span class="msi text-2xl">counter_1</span>
+        </button>
+        <div class="flex-1">
+            <h2 class="text-xl font-bold text-slate-800">Clone จาก GitHub</h2>
+            <p class="text-sm text-slate-500">ดึงโค้ดจาก private repository <code>nuttapong39/RDU</code></p>
+        </div>
+    </div>
+
+    <div class="pl-14 space-y-3">
+        <p class="text-sm text-slate-600">เปิด <b>PowerShell</b> แล้วรัน:</p>
+        <div class="code-block relative">
+            <pre class="bg-slate-900 text-slate-100 rounded-xl p-4 pr-14 overflow-x-auto"><code>cd C:\xampp\htdocs
+git clone https://github.com/nuttapong39/RDU.git
+cd RDU</code></pre>
+            <button class="copy-btn absolute top-3 right-3 w-8 h-8 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center" onclick="copyCode(this)">
+                <span class="msi text-[1rem]">content_copy</span>
+            </button>
+        </div>
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2">
+            <span class="msi text-amber-600 flex-shrink-0">info</span>
+            <div>ถ้าถาม username/password: ใช้ GitHub username + <b>Personal Access Token</b> (สร้างที่ <a class="underline" href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> scope <code>repo</code>)</div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== STEP 2: COMPOSER ===== -->
+<section id="step2" data-step="2" class="step-section bg-white rounded-2xl border-2 border-slate-200 shadow-sm p-6 md:p-8 transition-colors">
+    <div class="flex items-start gap-3 mb-4">
+        <button onclick="toggleStep(2)" class="step-checkbox w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center flex-shrink-0 hover:bg-blue-100 hover:text-blue-600 transition-colors">
+            <span class="msi text-2xl">counter_2</span>
+        </button>
+        <div class="flex-1">
+            <h2 class="text-xl font-bold text-slate-800">ติดตั้ง PHP Dependencies</h2>
+            <p class="text-sm text-slate-500">Composer จะดาวน์โหลด Laravel + package ทั้งหมด (~120 MB)</p>
+        </div>
+    </div>
+
+    <div class="pl-14 space-y-3">
+        <div class="code-block relative">
+            <pre class="bg-slate-900 text-slate-100 rounded-xl p-4 pr-14 overflow-x-auto"><code>composer install --optimize-autoloader --no-dev</code></pre>
+            <button class="copy-btn absolute top-3 right-3 w-8 h-8 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center" onclick="copyCode(this)">
+                <span class="msi text-[1rem]">content_copy</span>
+            </button>
+        </div>
+        <div class="text-xs text-slate-500 pl-1">
+            💡 <code>--no-dev</code> = production mode (ไม่ติดตั้ง phpunit) — ถ้าจะรัน test ใช้ <code>composer install</code> เฉย ๆ
+        </div>
+    </div>
+</section>
+
+<!-- ===== STEP 3: NPM ===== -->
+<section id="step3" data-step="3" class="step-section bg-white rounded-2xl border-2 border-slate-200 shadow-sm p-6 md:p-8 transition-colors">
+    <div class="flex items-start gap-3 mb-4">
+        <button onclick="toggleStep(3)" class="step-checkbox w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center flex-shrink-0 hover:bg-blue-100 hover:text-blue-600 transition-colors">
+            <span class="msi text-2xl">counter_3</span>
+        </button>
+        <div class="flex-1">
+            <h2 class="text-xl font-bold text-slate-800">Build Frontend Assets</h2>
+            <p class="text-sm text-slate-500">NPM ติดตั้ง + Vite compile Tailwind + JS bundle</p>
+        </div>
+    </div>
+
+    <div class="pl-14 space-y-3">
+        <div class="code-block relative">
+            <pre class="bg-slate-900 text-slate-100 rounded-xl p-4 pr-14 overflow-x-auto"><code>npm ci
+npm run build</code></pre>
+            <button class="copy-btn absolute top-3 right-3 w-8 h-8 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center" onclick="copyCode(this)">
+                <span class="msi text-[1rem]">content_copy</span>
+            </button>
+        </div>
+        <div class="text-xs text-slate-500 pl-1">
+            จะได้ <code>public/build/assets/app-*.css</code> + <code>app-*.js</code> ที่ Blade ใช้ผ่าน <code>@vite</code>
+        </div>
+    </div>
+</section>
+
+<!-- ===== STEP 4: ENV ===== -->
+<section id="step4" data-step="4" class="step-section bg-white rounded-2xl border-2 border-slate-200 shadow-sm p-6 md:p-8 transition-colors">
+    <div class="flex items-start gap-3 mb-4">
+        <button onclick="toggleStep(4)" class="step-checkbox w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center flex-shrink-0 hover:bg-blue-100 hover:text-blue-600 transition-colors">
+            <span class="msi text-2xl">counter_4</span>
+        </button>
+        <div class="flex-1">
+            <h2 class="text-xl font-bold text-slate-800">ตั้งค่า .env</h2>
+            <p class="text-sm text-slate-500">Copy template + generate app key + แก้ 4 บรรทัด</p>
+        </div>
+    </div>
+
+    <div class="pl-14 space-y-3">
+        <div class="code-block relative">
+            <pre class="bg-slate-900 text-slate-100 rounded-xl p-4 pr-14 overflow-x-auto"><code>copy .env.example .env
+php artisan key:generate
+notepad .env</code></pre>
+            <button class="copy-btn absolute top-3 right-3 w-8 h-8 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center" onclick="copyCode(this)">
+                <span class="msi text-[1rem]">content_copy</span>
+            </button>
+        </div>
+        <p class="text-sm text-slate-600 mt-3">แก้ 4 ค่าใน <code>.env</code>:</p>
+        <div class="code-block relative">
+            <pre class="bg-slate-900 text-slate-100 rounded-xl p-4 pr-14 overflow-x-auto"><code>APP_ENV=production
+APP_DEBUG=false
+APP_URL=http://192.168.1.XX
+DB_PASSWORD=your_postgres_password</code></pre>
+            <button class="copy-btn absolute top-3 right-3 w-8 h-8 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center" onclick="copyCode(this)">
+                <span class="msi text-[1rem]">content_copy</span>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- ===== STEP 5: DATABASE ===== -->
+<section id="step5" data-step="5" class="step-section bg-white rounded-2xl border-2 border-slate-200 shadow-sm p-6 md:p-8 transition-colors">
+    <div class="flex items-start gap-3 mb-4">
+        <button onclick="toggleStep(5)" class="step-checkbox w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center flex-shrink-0 hover:bg-blue-100 hover:text-blue-600 transition-colors">
+            <span class="msi text-2xl">counter_5</span>
+        </button>
+        <div class="flex-1">
+            <h2 class="text-xl font-bold text-slate-800">สร้าง Database + Migrate</h2>
+            <p class="text-sm text-slate-500">สร้าง <code>rdu_dashboard</code> DB + สร้าง table + seed admin user</p>
+        </div>
+    </div>
+
+    <div class="pl-14 space-y-3">
+        <div class="code-block relative">
+            <pre class="bg-slate-900 text-slate-100 rounded-xl p-4 pr-14 overflow-x-auto"><code>&amp; "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -c "CREATE DATABASE rdu_dashboard;"
+
+php artisan migrate --seed</code></pre>
+            <button class="copy-btn absolute top-3 right-3 w-8 h-8 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center" onclick="copyCode(this)">
+                <span class="msi text-[1rem]">content_copy</span>
+            </button>
+        </div>
+        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-start gap-2">
+            <span class="msi text-emerald-600 flex-shrink-0">check_circle</span>
+            <div>Seed จะสร้าง user <code>admin/admin</code> + 13 KPI indicators พร้อมใช้งาน</div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== STEP 6: HOSXP ===== -->
+<section id="step6" data-step="6" class="step-section bg-white rounded-2xl border-2 border-slate-200 shadow-sm p-6 md:p-8 transition-colors">
+    <div class="flex items-start gap-3 mb-4">
+        <button onclick="toggleStep(6)" class="step-checkbox w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center flex-shrink-0 hover:bg-blue-100 hover:text-blue-600 transition-colors">
+            <span class="msi text-2xl">counter_6</span>
+        </button>
+        <div class="flex-1">
+            <h2 class="text-xl font-bold text-slate-800">ตั้งค่า HOSxP Connection</h2>
+            <p class="text-sm text-slate-500">ผ่าน Admin UI (แนะนำ) — encrypt password อัตโนมัติ</p>
+        </div>
+    </div>
+
+    <div class="pl-14 space-y-3">
+        <ol class="list-decimal list-inside space-y-2 text-sm text-slate-700 pl-1">
+            <li>เริ่ม server: <code class="bg-slate-100 px-2 py-0.5 rounded text-xs">php artisan serve --host=0.0.0.0 --port=8000</code></li>
+            <li>เปิด browser: <a href="http://localhost:8000" class="text-blue-600 underline">http://localhost:8000</a></li>
+            <li>Login: <b>admin</b> / <b>admin</b></li>
+            <li>คลิก <b>ตั้งค่าฐานข้อมูล HOSxP</b> ใน sidebar</li>
+            <li>กรอกค่าตามตาราง (สอบถามจาก IT ของโรงพยาบาล):</li>
+        </ol>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                    <tr>
+                        <th class="text-left px-4 py-2">Field</th>
+                        <th class="text-left px-4 py-2">ตัวอย่างค่า</th>
+                        <th class="text-left px-4 py-2">คำอธิบาย</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <tr><td class="px-4 py-2 font-mono text-xs">Host</td><td class="px-4 py-2 font-mono">192.168.1.119</td><td class="px-4 py-2 text-slate-600">HOSxP replica IP</td></tr>
+                    <tr><td class="px-4 py-2 font-mono text-xs">Port</td><td class="px-4 py-2 font-mono">5432</td><td class="px-4 py-2 text-slate-600">PostgreSQL default</td></tr>
+                    <tr><td class="px-4 py-2 font-mono text-xs">Database</td><td class="px-4 py-2 font-mono">chk_hosxe</td><td class="px-4 py-2 text-slate-600">ชื่อ DB บน HOSxP</td></tr>
+                    <tr><td class="px-4 py-2 font-mono text-xs">Schema</td><td class="px-4 py-2 font-mono">rdu_kpi</td><td class="px-4 py-2 text-slate-600">Schema ของ VIEW ที่จำกัดสิทธิ์</td></tr>
+                    <tr><td class="px-4 py-2 font-mono text-xs">Username</td><td class="px-4 py-2 font-mono">rdu_readonly</td><td class="px-4 py-2 text-slate-600">User Read-Only</td></tr>
+                    <tr><td class="px-4 py-2 font-mono text-xs">Password</td><td class="px-4 py-2 font-mono">••••••</td><td class="px-4 py-2 text-slate-600">สอบถามจาก IT</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <ol start="6" class="list-decimal list-inside space-y-1 text-sm text-slate-700 pl-1">
+            <li>คลิก <b>Test Connection</b> → ต้องขึ้น "เชื่อมต่อสำเร็จ และยืนยัน Read-Only"</li>
+            <li>คลิก <b>บันทึก</b> → ระบบ encrypt password + เก็บใน JSON local</li>
+        </ol>
+
+        <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 flex items-start gap-2">
+            <span class="msi text-red-600 flex-shrink-0">gpp_bad</span>
+            <div>
+                <b>ห้าม</b> commit <code>storage/app/private/config/rdu_database.json</code> ขึ้น git —
+                password ถูก encrypt ด้วย <code>APP_KEY</code> เฉพาะเครื่อง → portable ไม่ได้
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== STEP 7: APACHE ===== -->
+<section id="step7" data-step="7" class="step-section bg-white rounded-2xl border-2 border-slate-200 shadow-sm p-6 md:p-8 transition-colors">
+    <div class="flex items-start gap-3 mb-4">
+        <button onclick="toggleStep(7)" class="step-checkbox w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center flex-shrink-0 hover:bg-blue-100 hover:text-blue-600 transition-colors">
+            <span class="msi text-2xl">counter_7</span>
+        </button>
+        <div class="flex-1">
+            <h2 class="text-xl font-bold text-slate-800">ตั้งค่า Apache (XAMPP)</h2>
+            <p class="text-sm text-slate-500">Point DocumentRoot ไป <code>public/</code> — สำคัญเรื่อง security</p>
+        </div>
+    </div>
+
+    <div class="pl-14 space-y-3">
+        <p class="text-sm text-slate-600">แก้ <code>C:\xampp\apache\conf\extra\httpd-vhosts.conf</code>:</p>
+        <div class="code-block relative">
+            <pre class="bg-slate-900 text-slate-100 rounded-xl p-4 pr-14 overflow-x-auto"><code>&lt;VirtualHost *:80&gt;
+    ServerName rdu.local
+    DocumentRoot "C:/xampp/htdocs/RDU/public"
+
+    &lt;Directory "C:/xampp/htdocs/RDU/public"&gt;
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    &lt;/Directory&gt;
+
+    ErrorLog "logs/rdu-error.log"
+    CustomLog "logs/rdu-access.log" common
+&lt;/VirtualHost&gt;</code></pre>
+            <button class="copy-btn absolute top-3 right-3 w-8 h-8 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center" onclick="copyCode(this)">
+                <span class="msi text-[1rem]">content_copy</span>
+            </button>
+        </div>
+        <p class="text-sm text-slate-600 mt-3">เพิ่มใน <code>C:\Windows\System32\drivers\etc\hosts</code>:</p>
+        <div class="code-block relative">
+            <pre class="bg-slate-900 text-slate-100 rounded-xl p-4 pr-14 overflow-x-auto"><code>127.0.0.1  rdu.local</code></pre>
+            <button class="copy-btn absolute top-3 right-3 w-8 h-8 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center" onclick="copyCode(this)">
+                <span class="msi text-[1rem]">content_copy</span>
+            </button>
+        </div>
+        <p class="text-sm text-slate-500 mt-2">Restart Apache ผ่าน XAMPP Control Panel</p>
+    </div>
+</section>
+
+<!-- ===== STEP 8: TEST ===== -->
+<section id="step8" data-step="8" class="step-section bg-white rounded-2xl border-2 border-slate-200 shadow-sm p-6 md:p-8 transition-colors">
+    <div class="flex items-start gap-3 mb-4">
+        <button onclick="toggleStep(8)" class="step-checkbox w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center flex-shrink-0 hover:bg-blue-100 hover:text-blue-600 transition-colors">
+            <span class="msi text-2xl">counter_8</span>
+        </button>
+        <div class="flex-1">
+            <h2 class="text-xl font-bold text-slate-800">ทดสอบระบบ</h2>
+            <p class="text-sm text-slate-500">รัน tests + login + ตรวจ dashboard</p>
+        </div>
+    </div>
+
+    <div class="pl-14 space-y-3">
+        <div class="code-block relative">
+            <pre class="bg-slate-900 text-slate-100 rounded-xl p-4 pr-14 overflow-x-auto"><code>php artisan test --filter=DashboardTest</code></pre>
+            <button class="copy-btn absolute top-3 right-3 w-8 h-8 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center" onclick="copyCode(this)">
+                <span class="msi text-[1rem]">content_copy</span>
+            </button>
+        </div>
+        <p class="text-sm text-slate-600">ต้องขึ้น <b class="text-emerald-600">✓ 19 passed</b></p>
+
+        <div class="grid sm:grid-cols-2 gap-3 mt-4">
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <div class="flex items-center gap-2 font-semibold text-blue-800 text-sm mb-1">
+                    <span class="msi">web</span> เปิด Dashboard
+                </div>
+                <a href="http://rdu.local" class="text-sm text-blue-700 underline">http://rdu.local</a>
+                <div class="text-xs text-blue-600 mt-1">Login: <code>admin</code> / <code>admin</code></div>
+            </div>
+            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                <div class="flex items-center gap-2 font-semibold text-emerald-800 text-sm mb-1">
+                    <span class="msi">verified</span> Checklist
+                </div>
+                <ul class="text-xs text-emerald-700 space-y-0.5 mt-1">
+                    <li>✓ Welcome banner โหลด</li>
+                    <li>✓ 4 category cards แสดง</li>
+                    <li>✓ 13 KPI cards ครบ</li>
+                    <li>✓ Sidebar toggle ได้</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== UPDATE FLOW ===== -->
+<section id="update" class="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl border border-emerald-200 shadow-sm p-6 md:p-8">
+    <div class="flex items-start gap-3 mb-4">
+        <div class="w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0">
+            <span class="msi text-2xl">sync</span>
+        </div>
+        <div>
+            <h2 class="text-xl font-bold text-slate-800">Update ปกติ — ใช้เวลา ~1 นาที</h2>
+            <p class="text-sm text-slate-600">เมื่อมี code ใหม่ push จาก dev machine</p>
+        </div>
+    </div>
+
+    <div class="code-block relative">
+        <pre class="bg-slate-900 text-slate-100 rounded-xl p-4 pr-14 overflow-x-auto"><code>cd C:\xampp\htdocs\RDU
+.\deploy.ps1</code></pre>
+        <button class="copy-btn absolute top-3 right-3 w-8 h-8 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center" onclick="copyCode(this)">
+            <span class="msi text-[1rem]">content_copy</span>
+        </button>
+    </div>
+
+    <p class="text-sm text-slate-600 mt-3">
+        Script อัจฉริยะ: ตรวจว่าอะไรเปลี่ยน (composer.lock / package-lock / migrations) แล้วรันเฉพาะที่จำเป็น
+        พร้อมล้าง cache อัตโนมัติ
+    </p>
+</section>
+
+<!-- ===== TROUBLESHOOTING ===== -->
+<section id="troubleshoot" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8">
+    <div class="flex items-start gap-3 mb-5">
+        <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
+            <span class="msi text-2xl">help</span>
+        </div>
+        <div>
+            <h2 class="text-xl font-bold text-slate-800">Troubleshooting</h2>
+            <p class="text-sm text-slate-500">ปัญหาที่พบบ่อย + วิธีแก้</p>
+        </div>
+    </div>
+
+    <div class="space-y-2">
+        <details class="border border-slate-200 rounded-xl overflow-hidden">
+            <summary class="flex items-center gap-2 p-3 hover:bg-slate-50 transition-colors font-medium text-sm">
+                <span class="msi chevron text-slate-400">chevron_right</span>
+                <span class="msi text-red-500 text-[1rem]">error</span>
+                <span class="flex-1">could not find driver</span>
+            </summary>
+            <div class="px-4 pb-4 text-sm text-slate-600 border-t border-slate-100 pt-3 space-y-2">
+                <p>PHP ยังไม่เปิด <code>pdo_pgsql</code> extension</p>
+                <p><b>แก้:</b> เปิด <code>C:\xampp\php\php.ini</code> ค้นหา <code>extension=pdo_pgsql</code> แล้วเอา <code>;</code> ด้านหน้าออก → restart Apache</p>
+            </div>
+        </details>
+
+        <details class="border border-slate-200 rounded-xl overflow-hidden">
+            <summary class="flex items-center gap-2 p-3 hover:bg-slate-50 transition-colors font-medium text-sm">
+                <span class="msi chevron text-slate-400">chevron_right</span>
+                <span class="msi text-red-500 text-[1rem]">error</span>
+                <span class="flex-1">password authentication failed for user "rdu_readonly"</span>
+            </summary>
+            <div class="px-4 pb-4 text-sm text-slate-600 border-t border-slate-100 pt-3 space-y-2">
+                <p>JSON config ผิด หรือ user บน HOSxP ไม่มี/password ผิด</p>
+                <p><b>แก้:</b> ไปที่ <b>ตั้งค่าฐานข้อมูล HOSxP</b> → กรอกใหม่ → Test Connection</p>
+            </div>
+        </details>
+
+        <details class="border border-slate-200 rounded-xl overflow-hidden">
+            <summary class="flex items-center gap-2 p-3 hover:bg-slate-50 transition-colors font-medium text-sm">
+                <span class="msi chevron text-slate-400">chevron_right</span>
+                <span class="msi text-red-500 text-[1rem]">error</span>
+                <span class="flex-1">database "chk_hosxe" does not exist</span>
+            </summary>
+            <div class="px-4 pb-4 text-sm text-slate-600 border-t border-slate-100 pt-3 space-y-2">
+                <p>ชื่อ database ใน JSON ผิด — ต้องตรงกับที่ HOSxP admin ตั้งไว้</p>
+                <p><b>แก้:</b> สอบถามจาก IT โรงพยาบาล → แก้ใน UI</p>
+            </div>
+        </details>
+
+        <details class="border border-slate-200 rounded-xl overflow-hidden">
+            <summary class="flex items-center gap-2 p-3 hover:bg-slate-50 transition-colors font-medium text-sm">
+                <span class="msi chevron text-slate-400">chevron_right</span>
+                <span class="msi text-red-500 text-[1rem]">error</span>
+                <span class="flex-1">relation "ovst" does not exist</span>
+            </summary>
+            <div class="px-4 pb-4 text-sm text-slate-600 border-t border-slate-100 pt-3 space-y-2">
+                <p><code>rdu_readonly</code> ไม่มี USAGE บน schema หรือ views ยังไม่ได้สร้าง</p>
+                <p><b>แก้:</b> SSH เข้า HOSxP server แล้ว:</p>
+                <div class="code-block relative">
+                    <pre class="bg-slate-900 text-slate-100 rounded-lg p-3 pr-12 overflow-x-auto text-xs"><code>GRANT USAGE ON SCHEMA rdu_kpi TO rdu_readonly;
+GRANT SELECT ON ALL TABLES IN SCHEMA rdu_kpi TO rdu_readonly;</code></pre>
+                    <button class="copy-btn absolute top-2 right-2 w-7 h-7 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center" onclick="copyCode(this)">
+                        <span class="msi text-[.9rem]">content_copy</span>
+                    </button>
+                </div>
+            </div>
+        </details>
+
+        <details class="border border-slate-200 rounded-xl overflow-hidden">
+            <summary class="flex items-center gap-2 p-3 hover:bg-slate-50 transition-colors font-medium text-sm">
+                <span class="msi chevron text-slate-400">chevron_right</span>
+                <span class="msi text-amber-500 text-[1rem]">warning</span>
+                <span class="flex-1">Icons/fonts ไม่โหลด (empty box)</span>
+            </summary>
+            <div class="px-4 pb-4 text-sm text-slate-600 border-t border-slate-100 pt-3">
+                <p>เครื่อง target ไม่มีอินเทอร์เน็ต → โหลด Google Fonts + Material Symbols ไม่ได้ — ต้องดาวน์โหลด fonts มาเก็บ local (ดู <code>docs/</code> ภายหลัง)</p>
+            </div>
+        </details>
+
+        <details class="border border-slate-200 rounded-xl overflow-hidden">
+            <summary class="flex items-center gap-2 p-3 hover:bg-slate-50 transition-colors font-medium text-sm">
+                <span class="msi chevron text-slate-400">chevron_right</span>
+                <span class="msi text-amber-500 text-[1rem]">warning</span>
+                <span class="flex-1">git pull conflict</span>
+            </summary>
+            <div class="px-4 pb-4 text-sm text-slate-600 border-t border-slate-100 pt-3 space-y-2">
+                <p>Reset local ให้ตรงกับ remote (ทิ้งการแก้ในเครื่อง — ยกเว้น <code>.env</code>/<code>rdu_database.json</code> ที่ ignored):</p>
+                <div class="code-block relative">
+                    <pre class="bg-slate-900 text-slate-100 rounded-lg p-3 pr-12 overflow-x-auto text-xs"><code>git fetch origin
+git reset --hard origin/main</code></pre>
+                    <button class="copy-btn absolute top-2 right-2 w-7 h-7 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center" onclick="copyCode(this)">
+                        <span class="msi text-[.9rem]">content_copy</span>
+                    </button>
+                </div>
+            </div>
+        </details>
+    </div>
+</section>
+
+<!-- ===== SECURITY CHECKLIST ===== -->
+<section class="bg-gradient-to-br from-red-50 to-amber-50 rounded-2xl border border-red-200 shadow-sm p-6 md:p-8">
+    <div class="flex items-start gap-3 mb-4">
+        <div class="w-11 h-11 rounded-xl bg-red-600 text-white flex items-center justify-center flex-shrink-0">
+            <span class="msi text-2xl">gpp_good</span>
+        </div>
+        <div>
+            <h2 class="text-xl font-bold text-slate-800">Security Checklist (Production)</h2>
+            <p class="text-sm text-slate-600">ก่อนเปิดใช้จริง — ตรวจให้ครบ</p>
+        </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-2 text-sm">
+        <label class="flex items-start gap-2 p-2 rounded hover:bg-white/60 cursor-pointer">
+            <input type="checkbox" class="mt-1 accent-red-600">
+            <span><code>.env</code> มี <code>APP_DEBUG=false</code></span>
+        </label>
+        <label class="flex items-start gap-2 p-2 rounded hover:bg-white/60 cursor-pointer">
+            <input type="checkbox" class="mt-1 accent-red-600">
+            <span><code>APP_ENV=production</code></span>
+        </label>
+        <label class="flex items-start gap-2 p-2 rounded hover:bg-white/60 cursor-pointer">
+            <input type="checkbox" class="mt-1 accent-red-600">
+            <span>เปลี่ยน password <code>admin/admin</code> แล้ว</span>
+        </label>
+        <label class="flex items-start gap-2 p-2 rounded hover:bg-white/60 cursor-pointer">
+            <input type="checkbox" class="mt-1 accent-red-600">
+            <span>Apache DocumentRoot ชี้ <code>public/</code> เท่านั้น</span>
+        </label>
+        <label class="flex items-start gap-2 p-2 rounded hover:bg-white/60 cursor-pointer">
+            <input type="checkbox" class="mt-1 accent-red-600">
+            <span><code>rdu_readonly</code> มีแค่ SELECT บน <code>rdu_kpi</code></span>
+        </label>
+        <label class="flex items-start gap-2 p-2 rounded hover:bg-white/60 cursor-pointer">
+            <input type="checkbox" class="mt-1 accent-red-600">
+            <span>GitHub repo เป็น <b>Private</b></span>
+        </label>
+    </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="text-center py-8 text-sm text-slate-500 border-t border-slate-200 mt-8">
+    <div class="flex items-center justify-center gap-2 mb-2">
+        <span class="msi text-emerald-500">favorite</span>
+        <span>RDU Dashboard — โรงพยาบาลเชียงกลาง จ.น่าน</span>
+    </div>
+    <div class="text-xs text-slate-400">
+        Maintainer: <a href="mailto:ckhossystem@gmail.com" class="text-blue-600 hover:underline">ckhossystem@gmail.com</a>
+        · <a href="https://github.com/nuttapong39/RDU" target="_blank" class="text-blue-600 hover:underline">GitHub Repo</a>
+        · <a href="DEPLOYMENT.md" class="text-blue-600 hover:underline">Full DEPLOYMENT.md</a>
+    </div>
+</footer>
+
+</main>
+</div>
+
+<script>
+/* ===== Copy-to-clipboard ===== */
+function copyCode(btn) {
+    const code = btn.parentElement.querySelector('code').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        btn.classList.add('copied');
+        const icon = btn.querySelector('.msi');
+        const orig = icon.textContent;
+        icon.textContent = 'check';
+        setTimeout(() => {
+            btn.classList.remove('copied');
+            icon.textContent = orig;
+        }, 1600);
+    });
+}
+
+/* ===== Step tracker (localStorage) ===== */
+const TOTAL_STEPS = 8;
+
+function loadProgress() {
+    const done = JSON.parse(localStorage.getItem('rdu_install_progress') || '[]');
+    done.forEach(step => markStepDone(step, false));
+    updateProgressBar();
+}
+
+function toggleStep(step) {
+    const section = document.querySelector(`[data-step="${step}"]`);
+    if (!section) return;
+    const isDone = section.classList.contains('step-done');
+    const done = JSON.parse(localStorage.getItem('rdu_install_progress') || '[]');
+    if (isDone) {
+        section.classList.remove('step-done');
+        section.querySelector('.step-checkbox').classList.remove('bg-emerald-500', 'text-white');
+        section.querySelector('.step-checkbox').classList.add('bg-slate-100', 'text-slate-600');
+        const idx = done.indexOf(step);
+        if (idx > -1) done.splice(idx, 1);
+    } else {
+        markStepDone(step);
+        if (!done.includes(step)) done.push(step);
+    }
+    localStorage.setItem('rdu_install_progress', JSON.stringify(done));
+    updateProgressBar();
+}
+
+function markStepDone(step, animate = true) {
+    const section = document.querySelector(`[data-step="${step}"]`);
+    if (!section) return;
+    section.classList.add('step-done');
+    const btn = section.querySelector('.step-checkbox');
+    btn.classList.remove('bg-slate-100', 'text-slate-600');
+    btn.classList.add('bg-emerald-500', 'text-white');
+    btn.querySelector('.msi').textContent = 'check';
+}
+
+function updateProgressBar() {
+    const done = JSON.parse(localStorage.getItem('rdu_install_progress') || '[]');
+    const pct = (done.length / TOTAL_STEPS) * 100;
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressText').textContent = `${done.length}/${TOTAL_STEPS}`;
+}
+
+function resetProgress() {
+    if (!confirm('ล้าง progress ทั้งหมด?')) return;
+    localStorage.removeItem('rdu_install_progress');
+    document.querySelectorAll('.step-section').forEach(s => {
+        s.classList.remove('step-done');
+        const btn = s.querySelector('.step-checkbox');
+        btn.classList.add('bg-slate-100', 'text-slate-600');
+        btn.classList.remove('bg-emerald-500', 'text-white');
+        const step = s.getAttribute('data-step');
+        btn.querySelector('.msi').textContent = 'counter_' + step;
+    });
+    updateProgressBar();
+}
+
+/* ===== Smooth scroll for nav ===== */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) {
+            e.preventDefault();
+            const offset = 80;
+            const top = target.getBoundingClientRect().top + window.scrollY - offset;
+            window.scrollTo({ top, behavior: 'smooth' });
+        }
+    });
+});
+
+/* Init */
+loadProgress();
+</script>
+
+</body>
+</html>

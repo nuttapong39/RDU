@@ -1,59 +1,156 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
+<h1 align="center">RDU Dashboard</h1>
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <b>ระบบ Dashboard ตัวชี้วัดการใช้ยาอย่างสมเหตุผล (Rational Drug Use)</b><br>
+  โรงพยาบาลเชียงกลาง จ.น่าน
 </p>
 
-## About Laravel
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel-12-red?style=flat-square&logo=laravel" alt="Laravel 12">
+  <img src="https://img.shields.io/badge/PHP-8.3+-blue?style=flat-square&logo=php" alt="PHP 8.3+">
+  <img src="https://img.shields.io/badge/PostgreSQL-15+-blue?style=flat-square&logo=postgresql" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/HOSxP-Read--Only-orange?style=flat-square" alt="HOSxP Read-Only">
+  <img src="https://img.shields.io/badge/Tests-199%20passing-success?style=flat-square" alt="Tests">
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📖 คู่มือการติดตั้ง (Install Guide)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+เลือกดูตามแบบที่คุณสะดวก:
 
-## Learning Laravel
+### 🎨 แบบ Interactive (แนะนำ) — install.html
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Interactive install wizard พร้อม copy-to-clipboard, step tracker, progress bar
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+**ดูออนไลน์ทันที (GitHub Pages):**
+> 👉 https://nuttapong39.github.io/RDU/install.html
 
-## Laravel Sponsors
+**หรือดู offline (หลัง clone):**
+```powershell
+cd C:\xampp\htdocs\RDU
+start install.html
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 📄 แบบ Markdown — DEPLOYMENT.md
 
-### Premium Partners
+Comprehensive step-by-step guide + troubleshooting + security checklist
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+> 👉 [DEPLOYMENT.md](./DEPLOYMENT.md)
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## ⚡ Quick Start (สำหรับคนที่รีบ)
 
-## Code of Conduct
+```powershell
+# 1. Clone
+cd C:\xampp\htdocs
+git clone https://github.com/nuttapong39/RDU.git
+cd RDU
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# 2. Install
+composer install --optimize-autoloader --no-dev
+npm ci && npm run build
 
-## Security Vulnerabilities
+# 3. Configure
+copy .env.example .env
+php artisan key:generate
+notepad .env    # แก้ APP_URL, DB_PASSWORD
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# 4. Database
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -c "CREATE DATABASE rdu_dashboard;"
+php artisan migrate --seed
 
-## License
+# 5. Serve + Login admin/admin
+php artisan serve --host=0.0.0.0 --port=8000
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Login: `admin` / `admin` → ตั้งค่า HOSxP connection ผ่าน Admin UI
+
+---
+
+## 🔄 Update (บนเครื่อง production)
+
+```powershell
+cd C:\xampp\htdocs\RDU
+.\deploy.ps1
+```
+
+Script อัจฉริยะ: ตรวจว่าอะไรเปลี่ยน แล้วรันเฉพาะที่จำเป็น (composer / npm / migrate / cache clear)
+
+---
+
+## 🎯 Features
+
+- **13 KPI Indicators** — Antibiotic (5), DrugQuality (3), PatientSafety (4), ChronicDisease (1)
+- **HOSxP Integration** — Read-only ผ่าน VIEW schema (`rdu_kpi`) ที่จำกัดสิทธิ์เฉพาะ column ที่ใช้
+- **Dashboard**  — Welcome banner, category summary, KPI grid grouped by category, trend charts (Chart.js)
+- **KPI Detail** — Hero metric card, 12-month trend, drill-down table, export (Excel/CSV/PDF)
+- **Design System** — Sarabun + Material Symbols Outlined + Tailwind v4 + custom tokens
+- **Auth** — HOSxP officer table (primary) + local admin fallback
+- **Security** — 3-layer read-only enforcement + encrypted DB config + audit log
+- **Responsive** — Collapsible sidebar with gradient + medicine pattern (works mobile & desktop)
+
+---
+
+## 🏗 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Laravel 12 · PHP 8.3+ |
+| Frontend | Blade · Tailwind v4 · Chart.js 4.4 · Material Symbols |
+| Application DB | PostgreSQL 15+ (`rdu_dashboard`) |
+| Hospital DB | HOSxP / PostgreSQL — **SELECT ONLY** via `rdu_kpi` schema |
+| Build | Vite + npm |
+| Web Server | Apache (XAMPP) |
+
+---
+
+## 🔐 Security
+
+RDU Dashboard เชื่อมต่อ HOSxP แบบ **อ่านอย่างเดียวเท่านั้น** ผ่าน 3 ชั้น:
+
+1. **Laravel layer** — `ReadonlyHosxpModel` throws exception หากมี write
+2. **Query layer** — `ReadonlyConnection` block ทุก INSERT/UPDATE/DELETE/CREATE/DROP
+3. **PostgreSQL layer** — user `rdu_readonly` มีสิทธิ์ `SELECT` เท่านั้น + VIEW จำกัด column
+
+**Sensitive files ที่ไม่อยู่ใน git:**
+- `.env` (APP_KEY, DB password)
+- `storage/app/private/config/rdu_database.json` (HOSxP encrypted credentials)
+
+ดู [DEPLOYMENT.md § 9](./DEPLOYMENT.md#9-security-checklist) สำหรับ security checklist ครบชุด
+
+---
+
+## 📚 Documentation
+
+| ไฟล์ | เนื้อหา |
+|---|---|
+| [install.html](./install.html) | Interactive install guide |
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | Deployment + troubleshooting คู่มือละเอียด |
+| [CLAUDE.md](./CLAUDE.md) | Project overview + coding conventions |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Data flow + architecture |
+| [docs/KPI-SPECIFICATION.md](./docs/KPI-SPECIFICATION.md) | 13 KPI definitions + formulas |
+| [docs/DATABASE-SECURITY.md](./docs/DATABASE-SECURITY.md) | Read-only enforcement rules |
+
+---
+
+## 🧪 Testing
+
+```powershell
+php artisan test                           # ทั้งหมด (199 tests)
+php artisan test --filter=DashboardTest    # เฉพาะ Dashboard (19 tests)
+```
+
+---
+
+## 📝 License
+
+Internal use — โรงพยาบาลเชียงกลาง จ.น่าน
+Framework: Laravel [MIT License](https://opensource.org/licenses/MIT)
+
+---
+
+<p align="center">
+  <b>Maintainer:</b> Nuttapong ·
+  <a href="mailto:ckhossystem@gmail.com">ckhossystem@gmail.com</a>
+</p>
