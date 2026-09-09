@@ -29,7 +29,7 @@ class HisAuthService
 
             $officer = $connection->table('officer')
                 ->where('officer_login_name', $username)
-                ->select(['officer_login_name', 'officer_login_password_md5', 'officer_login_password', 'name'])
+                ->select(['officer_login_name', 'officer_login_password_md5', 'officer_login_password', 'officer_name'])
                 ->first();
         } catch (\Exception $e) {
             return null;
@@ -44,7 +44,7 @@ class HisAuthService
         return User::updateOrCreate(
             ['username' => $username],
             [
-                'name'     => $officer->name ?? $username,
+                'name'     => $officer->officer_name ?? $username,
                 'email'    => $username . '@rdu.local',
                 'password' => Hash::make(uniqid('', true)), // random — login always goes through HOSxP
             ]
