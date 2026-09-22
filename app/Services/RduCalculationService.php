@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\RduIndicator;
 use App\Models\RduIndicatorResult;
+use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
 
 class RduCalculationService
@@ -135,12 +136,53 @@ class RduCalculationService
     }
 
     // -------------------------------------------------------------------------
+    // Fiscal quarter — always live, never persisted (same convention as month=0)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Sums numerator/denominator across the 3 months of a fiscal quarter (live only —
+     * a quarter total is never persisted to rdu_indicator_results, matching month=0).
+     * Each month's getNumerator/getDenominator call is still 1-hour cached by RduQueryService,
+     * and the 3 months never overlap in date range, so summing is safe (no double-counting).
+     */
+    public function getOrCalculateQuarter(RduIndicator $indicator, int $year, int $quarter): array
+    {
+        $num = 0;
+        $den = 0;
+        foreach (FiscalDateRange::quarterMonths($quarter) as $m) {
+            $num += $this->queryService->getNumerator($indicator->code, $year, $m);
+            $den += $this->queryService->getDenominator($indicator->code, $year, $m);
+        }
+
+        $pct    = $den > 0 ? round($num / $den * 100, 1) : null;
+        $status = $this->getStatus($pct, $indicator->target_value, $indicator->target_direction);
+
+        return [
+            'indicator'   => $indicator,
+            'numerator'   => $num,
+            'denominator' => $den,
+            'percentage'  => $pct,
+            'status'      => $status,
+            'from_cache'  => false,
+        ];
+    }
+
+    /** Batch version of getOrCalculateQuarter() for the sidebar (no batch-query optimization yet — see plan). */
+    public function getOrCalculateManyForQuarter(Collection $indicators, int $year, int $quarter): Collection
+    {
+        return $indicators->map(fn (RduIndicator $ind) => $this->getOrCalculateQuarter($ind, $year, $quarter));
+    }
+
+    // -------------------------------------------------------------------------
     // Trend — 12 months of a fiscal year in order (Oct → Sep)
     // -------------------------------------------------------------------------
 
     /**
      * Returns 12 data points for the fiscal year trend chart.
-     * Uses stored results when available; null when not yet calculated.
+     * Uses stored results when available; falls back to a live query (1-hour cached by
+     * RduQueryService, never persisted here — same "live only" convention as month=0/quarters)
+     * for any month that hasn't been explicitly calculate()'d yet, so the chart never shows
+     * gaps just because nobody has run the batch calculation for that month.
      */
     public function getTrend(RduIndicator $indicator, int $fyYear): array
     {
@@ -161,14 +203,32 @@ class RduCalculationService
         foreach ($months as ['year' => $y, 'month' => $m]) {
             $key    = "{$y}-{$m}";
             $result = $stored->get($key);
+
+            if ($result !== null) {
+                $trend[] = [
+                    'year'   => $y,
+                    'month'  => $m,
+                    'label'  => $labels[$m],
+                    'pct'    => round((float) $result->result, 1),
+                    'num'    => $result->numerator,
+                    'den'    => $result->denominator,
+                    'status' => $result->status ?? 'na',
+                ];
+                continue;
+            }
+
+            // Not yet calculate()'d — compute live instead of leaving a gap.
+            $num    = $this->queryService->getNumerator($indicator->code, $y, $m);
+            $den    = $this->queryService->getDenominator($indicator->code, $y, $m);
+            $pct    = $den > 0 ? round($num / $den * 100, 1) : null;
             $trend[] = [
                 'year'   => $y,
                 'month'  => $m,
                 'label'  => $labels[$m],
-                'pct'    => $result ? round((float) $result->result, 1) : null,
-                'num'    => $result?->numerator,
-                'den'    => $result?->denominator,
-                'status' => $result?->status ?? 'na',
+                'pct'    => $pct,
+                'num'    => $num,
+                'den'    => $den,
+                'status' => $this->getStatus($pct, $indicator->target_value, $indicator->target_direction),
             ];
         }
 
