@@ -43,9 +43,8 @@
         {{-- Brand Header --}}
         <div class="px-4 py-4 border-b border-blue-800/40 flex-shrink-0">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm
-                            bg-gradient-to-br from-blue-500 to-emerald-500 text-white">
-                    <span class="msi text-xl">local_hospital</span>
+                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm bg-white p-0.5">
+                    <img src="{{ asset('images/logo_ck.png') }}" alt="ตราสัญลักษณ์โรงพยาบาลเชียงกลาง" class="w-full h-full object-contain rounded-full">
                 </div>
                 <div class="min-w-0">
                     <div class="text-sm font-bold text-white leading-snug">
@@ -61,13 +60,13 @@
         <nav class="flex-1 px-3 py-3 overflow-y-auto sidebar-scroll text-sm" aria-label="เมนูหลัก">
 
             {{-- Section: Main --}}
-            <div class="text-blue-400/70 text-[.68rem] font-semibold uppercase tracking-wider px-3 pt-1 pb-1.5">
+            <div class="text-blue-200/90 text-[.68rem] font-semibold uppercase tracking-wider px-3 pt-1 pb-1.5">
                 เมนูหลัก
             </div>
 
             <a href="{{ route('dashboard') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150 cursor-pointer
-                      {{ request()->routeIs('dashboard') ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-200 hover:bg-blue-800/60 hover:text-white' }}"
+                      {{ request()->routeIs('dashboard') ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-100 hover:bg-blue-800/60 hover:text-white' }}"
                aria-current="{{ request()->routeIs('dashboard') ? 'page' : 'false' }}">
                 <span class="msi text-[1.1rem]">dashboard</span>
                 <span>ภาพรวม 13 ตัวชี้วัด</span>
@@ -78,7 +77,7 @@
                 @foreach($categories as $catKey => $catLabel)
                     @if($kpiByCategory->has($catKey))
                         <div class="pt-3 pb-0.5">
-                            <div class="text-blue-400/70 text-[.68rem] font-semibold uppercase tracking-wider px-3 mb-1.5 flex items-center gap-1.5">
+                            <div class="text-blue-200/90 text-[.68rem] font-semibold uppercase tracking-wider px-3 mb-1.5 flex items-center gap-1.5">
                                 <span class="msi text-[.85rem] opacity-80">{{ $catIcons[$catKey] ?? 'category' }}</span>
                                 {{ $catLabel }}
                             </div>
@@ -95,15 +94,15 @@
                                 @endphp
                                 <a href="{{ route('dashboard.kpi', $item['indicator']->code) }}"
                                    title="{{ $item['indicator']->name }}"
-                                   class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-150 cursor-pointer
-                                          {{ $isActive ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-200 hover:bg-blue-800/60 hover:text-white' }}"
+                                   class="flex items-start gap-2 px-3 py-1.5 rounded-lg transition-all duration-150 cursor-pointer
+                                          {{ $isActive ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-100 hover:bg-blue-800/60 hover:text-white' }}"
                                    aria-current="{{ $isActive ? 'page' : 'false' }}">
 
-                                    <span class="msi text-[.85rem] flex-shrink-0 {{ $statusIcon[1] }}">{{ $statusIcon[0] }}</span>
+                                    <span class="msi text-[.85rem] flex-shrink-0 mt-0.5 {{ $statusIcon[1] }}">{{ $statusIcon[0] }}</span>
 
                                     <div class="min-w-0 flex-1">
-                                        <span class="font-mono text-xs font-semibold opacity-90">{{ $item['indicator']->code }}</span>
-                                        <span class="text-xs opacity-60 ml-1.5 truncate">{{ \Illuminate\Support\Str::limit($item['indicator']->name, 18) }}</span>
+                                        <div class="font-mono text-xs font-semibold leading-tight">{{ $item['indicator']->code }}</div>
+                                        <div class="text-xs opacity-95 leading-snug break-words">{{ $item['indicator']->name }}</div>
                                     </div>
                                 </a>
                             @endforeach
@@ -116,13 +115,13 @@
             <div class="border-t border-blue-800/30 my-3 mx-1"></div>
 
             {{-- Section: Settings --}}
-            <div class="text-blue-400/70 text-[.68rem] font-semibold uppercase tracking-wider px-3 pb-1.5">
+            <div class="text-blue-200/90 text-[.68rem] font-semibold uppercase tracking-wider px-3 pb-1.5">
                 ตั้งค่าระบบ
             </div>
 
             <a href="{{ route('admin.database.show') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150 cursor-pointer
-                      {{ request()->routeIs('admin.database.*') ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-200 hover:bg-blue-800/60 hover:text-white' }}"
+                      {{ request()->routeIs('admin.database.*') ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-100 hover:bg-blue-800/60 hover:text-white' }}"
                aria-current="{{ request()->routeIs('admin.database.*') ? 'page' : 'false' }}">
                 <span class="msi text-[1.1rem]">storage</span>
                 <span>ตั้งค่าฐานข้อมูล HOSxP</span>
@@ -146,7 +145,7 @@
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit"
-                        class="flex items-center gap-1.5 text-xs text-blue-400 hover:text-red-300 transition-colors duration-150 cursor-pointer py-0.5">
+                        class="flex items-center gap-1.5 text-xs text-blue-200 hover:text-red-300 transition-colors duration-150 cursor-pointer py-0.5">
                     <span class="msi text-[.9rem]">logout</span>
                     ออกจากระบบ
                 </button>
@@ -169,13 +168,13 @@
             </button>
 
             {{-- Breadcrumb --}}
-            <nav class="hidden sm:flex items-center gap-1.5 text-sm text-slate-500" aria-label="breadcrumb">
-                <a href="{{ route('dashboard') }}" class="hover:text-blue-600 flex items-center gap-1 transition-colors">
+            <nav class="hidden sm:flex items-center gap-1.5 text-sm text-slate-500 min-w-0 flex-1" aria-label="breadcrumb">
+                <a href="{{ route('dashboard') }}" class="hover:text-blue-600 flex items-center gap-1 transition-colors flex-shrink-0">
                     <span class="msi text-[1rem]">home</span>
                     <span>หน้าหลัก</span>
                 </a>
-                <span class="msi text-slate-300 text-[.9rem]">chevron_right</span>
-                <span class="text-slate-800 font-semibold truncate max-w-[40ch]">@yield('title', 'Dashboard')</span>
+                <span class="msi text-slate-300 text-[.9rem] flex-shrink-0">chevron_right</span>
+                <span class="text-slate-800 font-semibold truncate min-w-0" title="@yield('title', 'Dashboard')">@yield('title', 'Dashboard')</span>
             </nav>
 
             {{-- Right side --}}
@@ -221,6 +220,16 @@
             <div class="mx-4 lg:mx-6 mt-3 p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm flex items-center gap-2" role="alert">
                 <span class="msi text-blue-500">info</span>
                 {{ session('info') }}
+            </div>
+        @endif
+        @if($errors->any())
+            <div class="mx-4 lg:mx-6 mt-3 p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-sm flex items-start gap-2" role="alert">
+                <span class="msi text-red-500">error</span>
+                <div>
+                    @foreach($errors->all() as $error)
+                        <div>{{ $error }}</div>
+                    @endforeach
+                </div>
             </div>
         @endif
 
