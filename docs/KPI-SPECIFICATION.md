@@ -64,10 +64,10 @@ trend, calculated_at, created_at
 
 ---
 
-#### KPI-01: URI ไม่ได้รับยาปฏิชีวนะ
+#### KPI-01: การใช้ยาปฏิชีวนะในบาดแผลจากอุบัติเหตุ (ทุกชนิด)
 ```
-ชื่อ:         ร้อยละผู้ป่วยนอกโรคติดเชื้อระบบทางเดินหายใจส่วนต้น
-              ที่ไม่ได้รับยาปฏิชีวนะ
+ชื่อ:         ร้อยละการใช้ยาปฏิชีวนะในบาดแผลจากอุบัติเหตุ
+              ครอบคลุมแผลทุกชนิด
 Code:         uri_no_antibiotic
 Numerator:    จำนวนผู้ป่วย URI ที่ไม่ได้รับยาปฏิชีวนะ
 Denominator:  จำนวนผู้ป่วย URI ทั้งหมด
@@ -80,10 +80,11 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-02: อุจจาระร่วงเฉียบพลัน ไม่ได้รับยาปฏิชีวนะ
+#### KPI-02: การใช้ยาปฏิชีวนะในบาดแผลจากอุบัติเหตุ (ไม่รวมบางประเภท)
 ```
-ชื่อ:         ร้อยละผู้ป่วยนอกโรคอุจจาระร่วงเฉียบพลัน
-              ที่ไม่ได้รับยาปฏิชีวนะ
+ชื่อ:         ร้อยละการใช้ยาปฏิชีวนะในบาดแผลจากอุบัติเหตุ
+              ไม่บวมรวมแผลสัตว์กัด แผลลึกถึงกล้ามเนื้อ
+              และแผลไฟไหม้น้ำร้อนลวก
 Code:         diarrhea_no_antibiotic
 Numerator:    จำนวนผู้ป่วยอุจจาระร่วงที่ไม่ได้รับยาปฏิชีวนะ
 Denominator:  จำนวนผู้ป่วยอุจจาระร่วงเฉียบพลันทั้งหมด
@@ -96,9 +97,9 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-03: แผลสดสะอาด ไม่ได้รับยาปฏิชีวนะ
+#### KPI-03: การใช้ยาปฏิชีวนะในหญิงคลอดปกติครบกำหนด
 ```
-ชื่อ:         ร้อยละผู้ป่วยแผลสดสะอาดที่ไม่ได้รับยาปฏิชีวนะ
+ชื่อ:         ร้อยละการใช้ยาปฏิชีวนะในหญิงคลอดปกติครบกำหนด
 Code:         wound_no_antibiotic
 Numerator:    จำนวนผู้ป่วยแผลสดสะอาดที่ไม่ได้รับยาปฏิชีวนะ
 Denominator:  จำนวนผู้ป่วยแผลสดสะอาดทั้งหมด
@@ -115,9 +116,10 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-04: ผู้ป่วยในที่ได้รับยาปฏิชีวนะ
+#### KPI-04: การใช้ยาปฏิชีวนะใน URI และหลอดลมอักเสบเฉียบพลัน (OPD)
 ```
-ชื่อ:         ร้อยละผู้ป่วยในที่ได้รับยาปฏิชีวนะ
+ชื่อ:         ร้อยละการใช้ยาปฏิชีวนะในโรคติดเชื้อที่ระบบการหายใจ
+              ช่วงบนและหลอดลมอักเสบเฉียบพลันในผู้ป่วยนอก
 Code:         ipd_antibiotic_use
 Numerator:    จำนวนผู้ป่วยในที่ได้รับยาปฏิชีวนะ
 Denominator:  จำนวนผู้ป่วยในทั้งหมด
@@ -130,10 +132,9 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-05: ปอดอักเสบ (CAP) ได้รับยาปฏิชีวนะที่เหมาะสม
+#### KPI-05: การใช้ยาปฏิชีวนะในโรคอุจจาระร่วงเฉียบพลัน
 ```
-ชื่อ:         ร้อยละผู้ป่วยโรคปอดอักเสบชุมชน (CAP)
-              ที่ได้รับยาปฏิชีวนะตามแนวทาง
+ชื่อ:         ร้อยละการใช้ยาปฏิชีวนะในโรคอุจจาระร่วงเฉียบพลัน
 Code:         cap_appropriate_antibiotic
 Numerator:    จำนวนผู้ป่วย CAP ที่ได้รับยาถูกต้อง
 Denominator:  จำนวนผู้ป่วย CAP ทั้งหมด
@@ -150,10 +151,10 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-06: มูลค่าการใช้ยาในบัญชียาหลักแห่งชาติ
+#### KPI-06: การใช้ยาปฏิชีวนะใน Pyelonephritis / UTI เฉียบพลัน (OPD)
 ```
-ชื่อ:         ร้อยละมูลค่าการใช้ยาในบัญชียาหลักแห่งชาติ
-              ต่อมูลค่ายาทั้งหมด
+ชื่อ:         ร้อยละการใช้ยาปฏิชีวนะในผู้ป่วยกลุ่ม Pylonephritis,
+              ปัสสาวะอักเสบเฉียบพลัน (ผู้ป่วยนอก)
 Code:         national_drug_list_value
 Numerator:    มูลค่าการใช้ยาในบัญชียาหลักแห่งชาติ
 Denominator:  มูลค่าการใช้ยาทั้งหมด
@@ -166,9 +167,9 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-07: มูลค่าการใช้ยาสามัญ
+#### KPI-07: การใช้ยา NSAIDs ซ้ำซ้อนในผู้ป่วยนอก
 ```
-ชื่อ:         ร้อยละมูลค่าการใช้ยาสามัญต่อมูลค่ายาทั้งหมด
+ชื่อ:         ร้อยละของผู้ป่วยนอกที่มีการใช้ยากลุ่ม NSAIDs ซ้ำซ้อน
 Code:         generic_drug_value
 Numerator:    มูลค่าการใช้ยาสามัญ
 Denominator:  มูลค่าการใช้ยาทั้งหมด
@@ -181,9 +182,9 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-08: มูลค่าการใช้ยาต้านจุลชีพ
+#### KPI-08: การได้รับ Inhaled Corticosteroid ในผู้ป่วยนอกโรคติดเชื้อ
 ```
-ชื่อ:         ร้อยละมูลค่าการใช้ยาต้านจุลชีพต่อมูลค่ายาทั้งหมด
+ชื่อ:         ร้อยละของผู้ป่วยนอกโรคติดเชื้อได้รับ Inhaled Corticosteroid
 Code:         antimicrobial_value_ratio
 Numerator:    มูลค่าการใช้ยาต้านจุลชีพ
 Denominator:  มูลค่าการใช้ยาทั้งหมด
@@ -200,9 +201,9 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-09: การใช้ NSAIDs ในผู้สูงอายุ
+#### KPI-09: การใช้ NSAIDs ในผู้ป่วยโรคเรื้อรังระดับ 3 ขึ้นไป
 ```
-ชื่อ:         ร้อยละผู้ป่วยอายุ 60 ปีขึ้นไปที่ได้รับยา NSAIDs
+ชื่อ:         ร้อยละของผู้ป่วยนอกโรคเรื้อรังระดับ 3 ขึ้นไปที่ได้รับ NSAIDs
 Code:         elderly_nsaids_use
 Numerator:    จำนวนผู้สูงอายุที่ได้รับยา NSAIDs
 Denominator:  จำนวนผู้ป่วยอายุ ≥ 60 ปีทั้งหมด
@@ -215,9 +216,10 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-10: การใช้ยาฉีดวิตามิน B1 โดยไม่มีข้อบ่งชี้
+#### KPI-10: การใช้ Metformin ควบคุมเบาหวานโดยไม่มีข้อห้ามใช้
 ```
-ชื่อ:         ร้อยละผู้ป่วยที่ได้รับยาฉีดวิตามิน B1 โดยไม่มีข้อบ่งชี้
+ชื่อ:         ร้อยละของผู้ป่วยเบาหวานที่ใช้ยา Metformin เป็นยาชนิดเดียว
+              หรือร่วมกับยาอื่นเพื่อควบคุมระดับน้ำตาลโดยไม่มีข้อห้ามใช้
 Code:         vit_b1_injection_no_indication
 Numerator:    จำนวนผู้ป่วยที่ได้รับวิตามิน B1 ฉีดโดยไม่มีข้อบ่งชี้
 Denominator:  จำนวนผู้ป่วยที่ได้รับวิตามิน B1 ฉีดทั้งหมด
@@ -230,10 +232,10 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-11: การใช้ Corticosteroid ฉีดโดยไม่มีข้อบ่งชี้
+#### KPI-11: ยาน้ำ non-sedating ในเด็กที่ติดเชื้อทางเดินหายใจ
 ```
-ชื่อ:         ร้อยละผู้ป่วยที่ได้รับ Corticosteroid ชนิดฉีด
-              โดยไม่มีข้อบ่งชี้
+ชื่อ:         ร้อยละผู้รับบริการผู้ป่วยเด็กที่ได้รับการวินิจฉัยเป็น
+              โรคติดเชื้อของทางเดินหายใจและได้รับยาน้ำชนิด non-sedating
 Code:         corticosteroid_injection_no_indication
 Numerator:    จำนวนผู้ป่วยที่ได้รับ Corticosteroid ฉีดโดยไม่มีข้อบ่งชี้
 Denominator:  จำนวนผู้ป่วยที่ได้รับ Corticosteroid ฉีดทั้งหมด
@@ -246,9 +248,10 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-12: Polypharmacy ในผู้สูงอายุ
+#### KPI-12: RAS Blockage 2 ชนิดร่วมกันในโรคความดันโลหิตสูง
 ```
-ชื่อ:         ร้อยละผู้ป่วยสูงอายุที่ได้รับยา ≥ 5 รายการต่อครั้ง
+ชื่อ:         ร้อยละจำนวนครั้งบริการโรคความดันโลหิตสูงทั่วไปที่ได้รับ
+              RAS Blockage 2 ชนิดร่วมกันในการรักษา
 Code:         elderly_polypharmacy
 Numerator:    จำนวนผู้สูงอายุที่ได้รับยา ≥ 5 รายการ
 Denominator:  จำนวนผู้สูงอายุที่มารับการรักษาทั้งหมด
@@ -265,9 +268,9 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-13: ผู้ป่วยเบาหวานควบคุมน้ำตาลได้ดี
+#### KPI-13: การใช้ Long-acting Benzodiazepine ในผู้สูงอายุ
 ```
-ชื่อ:         ร้อยละผู้ป่วยเบาหวานที่มีค่า HbA1c < 7%
+ชื่อ:         ร้อยละผู้ป่วยนอกสูงอายุที่ใช้ยากลุ่ม Long-acting Benzodiazepine
 Code:         dm_hba1c_controlled
 Numerator:    จำนวนผู้ป่วยเบาหวานที่มี HbA1c < 7%
 Denominator:  จำนวนผู้ป่วยเบาหวานที่มีการตรวจ HbA1c ทั้งหมด
@@ -284,19 +287,19 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 | # | Code | ชื่อย่อ | Target | Direction | Category |
 |---|---|---|---|---|---|
-| KPI-01 | uri_no_antibiotic | URI ไม่ใช้ AB | ≥ 80% | สูงดี | antibiotic_opd |
-| KPI-02 | diarrhea_no_antibiotic | อุจจาระร่วง ไม่ใช้ AB | ≥ 80% | สูงดี | antibiotic_opd |
-| KPI-03 | wound_no_antibiotic | แผลสะอาด ไม่ใช้ AB | ≥ 80% | สูงดี | antibiotic_opd |
-| KPI-04 | ipd_antibiotic_use | IPD ใช้ AB | ≤ 30% | ต่ำดี | antibiotic_ipd |
-| KPI-05 | cap_appropriate_antibiotic | CAP ใช้ AB ถูกต้อง | ≥ 80% | สูงดี | antibiotic_ipd |
-| KPI-06 | national_drug_list_value | มูลค่ายา NDF | ≥ 80% | สูงดี | drug_quality |
-| KPI-07 | generic_drug_value | มูลค่ายาสามัญ | ≥ 60% | สูงดี | drug_quality |
-| KPI-08 | antimicrobial_value_ratio | มูลค่า Antimicrobial | ≤ 25% | ต่ำดี | drug_quality |
-| KPI-09 | elderly_nsaids_use | NSAIDs ผู้สูงอายุ | ≤ 10% | ต่ำดี | patient_safety |
-| KPI-10 | vit_b1_injection_no_indication | Vit B1 ฉีดไม่มีข้อบ่งชี้ | ≤ 5% | ต่ำดี | patient_safety |
-| KPI-11 | corticosteroid_injection_no_indication | Steroid ฉีดไม่มีข้อบ่งชี้ | ≤ 5% | ต่ำดี | patient_safety |
-| KPI-12 | elderly_polypharmacy | Polypharmacy ผู้สูงอายุ | ≤ 10% | ต่ำดี | patient_safety |
-| KPI-13 | dm_hba1c_controlled | DM ควบคุมน้ำตาลได้ | ≥ 40% | สูงดี | chronic_disease |
+| KPI-01 | uri_no_antibiotic | ATB ในแผลอุบัติเหตุ (ทุกชนิด) | ≥ 80% | สูงดี | antibiotic_opd |
+| KPI-02 | diarrhea_no_antibiotic | ATB ในแผลอุบัติเหตุ (ไม่รวมบางประเภท) | ≥ 80% | สูงดี | antibiotic_opd |
+| KPI-03 | wound_no_antibiotic | ATB ในหญิงคลอดปกติครบกำหนด | ≥ 80% | สูงดี | antibiotic_opd |
+| KPI-04 | ipd_antibiotic_use | ATB ใน URI/หลอดลมอักเสบเฉียบพลัน (OPD) | ≤ 30% | ต่ำดี | antibiotic_ipd |
+| KPI-05 | cap_appropriate_antibiotic | ATB ในอุจจาระร่วงเฉียบพลัน | ≥ 80% | สูงดี | antibiotic_ipd |
+| KPI-06 | national_drug_list_value | ATB ใน Pyelonephritis/UTI เฉียบพลัน | ≥ 80% | สูงดี | drug_quality |
+| KPI-07 | generic_drug_value | NSAIDs ซ้ำซ้อน (OPD) | ≥ 60% | สูงดี | drug_quality |
+| KPI-08 | antimicrobial_value_ratio | Inhaled Corticosteroid (โรคติดเชื้อ) | ≤ 25% | ต่ำดี | drug_quality |
+| KPI-09 | elderly_nsaids_use | NSAIDs ในโรคเรื้อรังระดับ 3+ | ≤ 10% | ต่ำดี | patient_safety |
+| KPI-10 | vit_b1_injection_no_indication | Metformin คุมเบาหวานไม่มีข้อห้ามใช้ | ≤ 5% | ต่ำดี | patient_safety |
+| KPI-11 | corticosteroid_injection_no_indication | ยาน้ำ non-sedating ในเด็กติดเชื้อทางเดินหายใจ | ≤ 5% | ต่ำดี | patient_safety |
+| KPI-12 | elderly_polypharmacy | RAS Blockage 2 ชนิดร่วมกัน (HT) | ≤ 10% | ต่ำดี | patient_safety |
+| KPI-13 | dm_hba1c_controlled | Long-acting Benzodiazepine ผู้สูงอายุ | ≥ 40% | สูงดี | chronic_disease |
 
 ---
 
@@ -310,11 +313,11 @@ app/
     └── Kpi/
         ├── KpiQueryInterface.php          ← Interface กำหนด contract
         ├── Antibiotic/
-        │   ├── UriNoAntibioticQuery.php   ← KPI-01
+        │   ├── AccidentWoundAntibioticQuery.php ← KPI-01
         │   ├── DiarrheaNoAntibioticQuery.php  ← KPI-02
-        │   ├── WoundNoAntibioticQuery.php      ← KPI-03
-        │   ├── IpdAntibioticUseQuery.php       ← KPI-04
-        │   └── CapAppropriateAntibioticQuery.php ← KPI-05
+        │   ├── NormalDeliveryAntibioticQuery.php ← KPI-03
+        │   ├── RespiratoryInfectionAntibioticQuery.php ← KPI-04
+        │   └── AcuteDiarrheaAntibioticQuery.php ← KPI-05
         ├── DrugQuality/
         │   ├── NationalDrugListValueQuery.php  ← KPI-06
         │   ├── GenericDrugValueQuery.php       ← KPI-07

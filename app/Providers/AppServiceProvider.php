@@ -6,11 +6,11 @@ use App\DataSources\HosxpRduDataSource;
 use App\DataSources\MockRduDataSource;
 use App\DataSources\RduDataSourceInterface;
 use App\Database\ReadonlyConnection;
-use App\Queries\Kpi\Antibiotic\CapAppropriateAntibioticQuery;
+use App\Queries\Kpi\Antibiotic\AccidentWoundAntibioticQuery;
+use App\Queries\Kpi\Antibiotic\AcuteDiarrheaAntibioticQuery;
 use App\Queries\Kpi\Antibiotic\DiarrheaNoAntibioticQuery;
-use App\Queries\Kpi\Antibiotic\IpdAntibioticUseQuery;
-use App\Queries\Kpi\Antibiotic\UriNoAntibioticQuery;
-use App\Queries\Kpi\Antibiotic\WoundNoAntibioticQuery;
+use App\Queries\Kpi\Antibiotic\NormalDeliveryAntibioticQuery;
+use App\Queries\Kpi\Antibiotic\RespiratoryInfectionAntibioticQuery;
 use App\Queries\Kpi\ChronicDisease\DmHba1cControlledQuery;
 use App\Queries\Kpi\DrugQuality\AntimicrobialValueQuery;
 use App\Queries\Kpi\DrugQuality\GenericDrugValueQuery;
@@ -27,11 +27,11 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(HosxpRduDataSource::class, function ($app) {
             return new HosxpRduDataSource([
-                'KPI01' => $app->make(UriNoAntibioticQuery::class),
+                'KPI01' => $app->make(AccidentWoundAntibioticQuery::class),
                 'KPI02' => $app->make(DiarrheaNoAntibioticQuery::class),
-                'KPI03' => $app->make(WoundNoAntibioticQuery::class),
-                'KPI04' => $app->make(IpdAntibioticUseQuery::class),
-                'KPI05' => $app->make(CapAppropriateAntibioticQuery::class),
+                'KPI03' => $app->make(NormalDeliveryAntibioticQuery::class),
+                'KPI04' => $app->make(RespiratoryInfectionAntibioticQuery::class),
+                'KPI05' => $app->make(AcuteDiarrheaAntibioticQuery::class),
                 'KPI06' => $app->make(NationalDrugListValueQuery::class),
                 'KPI07' => $app->make(GenericDrugValueQuery::class),
                 'KPI08' => $app->make(AntimicrobialValueQuery::class),

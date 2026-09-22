@@ -89,11 +89,11 @@ class HosxpQueryTest extends TestCase
     public static function queryClassProvider(): array
     {
         return [
-            'KPI01' => [\App\Queries\Kpi\Antibiotic\UriNoAntibioticQuery::class],
+            'KPI01' => [\App\Queries\Kpi\Antibiotic\AccidentWoundAntibioticQuery::class],
             'KPI02' => [\App\Queries\Kpi\Antibiotic\DiarrheaNoAntibioticQuery::class],
-            'KPI03' => [\App\Queries\Kpi\Antibiotic\WoundNoAntibioticQuery::class],
-            'KPI04' => [\App\Queries\Kpi\Antibiotic\IpdAntibioticUseQuery::class],
-            'KPI05' => [\App\Queries\Kpi\Antibiotic\CapAppropriateAntibioticQuery::class],
+            'KPI03' => [\App\Queries\Kpi\Antibiotic\NormalDeliveryAntibioticQuery::class],
+            'KPI04' => [\App\Queries\Kpi\Antibiotic\RespiratoryInfectionAntibioticQuery::class],
+            'KPI05' => [\App\Queries\Kpi\Antibiotic\AcuteDiarrheaAntibioticQuery::class],
             'KPI06' => [\App\Queries\Kpi\DrugQuality\NationalDrugListValueQuery::class],
             'KPI07' => [\App\Queries\Kpi\DrugQuality\GenericDrugValueQuery::class],
             'KPI08' => [\App\Queries\Kpi\DrugQuality\AntimicrobialValueQuery::class],
