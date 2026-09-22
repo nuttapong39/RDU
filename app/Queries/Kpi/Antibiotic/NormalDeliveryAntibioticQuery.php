@@ -125,7 +125,8 @@ class NormalDeliveryAntibioticQuery implements KpiQueryInterface
                 vn.pdx AS dx,
                 p.pname, p.fname, p.lname,
                 di.drugitems_name,
-                CASE WHEN dd.code IS NOT NULL THEN concat(dd.name, \' (\', dd.licenseno, \')\') ELSE NULL END AS doctor
+                CASE WHEN dd.code IS NOT NULL THEN concat(dd.name, \' (\', dd.licenseno, \')\') ELSE NULL END AS doctor,
+                dd.code AS doctor_code
             FROM ipt o
             INNER JOIN an_stat vn ON vn.an = o.an
             LEFT OUTER JOIN patient p ON p.hn = o.hn
@@ -144,6 +145,7 @@ class NormalDeliveryAntibioticQuery implements KpiQueryInterface
             'fullname'       => $this->maskThaiName($row->pname, $row->fname, $row->lname),
             'drugitems_name' => $row->drugitems_name,
             'doctor'         => $row->doctor,
+            'doctor_code'    => $row->doctor_code,
         ]);
     }
 

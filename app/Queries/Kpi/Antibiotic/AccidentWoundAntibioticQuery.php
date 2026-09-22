@@ -143,7 +143,8 @@ class AccidentWoundAntibioticQuery implements KpiQueryInterface
                 CASE WHEN length(tt.vn) > 0 THEN 1 ELSE 0 END AS aa,
                 tt.drugitems_name,
                 tt.doctor_name,
-                CASE WHEN attdoc.code IS NOT NULL THEN concat(attdoc.name, \' (\', attdoc.licenseno, \')\') ELSE NULL END AS attending_doctor
+                CASE WHEN attdoc.code IS NOT NULL THEN concat(attdoc.name, \' (\', attdoc.licenseno, \')\') ELSE NULL END AS attending_doctor,
+                attdoc.code AS attending_doctor_code
             FROM ovst o
             LEFT OUTER JOIN patient p ON p.hn = o.hn
             LEFT OUTER JOIN ovstdiag od ON od.vn = o.vn
@@ -174,6 +175,7 @@ class AccidentWoundAntibioticQuery implements KpiQueryInterface
             'drugitems_name'   => $row->drugitems_name,
             'doctor'           => $row->doctor_name,
             'attending_doctor' => $row->attending_doctor,
+            'attending_doctor_code' => $row->attending_doctor_code,
         ]);
     }
 

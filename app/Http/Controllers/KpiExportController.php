@@ -12,6 +12,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -142,7 +144,7 @@ class KpiExportController extends Controller
             ];
             $details = $this->queryService->getDetailsBetween($indicator->code, $ctx['dateFrom'], $ctx['dateTo']);
 
-            return [$item, $details];
+            return [$item, $this->stripInternalColumns($details)];
         }
 
         if ($ctx['quarter']) {
@@ -153,7 +155,19 @@ class KpiExportController extends Controller
             $details = $this->queryService->getDetails($indicator->code, $ctx['year'], $ctx['month']);
         }
 
-        return [$item, $details];
+        return [$item, $this->stripInternalColumns($details)];
+    }
+
+    /**
+     * `attending_doctor_code`/`doctor_code` exist in query rows purely to key the web-only doctor
+     * alias mapping (docs/adr/0002-doctor-identity-masked-in-web-ui-only.md) — exports never mask
+     * doctor identity, so these internal join keys have no reason to appear as columns there. Every
+     * export path (CSV/Excel/PDF) derives its columns dynamically from row keys, so this is the one
+     * place to strip them.
+     */
+    private function stripInternalColumns(Collection $details): Collection
+    {
+        return $details->map(fn (array $row) => Arr::except($row, ['doctor_code', 'attending_doctor_code']));
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\SanitizesDateParams;
 use App\Models\AuditLog;
 use App\Models\RduIndicator;
+use App\Services\DoctorAliasService;
 use App\Services\RduCalculationService;
 use App\Services\RduQueryService;
 use App\Support\SimplePaginator;
@@ -19,6 +20,7 @@ class DashboardController extends Controller
     public function __construct(
         private RduCalculationService $calcService,
         private RduQueryService $queryService,
+        private DoctorAliasService $aliasService,
     ) {}
 
     public function index(Request $request): View
@@ -88,6 +90,9 @@ class DashboardController extends Controller
 
     /** Ranked ICD-10 codes shown before folding the rest into an "อื่นๆ" donut slice. */
     private const ICD10_TOP_N = 10;
+
+    /** Doctors with fewer visits than this are excluded from red/green judgement in the doctor-rate table (too few cases for the rate to be meaningful) — still listed, just ungraded. */
+    private const DOCTOR_RATE_MIN_VISITS = 5;
 
     /** KPI codes with real detail data rich enough to drive the deep-dive charts + quarterly-summary zone. */
     private const DEEP_DIVE_KPI_CODES = ['KPI01', 'KPI03', 'KPI04', 'KPI05'];
@@ -174,6 +179,8 @@ class DashboardController extends Controller
             'drugUsage'         => $drugUsage,
             'icd10Ranking'      => $icd10Ranking,
             'doctorRate'        => $doctorRate,
+            'doctorRateMinVisits'   => self::DOCTOR_RATE_MIN_VISITS,
+            'doctorRateThreshold'   => $this->doctorRateThreshold($indicator),
             'hasDeepDive'       => $hasDeepDive,
         ]);
     }
@@ -183,24 +190,28 @@ class DashboardController extends Controller
      * / (total visits attended by that doctor) — a true rate, not just a prescription count, since
      * the attending-doctor field is populated on every visit (ATB or not), unlike the prescribing
      * `doctor` field which is only set when an antibiotic was actually dispensed. Every doctor is
-     * shown (no minimum-case threshold), each carrying its own case count so noisy small-n bars are
-     * visible rather than hidden. Visits with no attending-doctor code are bucketed separately as
-     * "ไม่ระบุแพทย์" and never colored pass/fail (not a real, accountable person).
+     * shown; visits with no attending-doctor code are bucketed separately as "ไม่ระบุแพทย์" (returned
+     * as `unknown`, never assigned an alias or graded pass/fail — not a real, accountable person).
      *
-     * Row shape isn't uniform across KPIs: KPI01 has both `attending_doctor` (attending) and
-     * `doctor` (prescribing) as distinct keys; KPI03/KPI04 only carry one doctor column, keyed
-     * `doctor`, which already means attending for those two. Checking `attending_doctor` first and
-     * falling back to `doctor` resolves correctly for all three without per-KPI branching.
+     * Row shape isn't uniform across KPIs: KPI01 exposes both `attending_doctor`/`attending_doctor_code`
+     * (attending) and `doctor` (prescribing) as distinct keys; KPI03/KPI04/KPI05 only carry one doctor
+     * column, keyed `doctor`/`doctor_code`, which already means attending for those three. Checking
+     * the `attending_doctor_code` key first and falling back to `doctor_code` resolves correctly for
+     * all four without per-KPI branching.
      *
-     * The bar-height metric (`atb`, ATB-received count) always means the same thing across KPIs.
-     * The pass/fail COLOR does not follow it directly, because KPI03's numerator is inverted
-     * (target_direction='higher' — it counts visits that did NOT get an antibiotic, the opposite of
-     * KPI01/KPI04). Coloring straight off the ATB-received rate would flip KPI03's meaning: a doctor
-     * prescribing to 100% of cases (the worst outcome) would read as "pass" (100% >= 80% target).
-     * `$statusRate` corrects for this — for a 'higher' direction it's the no-antibiotic rate instead
-     * — while `rate` (shown to the user in the tooltip) always stays the plain ATB-received rate.
+     * Doctor identity is masked to a stable per-doctor alias (e.g. "DR-01") in this table — see
+     * docs/adr/0002-doctor-identity-masked-in-web-ui-only.md. The alias is resolved from the RAW
+     * `*_doctor_code` (HOSxP `doctor.code`), not the display string, so it survives name corrections.
      *
-     * @return array<int, array{name: string, total: int, atb: int, rate: float, status: ?string, unknown: bool}>
+     * Grading (`red`) is direction-aware and intentionally strict (no "near miss" tier — see Q4 of
+     * the KPI05-doctor-rate-table grilling session): KPI03's numerator is inverted (target_direction=
+     * 'higher' — it counts visits that did NOT get an antibiotic, the opposite of KPI01/04/05), so a
+     * doctor prescribing to 100% of cases (worst outcome) must never grade as green. `rate` shown to
+     * the user always stays the plain ATB-received rate regardless of direction; only the red/green
+     * call is direction-corrected. Doctors below DOCTOR_RATE_MIN_VISITS are returned with `graded =
+     * false` — too few cases for the rate to mean anything, shown but never colored.
+     *
+     * @return array<int, array{code: string, real_name: ?string, total: int, atb: int, rate: float, red: bool, graded: bool, unknown: bool}>
      */
     private function aggregateDoctorRate(Collection $allDetails, RduIndicator $indicator): array
     {
@@ -208,10 +219,11 @@ class DashboardController extends Controller
 
         foreach ($allDetails as $row) {
             $doctorRaw = array_key_exists('attending_doctor', $row) ? $row['attending_doctor'] : ($row['doctor'] ?? null);
+            $codeRaw   = array_key_exists('attending_doctor_code', $row) ? $row['attending_doctor_code'] : ($row['doctor_code'] ?? null);
             $doctor    = trim((string) $doctorRaw);
-            $key       = $doctor !== '' ? $doctor : '__unknown__';
+            $key       = $doctor !== '' ? trim((string) $codeRaw) : '__unknown__';
 
-            $groups[$key] ??= ['total' => 0, 'atb' => 0];
+            $groups[$key] ??= ['real_name' => $doctor, 'total' => 0, 'atb' => 0];
             $groups[$key]['total']++;
             if (trim((string) ($row['drugitems_name'] ?? '')) !== '') {
                 $groups[$key]['atb']++;
@@ -220,26 +232,57 @@ class DashboardController extends Controller
 
         $items = [];
         foreach ($groups as $key => $g) {
-            $isUnknown  = $key === '__unknown__';
-            $rate       = $g['total'] > 0 ? round($g['atb'] / $g['total'] * 100, 1) : 0.0;
-            $statusRate = $indicator->target_direction === 'higher' ? round(100 - $rate, 1) : $rate;
+            $isUnknown = $key === '__unknown__';
+            $rate      = $g['total'] > 0 ? round($g['atb'] / $g['total'] * 100, 1) : 0.0;
+            $graded    = ! $isUnknown && $g['total'] >= self::DOCTOR_RATE_MIN_VISITS;
 
             $items[] = [
-                'name'    => $isUnknown ? 'ไม่ระบุแพทย์' : $key,
-                'total'   => $g['total'],
-                'atb'     => $g['atb'],
-                'rate'    => $rate,
-                'status'  => $isUnknown ? null : $this->calcService->getStatus($statusRate, $indicator->target_value, $indicator->target_direction),
-                'unknown' => $isUnknown,
+                'code'      => $isUnknown ? null : $this->aliasService->aliasFor($key),
+                'real_name' => $isUnknown ? null : $g['real_name'],
+                'total'     => $g['total'],
+                'atb'       => $g['atb'],
+                'rate'      => $rate,
+                'red'       => $graded && $this->isDoctorRateRed($rate, $indicator),
+                'graded'    => $graded,
+                'unknown'   => $isUnknown,
             ];
         }
 
-        // Sorted by case COUNT (the chart's primary bar-height metric), not rate — a doctor with
-        // n=1 and a 100% rate would otherwise sort above a doctor with n=50 and a 60% rate, which
-        // is exactly the small-n distortion this metric was changed to avoid.
-        usort($items, fn ($a, $b) => $b['atb'] <=> $a['atb']);
+        // Worst offenders first — sorted by the plain ATB-received rate regardless of KPI direction,
+        // since a high raw rate always means "this doctor prescribes antibiotics more" across all
+        // four KPIs (KPI03's inverted target only affects the red/green call, not what "worse" means
+        // here). The unknown-doctor bucket, if any, always sorts last regardless of its rate.
+        usort($items, fn ($a, $b) => $a['unknown'] <=> $b['unknown'] ?: $b['rate'] <=> $a['rate']);
 
         return $items;
+    }
+
+    /**
+     * Direction-aware, strict pass/fail for the doctor-rate table's 2-color scheme (no "near miss"
+     * tier, unlike RduCalculationService::getStatus()) — exactly at the target counts as red, matching
+     * the hospital-provided reference dashboard this table was modeled on.
+     */
+    private function isDoctorRateRed(float $rate, RduIndicator $indicator): bool
+    {
+        return $indicator->target_direction === 'higher'
+            ? (100 - $rate) <= $indicator->target_value
+            : $rate >= $indicator->target_value;
+    }
+
+    /**
+     * Where the red/green boundary sits on the plain ATB-received rate scale shown in the doctor-rate
+     * table (bar width, dashed tick, legend text) — must match isDoctorRateRed()'s actual math, not
+     * just echo $indicator->target_value directly. For 'lower' KPIs the two coincide (target_value IS
+     * the rate threshold), but for 'higher' KPIs (KPI03) target_value is an avoidance-rate target
+     * (e.g. 80%), while the flip point on the RECEIVED-rate scale this table plots is 100-target_value
+     * (e.g. 20%) — using target_value directly there would draw the tick 60 points from where the
+     * color actually changes.
+     */
+    private function doctorRateThreshold(RduIndicator $indicator): float
+    {
+        return $indicator->target_direction === 'higher'
+            ? round(100 - $indicator->target_value, 2)
+            : $indicator->target_value;
     }
 
     /**

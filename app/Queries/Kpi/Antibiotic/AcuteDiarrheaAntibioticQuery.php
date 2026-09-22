@@ -121,7 +121,8 @@ class AcuteDiarrheaAntibioticQuery implements KpiQueryInterface
                 array_to_string(array_agg(DISTINCT od.icd10), \',\') AS dx,
                 p.pname, p.fname, p.lname,
                 tt.drugitems_name,
-                CASE WHEN attdoc.code IS NOT NULL THEN concat(attdoc.name, \' (\', attdoc.licenseno, \')\') ELSE NULL END AS doctor
+                CASE WHEN attdoc.code IS NOT NULL THEN concat(attdoc.name, \' (\', attdoc.licenseno, \')\') ELSE NULL END AS doctor,
+                attdoc.code AS doctor_code
             FROM ovst o
             LEFT OUTER JOIN patient p ON p.hn = o.hn
             LEFT OUTER JOIN ovstdiag od ON od.vn = o.vn
@@ -146,6 +147,7 @@ class AcuteDiarrheaAntibioticQuery implements KpiQueryInterface
             'fullname'       => $this->maskThaiName($row->pname, $row->fname, $row->lname),
             'drugitems_name' => $row->drugitems_name,
             'doctor'         => $row->doctor,
+            'doctor_code'    => $row->doctor_code,
         ]);
     }
 

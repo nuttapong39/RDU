@@ -288,40 +288,107 @@
     การวิเคราะห์เชิงลึก
 </div>
 
-{{-- Doctor antibiotic rate — full width, vertical bars (scrolls horizontally past ~10 doctors so
-     labels stay readable rather than cramming or truncating them) --}}
+{{-- Doctor antibiotic rate — table, sorted worst-first by rate. Doctor identity is masked to a
+     stable alias (see docs/adr/0002-doctor-identity-masked-in-web-ui-only.md); click/hover the
+     alias to reveal the real name. Exports are unaffected — always real names there. --}}
 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-5">
     <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
         <div class="flex items-center gap-2 font-semibold text-sm text-slate-800">
             <span class="msi text-purple-600">medical_services</span>
-            จำนวนเคสที่ได้รับยาปฏิชีวนะรายแพทย์ผู้ตรวจ
+            อัตราการสั่งยาปฏิชีวนะรายแพทย์ผู้ตรวจ
         </div>
         @if(count($doctorRate) > 0)
-            {{-- Status legend — bars are sized by case count, colored by the underlying rate vs
-                 the {{ $ind->target_value }}% target (still in the tooltip), not the only signal --}}
             <div class="flex items-center gap-3 text-[.7rem] text-slate-500 flex-wrap">
-                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#10b981"></span>ผ่านเกณฑ์</span>
-                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#f59e0b"></span>ใกล้เป้าหมาย</span>
-                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#ef4444"></span>ไม่ผ่านเกณฑ์</span>
-                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#94a3b8"></span>ไม่ระบุแพทย์</span>
+                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#ef4444"></span>เกินเกณฑ์ {{ $doctorRateThreshold }}%</span>
+                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#10b981"></span>ต่ำกว่าเกณฑ์</span>
             </div>
         @endif
     </div>
     @if(count($doctorRate) > 0)
+        @php
+            $gradedDoctors   = array_values(array_filter($doctorRate, fn ($r) => $r['graded']));
+            $ungradedDoctors = array_values(array_filter($doctorRate, fn ($r) => ! $r['graded'] && ! $r['unknown']));
+            $unknownRow      = collect($doctorRate)->firstWhere('unknown', true);
+        @endphp
+
         <div class="flex items-start gap-2.5 mb-4 p-3 rounded-lg bg-indigo-50 border border-indigo-100">
             <span class="msi text-indigo-500 text-[1.1rem] flex-shrink-0 mt-0.5">info</span>
             <p class="text-sm text-indigo-900 leading-relaxed">
-                <strong>ความสูงแท่ง = จำนวนเคส</strong>ที่แพทย์คนนั้นสั่งยาปฏิชีวนะ
-                <span class="text-indigo-700">(ไม่ใช่ % แล้ว เพื่อไม่ให้เคสน้อยๆ เช่น 1 เคส ดูเหมือนอัตรา 100%)</span>
-                &nbsp;·&nbsp; <strong>สีของแท่ง</strong> ยังสะท้อนอัตรา % เทียบเกณฑ์เป้าหมาย {{ $ind->target_value }}% เดิม
-                &nbsp;·&nbsp; ชี้ที่แท่งเพื่อดู <strong>อัตรา %</strong> และ<strong>จำนวนเคสทั้งหมด (n)</strong> ของแพทย์คนนั้น
+                <strong>ชื่อแพทย์แสดงเป็นรหัสปกปิด</strong>
+                <span class="text-indigo-700">(กด/hover ที่รหัสเพื่อดูชื่อจริง)</span>
+                &nbsp;·&nbsp; เรียงจาก<strong>อัตราสูงสุด</strong>ไปต่ำสุด
+                &nbsp;·&nbsp; แพทย์ที่มี visit น้อยกว่า {{ $doctorRateMinVisits }} ครั้งจะไม่ตัดสินผ่าน/ไม่ผ่านเกณฑ์ (ข้อมูลไม่พอ)
             </p>
         </div>
+
         <div class="overflow-x-auto">
-            <div style="height: 380px; min-width: {{ max(640, count($doctorRate) * 78) }}px;">
-                <canvas id="doctorRateChart" aria-label="จำนวนเคสที่ได้รับยาปฏิชีวนะรายแพทย์ผู้ตรวจ" role="img"></canvas>
-            </div>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-left text-xs text-slate-500 border-b border-slate-200">
+                        <th class="py-2 pr-3 font-medium">แพทย์</th>
+                        <th class="py-2 pr-3 font-medium text-right">VISIT</th>
+                        <th class="py-2 pr-3 font-medium text-right">ได้ ATB</th>
+                        <th class="py-2 pr-3 font-medium text-right">อัตรา</th>
+                        <th class="py-2 font-medium">เทียบเป้า {{ $doctorRateThreshold }}%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($gradedDoctors as $row)
+                        <tr class="border-b border-slate-100 last:border-0">
+                            <td class="py-2 pr-3">
+                                <span class="doctor-alias cursor-pointer select-none font-medium text-slate-700 hover:text-indigo-600 transition-colors"
+                                      data-code="{{ $row['code'] }}" data-real="{{ $row['real_name'] }}"
+                                      title="{{ $row['real_name'] }}"
+                                      onclick="this.textContent = this.textContent.trim() === this.dataset.code ? this.dataset.real : this.dataset.code">{{ $row['code'] }}</span>
+                            </td>
+                            <td class="py-2 pr-3 text-right tabular-nums text-slate-500">{{ number_format($row['total']) }}</td>
+                            <td class="py-2 pr-3 text-right tabular-nums text-slate-500">{{ number_format($row['atb']) }}</td>
+                            <td class="py-2 pr-3 text-right tabular-nums font-semibold {{ $row['red'] ? 'text-red-600' : 'text-emerald-600' }}">{{ $row['rate'] }}%</td>
+                            <td class="py-2">
+                                <div class="relative h-3 bg-slate-100 rounded-full overflow-hidden" style="min-width:120px;">
+                                    <div class="absolute inset-y-0 left-0 rounded-full {{ $row['red'] ? 'bg-red-500' : 'bg-emerald-500' }}" style="width: {{ min(100, $row['rate']) }}%;"></div>
+                                    <div class="absolute inset-y-0 border-l-2 border-dashed border-slate-400/70" style="left: {{ min(100, $doctorRateThreshold) }}%;"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
+
+        @if(count($ungradedDoctors) > 0 || $unknownRow)
+            <div class="mt-4 pt-3 border-t border-dashed border-slate-200">
+                <p class="text-xs text-slate-400 mb-2 flex items-center gap-1">
+                    <span class="msi text-[.9rem]">info</span>
+                    ข้อมูลไม่เพียงพอสำหรับตัดสินผ่าน/ไม่ผ่านเกณฑ์ (visit น้อยกว่า {{ $doctorRateMinVisits }} ครั้ง หรือไม่ระบุแพทย์) — แสดงไว้เพื่อความครบถ้วน
+                </p>
+                <table class="w-full text-sm opacity-70">
+                    <tbody>
+                        @foreach($ungradedDoctors as $row)
+                            <tr class="border-b border-slate-100 last:border-0">
+                                <td class="py-1.5 pr-3 w-1/5">
+                                    <span class="doctor-alias cursor-pointer select-none text-slate-500"
+                                          data-code="{{ $row['code'] }}" data-real="{{ $row['real_name'] }}"
+                                          title="{{ $row['real_name'] }}"
+                                          onclick="this.textContent = this.textContent.trim() === this.dataset.code ? this.dataset.real : this.dataset.code">{{ $row['code'] }}</span>
+                                </td>
+                                <td class="py-1.5 pr-3 text-right tabular-nums text-slate-400">{{ $row['total'] }}</td>
+                                <td class="py-1.5 pr-3 text-right tabular-nums text-slate-400">{{ $row['atb'] }}</td>
+                                <td class="py-1.5 text-right tabular-nums text-slate-400">{{ $row['rate'] }}%</td>
+                            </tr>
+                        @endforeach
+                        @if($unknownRow)
+                            <tr>
+                                <td class="py-1.5 pr-3 text-slate-400">ไม่ระบุแพทย์</td>
+                                <td class="py-1.5 pr-3 text-right tabular-nums text-slate-400">{{ $unknownRow['total'] }}</td>
+                                <td class="py-1.5 pr-3 text-right tabular-nums text-slate-400">{{ $unknownRow['atb'] }}</td>
+                                <td class="py-1.5 text-right tabular-nums text-slate-400">{{ $unknownRow['rate'] }}%</td>
+                            </tr>
+                        @endif
+                    </tbody>
+                </table>
+            </div>
+        @endif
     @else
         <div class="status-empty py-8">
             <span class="msi">medical_services</span>
@@ -998,83 +1065,6 @@
                             return ` ${item.label}: ${item.parsed.toLocaleString()} ครั้ง (${pct}%)`;
                         },
                     },
-                },
-            },
-        },
-    });
-})();
-</script>
-<script>
-(function () {
-    const canvas = document.getElementById('doctorRateChart');
-    if (!canvas) return; // hidden when there's no doctor data for the period
-
-    const doctors = @json($doctorRate);
-
-    // Short axis labels (strip the "(license no.)" suffix) so ~28 rotated ticks stay legible —
-    // full name + case count still appears in the tooltip title, nothing is lost, just deferred.
-    const shortName = (name) => name.replace(/\s*\([^)]*\)\s*$/, '');
-    const labels = doctors.map(d => shortName(d.name));
-    const counts = doctors.map(d => d.atb); // bar height = case count, not rate — see caption above
-    const statusColor = (d) => d.unknown ? '#94a3b8' : (({ pass: '#10b981', warning: '#f59e0b', fail: '#ef4444' })[d.status] ?? '#94a3b8');
-
-    // Soft top-to-bottom gradient per bar (a modern dashboard treatment) instead of flat fills.
-    const gradientFor = (ctx, color) => {
-        const { chartArea } = ctx.chart;
-        if (!chartArea) return color;
-        const g = ctx.chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-        g.addColorStop(0, color);
-        g.addColorStop(1, color + '99');
-        return g;
-    };
-
-    new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [{
-                data: counts,
-                backgroundColor: (ctx) => gradientFor(ctx, statusColor(doctors[ctx.dataIndex])),
-                hoverBackgroundColor: (ctx) => statusColor(doctors[ctx.dataIndex]),
-                borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 },
-                borderSkipped: false,
-                maxBarThickness: 42,
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: { duration: 500, easing: 'easeOutQuart' },
-            plugins: {
-                legend: { display: false }, // color-coded legend already rendered above the canvas
-                tooltip: {
-                    titleFont: { family: 'Sarabun, sans-serif', weight: '600' },
-                    bodyFont: { family: 'Sarabun, sans-serif' },
-                    padding: 10,
-                    cornerRadius: 8,
-                    callbacks: {
-                        title: (items) => doctors[items[0].dataIndex].name,
-                        label: (item) => {
-                            const d = doctors[item.dataIndex];
-                            return ` ${d.atb} เคส · อัตรา ${d.rate}% (${d.atb}/${d.total} เคสที่ตรวจ)`;
-                        },
-                    },
-                },
-            },
-            scales: {
-                x: {
-                    ticks: {
-                        font: { family: 'Sarabun, sans-serif', size: 10.5 },
-                        maxRotation: 45,
-                        minRotation: 45,
-                        autoSkip: false,
-                    },
-                    grid: { display: false },
-                },
-                y: {
-                    min: 0,
-                    ticks: { precision: 0, font: { family: 'Sarabun, sans-serif', size: 11 } },
-                    grid: { color: 'rgba(0,0,0,0.045)' },
                 },
             },
         },
