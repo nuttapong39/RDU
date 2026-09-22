@@ -281,7 +281,7 @@
     </div>
 </div>
 
-{{-- ============ DEEP-DIVE ANALYSIS (KPI01, KPI03, KPI04 — any KPI with real detail data) ============ --}}
+{{-- ============ DEEP-DIVE ANALYSIS (KPI01, KPI03, KPI04, KPI05 — any KPI with real detail data) ============ --}}
 @if($hasDeepDive)
 <div class="section-head">
     <span class="msi">insights</span>

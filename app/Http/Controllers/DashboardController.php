@@ -90,7 +90,7 @@ class DashboardController extends Controller
     private const ICD10_TOP_N = 10;
 
     /** KPI codes with real detail data rich enough to drive the deep-dive charts + quarterly-summary zone. */
-    private const DEEP_DIVE_KPI_CODES = ['KPI01', 'KPI03', 'KPI04'];
+    private const DEEP_DIVE_KPI_CODES = ['KPI01', 'KPI03', 'KPI04', 'KPI05'];
 
     /** Detail-row keys a table column header may sort by (matches the associative keys every KpiQueryInterface::getDetails() row uses). */
     private const SORTABLE_COLUMNS = ['HN', 'VN', 'AN', 'vstdate', 'dchdate', 'dx', 'fullname', 'CC', 'HPI', 'drugitems_name', 'doctor', 'attending_doctor'];
