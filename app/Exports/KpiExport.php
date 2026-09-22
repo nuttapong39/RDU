@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Services\RduCalculationService;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -17,8 +16,7 @@ class KpiExport implements FromArray, WithHeadings, WithTitle, ShouldAutoSize, W
         private array  $details,
         private string $indicatorCode,
         private string $indicatorName,
-        private int    $year,
-        private int    $month,
+        private string $periodLabel,
     ) {}
 
     public function title(): string
@@ -33,13 +31,10 @@ class KpiExport implements FromArray, WithHeadings, WithTitle, ShouldAutoSize, W
 
     public function array(): array
     {
-        $monthLabel = $this->month === 0 ? 'ทั้งปี' : (RduCalculationService::thaiMonths()[$this->month] ?? $this->month);
-
         $rows = [
             // Header block
             ['ตัวชี้วัด', $this->indicatorCode . ' — ' . $this->indicatorName],
-            ['ปีงบประมาณ', $this->year],
-            ['เดือน', $monthLabel],
+            ['ช่วงเวลา', $this->periodLabel],
             ['ตัวเศษ', $this->summary['numerator']],
             ['ตัวส่วน', $this->summary['denominator']],
             ['ผลลัพธ์ (%)', $this->summary['percentage'] !== null ? $this->summary['percentage'] . '%' : 'N/A'],

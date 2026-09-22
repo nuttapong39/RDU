@@ -31,8 +31,7 @@
 
 <h1>{{ $item['indicator']->code }}: {{ $item['indicator']->name }}</h1>
 <div class="sub">
-    ปีงบประมาณ {{ $year }}
-    @if($month > 0) — {{ \App\Services\RduCalculationService::thaiMonths()[$month] ?? '' }} @endif
+    {{ $periodLabel }}
     &nbsp;|&nbsp; โรงพยาบาลเชียงกลาง จังหวัดน่าน
 </div>
 
@@ -71,7 +70,7 @@
 
 {{-- Detail table --}}
 @if($details->isNotEmpty())
-    <div style="font-weight:bold; margin-bottom:4px;">รายการข้อมูลรายกรณี (แสดงไม่เกิน 500 รายการ)</div>
+    <div style="font-weight:bold; margin-bottom:4px;">รายการข้อมูลรายกรณี ({{ number_format($details->count()) }} รายการ — ครบทุกรายการ)</div>
     <table class="detail">
         <thead>
             <tr>
