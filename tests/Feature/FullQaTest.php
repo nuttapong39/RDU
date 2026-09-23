@@ -243,18 +243,6 @@ class FullQaTest extends TestCase
         $this->assertStringContainsString('const trend', $response->content());
     }
 
-    public function test_kpi_detail_shows_export_buttons(): void
-    {
-        $user = User::factory()->create();
-        $response = $this->actingAs($user)
-            ->get(route('dashboard.kpi', 'KPI01'))
-            ->assertOk();
-
-        $response->assertSee('Export Excel', false);
-        $response->assertSee('Export CSV', false);
-        $response->assertSee('Export PDF', false);
-    }
-
     public function test_kpi_detail_shows_back_link(): void
     {
         $user = User::factory()->create();
@@ -262,15 +250,6 @@ class FullQaTest extends TestCase
             ->get(route('dashboard.kpi', 'KPI01'))
             ->assertOk()
             ->assertSee('กลับภาพรวม', false);
-    }
-
-    public function test_kpi_detail_shows_detail_table_section(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user)
-            ->get(route('dashboard.kpi', 'KPI01'))
-            ->assertOk()
-            ->assertSee('รายการข้อมูลรายกรณี', false);
     }
 
     public function test_kpi_detail_returns_404_for_unknown_code(): void
@@ -290,58 +269,6 @@ class FullQaTest extends TestCase
 
         $response->assertSee('ยาปฏิชีวนะ', false);
         $response->assertSee('คุณภาพยา', false);
-    }
-
-    // =========================================================================
-    // Export End-to-End
-    // =========================================================================
-
-    public function test_csv_export_journey_complete(): void
-    {
-        $user = User::factory()->create();
-        $response = $this->actingAs($user)
-            ->get(route('kpi.export.csv', ['code' => 'KPI01', 'year' => 2568, 'month' => 1]))
-            ->assertOk();
-
-        $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
-        $this->assertStringContainsString('.csv', $response->headers->get('Content-Disposition'));
-        $this->assertStringStartsWith("\xEF\xBB\xBF", $response->streamedContent());
-    }
-
-    public function test_excel_export_journey_complete(): void
-    {
-        $user = User::factory()->create();
-        $response = $this->actingAs($user)
-            ->get(route('kpi.export.excel', ['code' => 'KPI01', 'year' => 2568, 'month' => 1]))
-            ->assertOk();
-
-        $this->assertStringContainsString('spreadsheetml', $response->headers->get('Content-Type') ?? '');
-        $this->assertStringContainsString('.xlsx', $response->headers->get('Content-Disposition'));
-    }
-
-    public function test_pdf_export_journey_complete(): void
-    {
-        $user = User::factory()->create();
-        $response = $this->actingAs($user)
-            ->get(route('kpi.export.pdf', ['code' => 'KPI01', 'year' => 2568, 'month' => 1]))
-            ->assertOk();
-
-        $this->assertStringContainsString('pdf', $response->headers->get('Content-Type') ?? '');
-        $this->assertStringContainsString('.pdf', $response->headers->get('Content-Disposition'));
-    }
-
-    public function test_export_links_on_kpi_page_point_to_correct_routes(): void
-    {
-        $user = User::factory()->create();
-        $response = $this->actingAs($user)
-            ->get(route('dashboard.kpi', ['code' => 'KPI01', 'year' => 2568, 'month' => 3]))
-            ->assertOk();
-
-        $params = ['code' => 'KPI01', 'year' => 2568, 'month' => 3];
-        // Use default escaping=true so '&' in URL is matched as '&amp;' in HTML
-        $response->assertSee(route('kpi.export.csv',   $params));
-        $response->assertSee(route('kpi.export.excel', $params));
-        $response->assertSee(route('kpi.export.pdf',   $params));
     }
 
     // =========================================================================
@@ -502,32 +429,12 @@ class FullQaTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_export_with_unknown_kpi_code_returns_404(): void
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->get(route('kpi.export.csv',   ['code' => 'INVALID']))
-            ->assertNotFound();
-
-        $this->actingAs($user)
-            ->get(route('kpi.export.excel', ['code' => 'INVALID']))
-            ->assertNotFound();
-
-        $this->actingAs($user)
-            ->get(route('kpi.export.pdf',   ['code' => 'INVALID']))
-            ->assertNotFound();
-    }
-
     public function test_guest_cannot_access_any_protected_route(): void
     {
         $protectedUrls = [
             route('dashboard'),
             route('dashboard.kpi', 'KPI01'),
             route('admin.database.show'),
-            route('kpi.export.csv',   ['code' => 'KPI01']),
-            route('kpi.export.excel', ['code' => 'KPI01']),
-            route('kpi.export.pdf',   ['code' => 'KPI01']),
         ];
 
         foreach ($protectedUrls as $url) {

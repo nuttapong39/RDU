@@ -130,22 +130,6 @@ class SecurityTest extends TestCase
             ->assertOk();
     }
 
-    public function test_export_csv_clamps_year_below_minimum(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user)
-            ->get(route('kpi.export.csv', ['code' => 'KPI01', 'year' => 100, 'month' => 0]))
-            ->assertOk();
-    }
-
-    public function test_export_csv_clamps_month_above_twelve(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user)
-            ->get(route('kpi.export.csv', ['code' => 'KPI01', 'year' => 2568, 'month' => 99]))
-            ->assertOk();
-    }
-
     // ---- No server fingerprinting ----
 
     public function test_x_powered_by_header_absent(): void

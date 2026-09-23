@@ -49,42 +49,13 @@ class RduQueryService
 
     /**
      * Case-level detail rows across all 3 months of a fiscal quarter, combined — not capped
-     * (each month is already fetched/cached individually via getDetails(); callers that need a
-     * bounded page for on-screen display should paginate the returned Collection themselves,
-     * e.g. via App\Support\SimplePaginator — exports need the full set, so nothing is dropped here).
+     * (each month is already fetched/cached individually via getDetails()).
      */
     public function getDetailsForQuarter(string $kpiCode, int $year, int $quarter): Collection
     {
         return collect(FiscalDateRange::quarterMonths($quarter))
             ->flatMap(fn (int $m) => $this->getDetails($kpiCode, $year, $m))
             ->values();
-    }
-
-    public function getNumeratorBetween(string $kpiCode, string $startDate, string $endDate): int
-    {
-        return Cache::remember(
-            $this->cacheKeyBetween($kpiCode, $startDate, $endDate, 'num'),
-            self::CACHE_TTL,
-            fn () => $this->dataSource->getNumeratorBetween($kpiCode, $startDate, $endDate)
-        );
-    }
-
-    public function getDenominatorBetween(string $kpiCode, string $startDate, string $endDate): int
-    {
-        return Cache::remember(
-            $this->cacheKeyBetween($kpiCode, $startDate, $endDate, 'den'),
-            self::CACHE_TTL,
-            fn () => $this->dataSource->getDenominatorBetween($kpiCode, $startDate, $endDate)
-        );
-    }
-
-    public function getDetailsBetween(string $kpiCode, string $startDate, string $endDate): Collection
-    {
-        return Cache::remember(
-            $this->cacheKeyBetween($kpiCode, $startDate, $endDate, 'detail'),
-            self::CACHE_TTL,
-            fn () => $this->dataSource->getDetailsBetween($kpiCode, $startDate, $endDate)
-        );
     }
 
     /** Returns percentage (0–100), or null if denominator is 0. */
