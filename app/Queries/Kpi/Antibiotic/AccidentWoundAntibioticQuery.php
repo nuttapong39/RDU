@@ -123,7 +123,8 @@ class AccidentWoundAntibioticQuery implements KpiQueryInterface
             drug_info AS (
                 SELECT o.hn, o.vn,
                        array_to_string(array_agg(DISTINCT concat(d.name, \' \', d.strength, \' \', d.units)), \';\') AS drugitems_name,
-                       array_to_string(array_agg(DISTINCT concat(dd.name, \' (\', dd.licenseno, \')\')), \';\') AS doctor_name
+                       array_to_string(array_agg(DISTINCT concat(dd.name, \' (\', dd.licenseno, \')\')), \';\') AS doctor_name,
+                       SUM(o.sum_price) AS atb_cost
                 FROM opitemrece o
                 INNER JOIN drugitems d ON d.icode = o.icode
                 LEFT OUTER JOIN doctor dd ON dd.code = o.doctor
@@ -131,6 +132,13 @@ class AccidentWoundAntibioticQuery implements KpiQueryInterface
                   AND o.qty > 0
                   AND d.icode IN ('.$this->quotedList(self::ANTIBIOTIC_ICODES).')
                 GROUP BY o.hn, o.vn
+            ),
+            all_drug_info AS (
+                SELECT op.vn, COUNT(DISTINCT op.icode) AS total_drug_items
+                FROM opitemrece op
+                WHERE op.vn IN (SELECT vn FROM vn_list)
+                  AND op.qty > 0
+                GROUP BY op.vn
             )
             SELECT
                 o.hn,
@@ -143,23 +151,34 @@ class AccidentWoundAntibioticQuery implements KpiQueryInterface
                 CASE WHEN length(tt.vn) > 0 THEN 1 ELSE 0 END AS aa,
                 tt.drugitems_name,
                 tt.doctor_name,
+                tt.atb_cost,
+                COALESCE(adi.total_drug_items, 0) AS total_drug_items,
                 CASE WHEN attdoc.code IS NOT NULL THEN concat(attdoc.name, \' (\', attdoc.licenseno, \')\') ELSE NULL END AS attending_doctor,
-                attdoc.code AS attending_doctor_code
+                attdoc.code AS attending_doctor_code,
+                pt.name AS coverage,
+                sp.name AS department,
+                kd.department AS room
             FROM ovst o
             LEFT OUTER JOIN patient p ON p.hn = o.hn
             LEFT OUTER JOIN ovstdiag od ON od.vn = o.vn
             LEFT OUTER JOIN drug_info tt ON tt.vn = o.vn
+            LEFT OUTER JOIN all_drug_info adi ON adi.vn = o.vn
             LEFT OUTER JOIN doctor attdoc ON attdoc.code = o.doctor AND attdoc.council_code = \'01\' AND attdoc.active = \'Y\'
             LEFT JOIN (SELECT vn, string_agg(cc, \', \') AS cc1 FROM opdscreen_cc_list GROUP BY vn) c ON o.vn = c.vn
             LEFT JOIN (SELECT vn, string_agg(hpi_text, \', \') AS hpi1 FROM patient_history_hpi GROUP BY vn) h ON o.vn = h.vn
+            LEFT OUTER JOIN pttype pt ON pt.pttype = o.pttype
+            LEFT OUTER JOIN spclty sp ON sp.spclty = o.spclty
+            LEFT OUTER JOIN kskdepartment kd ON kd.depcode = o.main_dep
             WHERE o.vn IN (SELECT vn FROM vn_list)
               AND (('.$this->injuryTypeCondition('od.icd10').') OR ('.$this->externalCauseCondition('od.icd10').'))
             GROUP BY
                 o.hn, o.vn, o.vstdate,
-                tt.vn, tt.drugitems_name, tt.doctor_name,
+                tt.vn, tt.drugitems_name, tt.doctor_name, tt.atb_cost,
+                adi.total_drug_items,
                 p.pname, p.fname, p.lname,
                 c.cc1, h.hpi1,
-                attdoc.code, attdoc.name, attdoc.licenseno
+                attdoc.code, attdoc.name, attdoc.licenseno,
+                pt.name, sp.name, kd.department
             ORDER BY aa DESC, o.vstdate, o.hn, o.vn',
             [$startDate, $endDate]
         );
@@ -173,9 +192,14 @@ class AccidentWoundAntibioticQuery implements KpiQueryInterface
             'CC'               => $row->cc,
             'HPI'              => $row->hpi,
             'drugitems_name'   => $row->drugitems_name,
+            'atb_cost'         => (float) $row->atb_cost,
+            'total_drug_items' => (int) $row->total_drug_items,
             'doctor'           => $row->doctor_name,
             'attending_doctor' => $row->attending_doctor,
             'attending_doctor_code' => $row->attending_doctor_code,
+            'coverage'         => $row->coverage,
+            'department'       => $row->department,
+            'room'             => $row->room,
         ]);
     }
 

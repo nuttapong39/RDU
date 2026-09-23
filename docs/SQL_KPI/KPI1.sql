@@ -1,3 +1,9 @@
+-- atb_cost ใช้ opitemrece.sum_price (ราคาจริงตอนจ่ายยา ไม่ใช่ drugitems.unitprice ซึ่งเป็นแค่ราคา
+-- แคตตาล็อกปัจจุบัน ใช้ย้อนหลังไม่แม่นยำ) — total_drug_items นับยา "ทุกชนิด" ต่อ visit ไม่กรองด้วย
+-- icode_list เลย (คนละตัวกับ drug_info ที่กรองเฉพาะ ATB)
+-- coverage = pttype.name (สิทธิ์การรักษา), department = spclty.name (แผนก) — join ตรงจาก ovst.pttype/
+-- ovst.spclty ทั้งคู่ — room = kskdepartment.department (ห้องตรวจ) join จาก ovst.main_dep **ไม่ใช่**
+-- cur_dep (เป็น pointer คิวสด กลายเป็น "999 กลับบ้าน" เสมอสำหรับ visit ที่จบแล้ว)
 -- แก้ช่วงวันที่ตรงนี้ก่อนรัน
 WITH date_range AS (
     SELECT DATE '2026-08-01' AS ds1,
@@ -75,7 +81,8 @@ vn_list AS (
 drug_info AS (
     SELECT o.hn, o.vn,
            array_to_string(array_agg(DISTINCT concat(d.name,' ',d.strength,' ',d.units)), ';') AS drugitems_name,
-           array_to_string(array_agg(DISTINCT concat(dd.name,' (',dd.licenseno,') ')), ';') AS doctor_name
+           array_to_string(array_agg(DISTINCT concat(dd.name,' (',dd.licenseno,') ')), ';') AS doctor_name,
+           SUM(o.sum_price) AS atb_cost
     FROM opitemrece o
     INNER JOIN drugitems d ON d.icode = o.icode
     LEFT OUTER JOIN doctor dd ON dd.code = o.doctor
@@ -83,6 +90,15 @@ drug_info AS (
       AND o.qty > 0
       AND o.icode IN (SELECT icode FROM icode_list)
     GROUP BY o.hn, o.vn
+),
+
+-- จำนวนยา "ทุกชนิด" ต่อ VN (ไม่กรอง icode_list) — สำหรับ "ยาเฉลี่ยต่อ VISIT ทุกชนิดรวมกัน"
+all_drug_info AS (
+    SELECT op.vn, COUNT(DISTINCT op.icode) AS total_drug_items
+    FROM opitemrece op
+    WHERE op.vn IN (SELECT vn FROM vn_list)
+      AND op.qty > 0
+    GROUP BY op.vn
 )
 
 SELECT
@@ -96,20 +112,31 @@ SELECT
     h.hpi1,
     CASE WHEN length(tt.vn) > 0 THEN 1 ELSE 0 END AS aa,
     tt.drugitems_name,
-    tt.doctor_name
+    tt.doctor_name,
+    tt.atb_cost,
+    COALESCE(adi.total_drug_items, 0) AS total_drug_items,
+    pt.name AS coverage,
+    sp.name AS department,
+    kd.department AS room
 FROM ovst o
 LEFT OUTER JOIN patient p ON p.hn = o.hn
 LEFT OUTER JOIN ovstdiag od ON od.vn = o.vn
 LEFT OUTER JOIN drug_info tt ON tt.vn = o.vn
+LEFT OUTER JOIN all_drug_info adi ON adi.vn = o.vn
 LEFT JOIN (SELECT vn, string_agg(cc, ', ') AS cc1 FROM opdscreen_cc_list GROUP BY vn) c ON o.vn = c.vn
 LEFT JOIN (SELECT vn, string_agg(hpi_text, ', ') AS hpi1 FROM patient_history_hpi GROUP BY vn) h ON o.vn = h.vn
+LEFT OUTER JOIN pttype pt ON pt.pttype = o.pttype
+LEFT OUTER JOIN spclty sp ON sp.spclty = o.spclty
+LEFT OUTER JOIN kskdepartment kd ON kd.depcode = o.main_dep
 CROSS JOIN date_range dr
 WHERE o.vstdate BETWEEN dr.ds1 AND dr.ds2
   AND o.vn IN (SELECT vn FROM vn_list)
   AND (od.icd10 IN (SELECT code FROM injury_code_list) OR od.icd10 IN (SELECT code FROM external_cause_code_list))
 GROUP BY
     o.hn, o.vn, o.vstdate,
-    tt.vn, tt.drugitems_name, tt.doctor_name,
+    tt.vn, tt.drugitems_name, tt.doctor_name, tt.atb_cost,
+    adi.total_drug_items,
     p.pname, p.fname,
-    c.cc1, h.hpi1
+    c.cc1, h.hpi1,
+    pt.name, sp.name, kd.department
 ORDER BY aa DESC, o.vstdate, o.hn, o.vn;

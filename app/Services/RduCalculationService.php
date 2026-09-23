@@ -242,10 +242,13 @@ class RduCalculationService
      */
     public function fiscalYearMonths(int $fyYear): array
     {
-        $prev = $fyYear - 1;
+        // FiscalDateRange::toGregorian() already maps a fiscal year's Oct-Dec months to the previous
+        // AD calendar year internally — every (year, month) pair here uses the SAME fiscal year label
+        // $fyYear regardless of month. Subtracting 1 here too (as this used to do) double-applies that
+        // shift, pulling Oct/Nov/Dec from a full fiscal year earlier than intended.
         $months = [];
         foreach ([10, 11, 12] as $m) {
-            $months[] = ['year' => $prev, 'month' => $m];
+            $months[] = ['year' => $fyYear, 'month' => $m];
         }
         foreach (range(1, 9) as $m) {
             $months[] = ['year' => $fyYear, 'month' => $m];

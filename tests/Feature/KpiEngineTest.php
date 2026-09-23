@@ -145,15 +145,17 @@ class KpiEngineTest extends TestCase
         $this->assertCount(12, $trend);
     }
 
-    public function test_get_trend_starts_with_october_of_previous_year(): void
+    public function test_get_trend_starts_with_october(): void
     {
         $svc   = app(RduCalculationService::class);
         $ind   = RduIndicator::first();
         $trend = $svc->getTrend($ind, 2568);
 
+        // 'year' stays the fiscal year label (2568) even for October — FiscalDateRange::toGregorian()
+        // maps it to the previous AD calendar year internally, so this field must NOT be pre-shifted.
         $first = $trend[0];
         $this->assertSame(10, $first['month']);
-        $this->assertSame(2567, $first['year']);
+        $this->assertSame(2568, $first['year']);
     }
 
     public function test_get_trend_ends_with_september_of_fy_year(): void
@@ -211,9 +213,9 @@ class KpiEngineTest extends TestCase
         $months = $svc->fiscalYearMonths(2568);
 
         $this->assertCount(12, $months);
-        $this->assertSame(['year' => 2567, 'month' => 10], $months[0]);
-        $this->assertSame(['year' => 2567, 'month' => 11], $months[1]);
-        $this->assertSame(['year' => 2567, 'month' => 12], $months[2]);
+        $this->assertSame(['year' => 2568, 'month' => 10], $months[0]);
+        $this->assertSame(['year' => 2568, 'month' => 11], $months[1]);
+        $this->assertSame(['year' => 2568, 'month' => 12], $months[2]);
         $this->assertSame(['year' => 2568, 'month' => 1],  $months[3]);
         $this->assertSame(['year' => 2568, 'month' => 9],  $months[11]);
     }

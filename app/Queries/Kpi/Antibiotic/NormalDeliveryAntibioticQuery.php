@@ -110,12 +110,20 @@ class NormalDeliveryAntibioticQuery implements KpiQueryInterface
             ),
             drug_info AS (
                 SELECT op.an,
-                       array_to_string(array_agg(DISTINCT concat(d.name, \' \', d.strength, \' \', d.units)), \';\') AS drugitems_name
+                       array_to_string(array_agg(DISTINCT concat(d.name, \' \', d.strength, \' \', d.units)), \';\') AS drugitems_name,
+                       SUM(op.sum_price) AS atb_cost
                 FROM opitemrece op
                 INNER JOIN drugitems d ON d.icode = op.icode
                 WHERE op.an IN (SELECT an FROM an_list)
                   AND op.qty > 0
                   AND d.icode IN ('.$this->quotedList(self::ANTIBIOTIC_ICODES).')
+                GROUP BY op.an
+            ),
+            all_drug_info AS (
+                SELECT op.an, COUNT(DISTINCT op.icode) AS total_drug_items
+                FROM opitemrece op
+                WHERE op.an IN (SELECT an FROM an_list)
+                  AND op.qty > 0
                 GROUP BY op.an
             )
             SELECT
@@ -125,27 +133,41 @@ class NormalDeliveryAntibioticQuery implements KpiQueryInterface
                 vn.pdx AS dx,
                 p.pname, p.fname, p.lname,
                 di.drugitems_name,
+                di.atb_cost,
+                COALESCE(adi.total_drug_items, 0) AS total_drug_items,
                 CASE WHEN dd.code IS NOT NULL THEN concat(dd.name, \' (\', dd.licenseno, \')\') ELSE NULL END AS doctor,
-                dd.code AS doctor_code
+                dd.code AS doctor_code,
+                pt.name AS coverage,
+                sp.name AS department,
+                w.name AS room
             FROM ipt o
             INNER JOIN an_stat vn ON vn.an = o.an
             LEFT OUTER JOIN patient p ON p.hn = o.hn
             LEFT OUTER JOIN drug_info di ON di.an = o.an
+            LEFT OUTER JOIN all_drug_info adi ON adi.an = o.an
             LEFT OUTER JOIN doctor dd ON dd.code = o.admdoctor AND dd.council_code = \'01\' AND dd.active = \'Y\'
+            LEFT OUTER JOIN pttype pt ON pt.pttype = o.pttype
+            LEFT OUTER JOIN spclty sp ON sp.spclty = o.spclty
+            LEFT OUTER JOIN ward w ON w.ward = o.ward
             WHERE o.an IN (SELECT an FROM an_list)
             ORDER BY o.dchdate, o.hn, o.an',
             [$startDate, $endDate]
         );
 
         return collect($rows)->map(fn ($row) => [
-            'HN'             => $row->hn,
-            'AN'             => $row->an,
-            'dchdate'        => $row->dchdate,
-            'dx'             => $row->dx,
-            'fullname'       => $this->maskThaiName($row->pname, $row->fname, $row->lname),
-            'drugitems_name' => $row->drugitems_name,
-            'doctor'         => $row->doctor,
-            'doctor_code'    => $row->doctor_code,
+            'HN'               => $row->hn,
+            'AN'               => $row->an,
+            'dchdate'          => $row->dchdate,
+            'dx'               => $row->dx,
+            'fullname'         => $this->maskThaiName($row->pname, $row->fname, $row->lname),
+            'drugitems_name'   => $row->drugitems_name,
+            'atb_cost'         => (float) $row->atb_cost,
+            'total_drug_items' => (int) $row->total_drug_items,
+            'doctor'           => $row->doctor,
+            'doctor_code'      => $row->doctor_code,
+            'coverage'         => $row->coverage,
+            'department'       => $row->department,
+            'room'             => $row->room,
         ]);
     }
 
