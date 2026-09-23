@@ -45,7 +45,7 @@
 {{-- ============ HEADER ============ --}}
 <div class="mb-5">
     <a href="{{ route('dashboard') }}"
-       class="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 mb-3 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
+       class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 mb-3 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded">
         <span class="msi text-[1rem]">arrow_back</span>
         กลับภาพรวม
     </a>
@@ -88,11 +88,11 @@
             $qIsActive = $quarter === $qb['quarter'];
         @endphp
         <a href="{{ route('dashboard.kpi', ['code' => $ind->code, 'year' => $year, 'quarter' => $qb['quarter']]) }}"
-           class="group bg-white rounded-xl border p-4 shadow-sm cursor-pointer relative overflow-hidden
-                  hover:shadow-xl hover:shadow-blue-100 hover:-translate-y-1 hover:scale-[1.02]
-                  hover:border-blue-400 hover:ring-2 hover:ring-blue-100 hover:bg-blue-50
+           class="group bg-white rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] cursor-pointer relative overflow-hidden
+                  hover:shadow-xl hover:shadow-indigo-100 hover:-translate-y-1 hover:scale-[1.02]
+                  hover:ring-2 hover:ring-indigo-200 hover:bg-indigo-50/40
                   transition-all duration-200 ease-out
-                  {{ $qIsActive ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-200' }}">
+                  {{ $qIsActive ? 'ring-2 ring-indigo-200' : '' }}">
 
             {{-- Decorative watermark icon — same monochrome/low-opacity pattern as the main KPI cards, brightens on hover --}}
             <span class="msi absolute pointer-events-none select-none text-slate-500 opacity-[0.02] transition-opacity duration-200 group-hover:opacity-[0.08]"
@@ -120,16 +120,16 @@
 
 {{-- ============ FILTER TOOLBAR ============ --}}
 <form method="GET" action="{{ route('dashboard.kpi', $ind->code) }}"
-      class="bg-white rounded-xl border border-slate-200 px-4 py-3 mb-5 shadow-sm">
+      class="bg-white rounded-2xl px-4 py-3 mb-10 shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)]">
     <input type="hidden" name="quarter" id="quarterInput" value="{{ $quarter ?? '' }}">
 
     <div class="flex flex-wrap items-center gap-3">
-        <span class="msi text-blue-600">filter_list</span>
+        <span class="msi text-indigo-600">filter_list</span>
 
         <div class="flex items-center gap-2">
             <label for="filter-year" class="text-xs text-slate-500 font-medium whitespace-nowrap">ปีงบประมาณ</label>
             <select id="filter-year" name="year"
-                    class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer bg-white">
+                    class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer bg-white">
                 @foreach($yearOptions as $y)
                     <option value="{{ $y }}" @selected($y === $year)>{{ $y }}</option>
                 @endforeach
@@ -141,14 +141,14 @@
             <button type="button"
                     onclick="document.getElementById('quarterInput').value=''; this.form.submit();"
                     class="px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer whitespace-nowrap
-                           {{ !$quarter && $month === 0 ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50' }}">
+                           {{ !$quarter && $month === 0 ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50' }}">
                 ทั้งปี
             </button>
             @foreach([1, 2, 3, 4] as $q)
                 <button type="button"
                         onclick="document.getElementById('quarterInput').value='{{ $q }}'; this.form.submit();"
                         class="px-3 py-1.5 text-sm font-medium border-l border-slate-300 transition-colors cursor-pointer whitespace-nowrap
-                               {{ $quarter === $q ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50' }}">
+                               {{ $quarter === $q ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50' }}">
                     ไตรมาส {{ $q }}
                 </button>
             @endforeach
@@ -158,7 +158,7 @@
             <label for="filter-month" class="text-xs text-slate-500 font-medium whitespace-nowrap">หรือเลือกเดือน</label>
             <select id="filter-month" name="month"
                     onchange="document.getElementById('quarterInput').value=''"
-                    class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer bg-white">
+                    class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer bg-white">
                 <option value="0" @selected(!$quarter && $month === 0)>ทั้งปี</option>
                 @foreach($monthOptions as $num => $name)
                     <option value="{{ $num }}" @selected(!$quarter && $num === $month)>{{ $name }}</option>
@@ -167,9 +167,9 @@
         </div>
 
         <button type="submit"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
                        text-white rounded-lg text-sm font-medium transition-colors cursor-pointer
-                       focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1">
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1">
             <span class="msi text-[1rem]">refresh</span>
             รีเฟรช
         </button>
@@ -181,7 +181,7 @@
     </div>
 
     @if($quarter)
-        <div class="mt-2.5 inline-flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg">
+        <div class="mt-2.5 inline-flex items-center gap-1.5 text-xs text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">
             <span class="msi text-[.9rem]">date_range</span>
             กำลังดู {{ \App\Support\FiscalDateRange::quarterLabel($quarter) }} · ปีงบ {{ $year }}
         </div>
@@ -192,7 +192,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
 
     {{-- Metric Card --}}
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
         <div class="text-xs text-slate-500 mb-1 uppercase tracking-wider font-semibold">ผลลัพธ์</div>
         <div class="flex items-baseline gap-1 mb-3">
             <span class="text-5xl font-bold tabular-nums {{ $pctColor }}">
@@ -208,15 +208,16 @@
             {{ $statusMeta['label'] }}
         </span>
 
-        {{-- Progress bar --}}
+        {{-- Progress bar with a dashed tick marking the exact target position --}}
         @if($pct !== null)
-            <div class="w-full bg-slate-100 rounded-full h-2 mt-4 mb-1 overflow-hidden">
+            <div class="relative w-full bg-slate-100 rounded-full h-2 mt-4 mb-1 overflow-hidden">
                 <div class="h-2 rounded-full {{ $barColor }} animate-progress"
                      style="width: {{ min($pct, 100) }}%"
                      role="progressbar"
                      aria-valuenow="{{ $pct }}"
                      aria-valuemin="0"
                      aria-valuemax="100"></div>
+                <div class="absolute inset-y-0 border-l-2 border-dashed border-slate-500/70" style="left: {{ min(100, $ind->target_value) }}%;"></div>
             </div>
             <div class="text-[.7rem] text-slate-400 tabular-nums">0% ── เป้า {{ $ind->targetLabel() }} ── 100%</div>
         @endif
@@ -258,15 +259,15 @@
     </div>
 
     {{-- Trend Chart --}}
-    <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="px-5 py-3 border-b border-slate-200 flex items-center justify-between gap-2">
+    <div class="lg:col-span-2 bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] overflow-hidden">
+        <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between gap-2">
             <div class="flex items-center gap-2 font-semibold text-sm text-slate-800">
-                <span class="msi text-blue-600">trending_up</span>
+                <span class="msi text-indigo-600">trending_up</span>
                 แนวโน้มรายเดือน (ปีงบประมาณ {{ $year }})
             </div>
             @if(!empty($activeMonths))
-                <span class="inline-flex items-center gap-1.5 text-xs text-blue-700">
-                    <span class="inline-block w-2.5 h-2.5 rounded-full border-2 border-[#2563eb] bg-white"></span>
+                <span class="inline-flex items-center gap-1.5 text-xs text-indigo-700">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full border-2 border-indigo-600 bg-white"></span>
                     ช่วงที่กำลังดูอยู่
                 </span>
             @endif
@@ -281,6 +282,90 @@
     </div>
 </div>
 
+{{-- ============ CUMULATIVE YTD TREND — shown for every KPI, stub or real ============ --}}
+<div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] overflow-hidden mb-10">
+    <div class="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+        <span class="msi text-indigo-600">show_chart</span>
+        <span class="font-semibold text-sm text-slate-800">แนวโน้มอัตราเฉลี่ยสะสม (ปีงบประมาณ {{ $year }})</span>
+    </div>
+    <div class="p-4">
+        <div style="height: 220px;">
+            <canvas id="cumulativeTrendChart" aria-label="กราฟอัตราเฉลี่ยสะสมรายปี" role="img"></canvas>
+        </div>
+    </div>
+</div>
+
+{{-- ============ VISIT PROPORTION DONUT (ได้ยา/ไม่ได้ยา) — shown for every KPI, stub or real ============ --}}
+@php
+    // KPI03's numerator counts visits that did NOT get an antibiotic (target_direction='higher' — the
+    // opposite of every other KPI here) — swap which raw count maps to "ได้ยา"/"ไม่ได้ยา" so the donut's
+    // labels stay truthful instead of silently reusing the other KPIs' numerator-is-received assumption.
+    $donutReceived = $item['numerator'] !== null && $item['denominator'] !== null
+        ? ($ind->target_direction === 'higher' ? $item['denominator'] - $item['numerator'] : $item['numerator'])
+        : null;
+    $donutNotReceived = $item['numerator'] !== null && $item['denominator'] !== null
+        ? $item['denominator'] - $donutReceived
+        : null;
+@endphp
+<div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7 mb-10">
+    <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
+        <span class="msi text-indigo-600">donut_small</span>
+        สัดส่วน VISIT
+    </div>
+    @if($donutReceived !== null && $item['denominator'] > 0)
+        <div class="flex flex-col sm:flex-row items-center gap-6">
+            <div class="relative mx-auto flex-shrink-0" style="height: 180px; width: 180px;">
+                <canvas id="visitProportionDonut" aria-label="สัดส่วน visit ที่ได้และไม่ได้รับยาปฏิชีวนะ" role="img"></canvas>
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span class="text-xl font-bold text-slate-800 tabular-nums">{{ number_format($item['denominator']) }}</span>
+                    <span class="text-[.65rem] text-slate-400">visit ทั้งหมด</span>
+                </div>
+            </div>
+            <div id="visitProportionLegend" class="flex-1 w-full flex flex-col gap-2"></div>
+        </div>
+    @else
+        <div class="status-empty py-8">
+            <span class="msi">donut_small</span>
+            <p class="font-medium text-sm">ยังไม่มีข้อมูลเพียงพอสำหรับช่วงเวลานี้</p>
+        </div>
+    @endif
+</div>
+
+{{-- ============ VISIT STAT CARDS — shown for every KPI, stub or real ============ --}}
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
+        <div class="text-xs text-slate-500 mb-1">VISIT ทั้งหมด</div>
+        <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($visitStats['total_visits']) }}</div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
+        <div class="text-xs text-slate-500 mb-1">VISIT ที่ได้ ATB</div>
+        <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($visitStats['atb_visits']) }}</div>
+        @if($visitStats['pct'] !== null)
+            <div class="text-[.7rem] text-slate-400">{{ $visitStats['pct'] }}% ของทั้งหมด</div>
+        @endif
+    </div>
+    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
+        <div class="text-xs text-slate-500 mb-1">ยาเฉลี่ยต่อ VISIT</div>
+        <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ $visitStats['avg_drug_items'] ?? 'N/A' }}</div>
+        <div class="text-[.7rem] text-slate-400">ทุกชนิดรวมกัน</div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
+        <div class="text-xs text-slate-500 mb-1">มูลค่า ATB (บาท)</div>
+        <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($visitStats['atb_cost'], 0) }}</div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
+        <div class="text-xs text-slate-500 mb-1">ส่วนต่างจากเป้า</div>
+        @if($visitStats['gap_from_target'] !== null)
+            <div class="text-2xl font-bold tabular-nums {{ $visitStats['gap_is_good'] ? 'text-emerald-600' : 'text-red-600' }}">
+                {{ $visitStats['gap_from_target'] > 0 ? '+' : '' }}{{ $visitStats['gap_from_target'] }}%
+            </div>
+            <div class="text-[.7rem] text-slate-400">เป้า {{ $ind->targetLabel() }}</div>
+        @else
+            <div class="text-2xl font-bold text-slate-400">N/A</div>
+        @endif
+    </div>
+</div>
+
 {{-- ============ DEEP-DIVE ANALYSIS (KPI01, KPI03, KPI04, KPI05 — any KPI with real detail data) ============ --}}
 @if($hasDeepDive)
 <div class="section-head">
@@ -291,10 +376,10 @@
 {{-- Doctor antibiotic rate — table, sorted worst-first by rate. Doctor identity is masked to a
      stable alias (see docs/adr/0002-doctor-identity-masked-in-web-ui-only.md); click/hover the
      alias to reveal the real name. Exports are unaffected — always real names there. --}}
-<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-5">
+<div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7 mb-10">
     <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
         <div class="flex items-center gap-2 font-semibold text-sm text-slate-800">
-            <span class="msi text-purple-600">medical_services</span>
+            <span class="msi text-indigo-600">medical_services</span>
             อัตราการสั่งยาปฏิชีวนะรายแพทย์ผู้ตรวจ
         </div>
         @if(count($doctorRate) > 0)
@@ -397,49 +482,17 @@
     @endif
 </div>
 
-{{-- ICD-10 ranking + drug usage, paired side by side — deliberately distinct header/icon/palette
+{{-- ICD-10 ranking + drug usage, paired side by side — deliberately distinct header/icon
      from the quarterly donut further down so the two never get confused --}}
-@php
-    $icd10Colors = ['#e11d48','#f97316','#eab308','#84cc16','#10b981','#06b6d4','#3b82f6','#8b5cf6','#d946ef','#f43f5e','#94a3b8'];
-@endphp
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
-            <span class="msi text-rose-600">local_hospital</span>
+            <span class="msi text-indigo-600">local_hospital</span>
             การวินิจฉัย ICD-10 ที่พบบ่อย 10 อันดับแรก
         </div>
         @if(count($icd10Ranking['items']) > 0)
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div class="relative mx-auto" style="height: 220px; max-width: 220px;">
-                    <canvas id="icd10DonutChart" aria-label="สัดส่วนรหัสวินิจฉัย ICD-10" role="img"></canvas>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span class="text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($icd10Ranking['total']) }}</span>
-                        <span class="text-[.65rem] text-slate-400">Dx ทั้งหมด</span>
-                    </div>
-                </div>
-                <div class="flex flex-col gap-2 text-sm">
-                    @foreach($icd10Ranking['items'] as $i => $row)
-                        <div class="flex items-start justify-between gap-2">
-                            <span class="flex items-start gap-2 min-w-0">
-                                <span class="inline-block w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0" style="background: {{ $icd10Colors[$i] ?? '#94a3b8' }}"></span>
-                                <span class="min-w-0">
-                                    @if($row['code'])
-                                        <span class="font-semibold text-slate-700">{{ $row['code'] }}</span>
-                                    @endif
-                                    @if($row['tname'] || $row['name'])
-                                        <span class="text-slate-500 text-xs block truncate" title="{{ $row['name'] }}">
-                                            {{ $row['tname'] ?: $row['name'] }}
-                                        </span>
-                                    @endif
-                                </span>
-                            </span>
-                            <span class="flex items-center gap-2 tabular-nums flex-shrink-0">
-                                <span class="text-slate-400 text-xs">{{ number_format($row['count']) }}</span>
-                                <span class="font-semibold text-slate-700 w-12 text-right text-xs">{{ $row['percent'] }}%</span>
-                            </span>
-                        </div>
-                    @endforeach
-                </div>
+            <div style="height: {{ max(220, count($icd10Ranking['items']) * 32) }}px;">
+                <canvas id="icd10DonutChart" aria-label="การวินิจฉัย ICD-10 ที่พบบ่อย 10 อันดับแรก" role="img"></canvas>
             </div>
         @else
             <div class="status-empty py-8">
@@ -449,9 +502,9 @@
         @endif
     </div>
 
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
-            <span class="msi text-blue-600">bar_chart</span>
+            <span class="msi text-indigo-600">bar_chart</span>
             สัดส่วนยาปฏิชีวนะที่สั่งจ่าย
         </div>
         @if(count($drugUsage) > 0)
@@ -467,6 +520,98 @@
     </div>
 </div>
 
+{{-- ============ COVERAGE-TYPE BREAKDOWN (สิทธิ์การรักษา) ============ --}}
+<div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7 mb-10">
+    <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
+        <span class="msi text-indigo-600">badge</span>
+        สิทธิ์การรักษา
+    </div>
+    @if(count($coverageBreakdown) > 0)
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-left text-xs text-slate-500 border-b border-slate-200">
+                        <th class="py-2 pr-3 font-medium">สิทธิ์การรักษา</th>
+                        <th class="py-2 pr-3 font-medium text-right">VISIT</th>
+                        <th class="py-2 pr-3 font-medium text-right">ได้ ATB</th>
+                        <th class="py-2 font-medium text-right">% ได้ ATB</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($coverageBreakdown as $row)
+                        <tr class="border-b border-slate-100 last:border-0">
+                            <td class="py-2 pr-3 text-slate-700">{{ $row['coverage'] }}</td>
+                            <td class="py-2 pr-3 text-right tabular-nums text-slate-500">{{ number_format($row['total']) }}</td>
+                            <td class="py-2 pr-3 text-right tabular-nums text-slate-500">{{ number_format($row['atb']) }}</td>
+                            <td class="py-2 text-right tabular-nums font-semibold text-slate-700">{{ $row['rate'] }}%</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="status-empty py-8">
+            <span class="msi">badge</span>
+            <p class="font-medium text-sm">ยังไม่มีข้อมูลในช่วงเวลานี้</p>
+        </div>
+    @endif
+</div>
+
+{{-- ============ DEPARTMENT + ROOM/WARD BREAKDOWN (ATB-positive visits only) ============ --}}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
+    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
+        <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
+            <span class="msi text-indigo-600">local_hospital</span>
+            แผนก (เฉพาะ VISIT ที่ได้ ATB)
+        </div>
+        @if(count($departmentBreakdown) > 0)
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <tbody>
+                        @foreach($departmentBreakdown as $row)
+                            <tr class="border-b border-slate-100 last:border-0">
+                                <td class="py-1.5 pr-3 text-slate-700">{{ $row['label'] }}</td>
+                                <td class="py-1.5 text-right tabular-nums font-semibold text-slate-700">{{ number_format($row['count']) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="status-empty py-8">
+                <span class="msi">local_hospital</span>
+                <p class="font-medium text-sm">ยังไม่มีข้อมูลในช่วงเวลานี้</p>
+            </div>
+        @endif
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
+        <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
+            <span class="msi text-indigo-600">meeting_room</span>
+            {{ $ind->code === 'KPI03' ? 'หอผู้ป่วย (เฉพาะ VISIT ที่ได้ ATB)' : 'ห้องตรวจ (เฉพาะ VISIT ที่ได้ ATB)' }}
+        </div>
+        @if(count($roomBreakdown) > 0)
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <tbody>
+                        @foreach($roomBreakdown as $row)
+                            <tr class="border-b border-slate-100 last:border-0">
+                                <td class="py-1.5 pr-3 text-slate-700">{{ $row['label'] }}</td>
+                                <td class="py-1.5 text-right tabular-nums font-semibold text-slate-700">{{ number_format($row['count']) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="status-empty py-8">
+                <span class="msi">meeting_room</span>
+                <p class="font-medium text-sm">ยังไม่มีข้อมูลในช่วงเวลานี้</p>
+            </div>
+        @endif
+    </div>
+</div>
+
 <div class="section-head">
     <span class="msi">calendar_view_month</span>
     สรุปรายไตรมาส
@@ -476,7 +621,7 @@
 {{-- ============ QUARTERLY PIE CHART + DESCRIPTION CARD ============ --}}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
     {{-- Pie chart: share of antibiotic-positive cases (numerator) across the 4 quarters --}}
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">calendar_view_month</span>
             สัดส่วนเคส ATB แยกรายไตรมาส (Q1–Q4 ปีงบ {{ $year }})
@@ -501,14 +646,14 @@
 
     {{-- Description card, compacted to fit the narrower column --}}
     @if($ind->numerator_desc || $ind->denominator_desc)
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
             <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
                 <span class="msi text-indigo-600">description</span>
                 คำนิยามตัวชี้วัด
             </div>
             <div class="space-y-3 text-sm">
                 @if($ind->numerator_desc)
-                    <div class="p-3 bg-blue-50 rounded-lg text-blue-800">
+                    <div class="p-3 bg-indigo-50 rounded-lg text-indigo-800">
                         <div class="font-semibold text-xs uppercase tracking-wider mb-1">ตัวเศษ (Numerator)</div>
                         <p class="text-sm line-clamp-2">{{ $ind->numerator_desc }}</p>
                     </div>
@@ -521,248 +666,6 @@
                 @endif
             </div>
         </div>
-    @endif
-</div>
-
-{{-- ============ EXPORT ============ --}}
-@php
-    // Pre-fill the export modal's date range with whatever period is currently on screen,
-    // so most of the time the user just confirms the format without retyping dates.
-    if ($quarter) {
-        [$prefillFrom, $prefillTo] = \App\Support\FiscalDateRange::quarterToGregorian($year, $quarter);
-    } else {
-        [$prefillFrom, $prefillTo] = \App\Support\FiscalDateRange::toGregorian($year, $month);
-    }
-@endphp
-<div class="section-head">
-    <span class="msi">download</span>
-    ดาวน์โหลดรายงาน
-</div>
-
-<button type="button" onclick="document.getElementById('dateRangeModal').classList.remove('hidden')"
-        class="w-full flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-colors cursor-pointer text-left mb-6
-               focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
-    <div class="sc-icon"><span class="msi">download</span></div>
-    <div>
-        <div class="text-sm font-bold text-slate-800">Export รายงาน...</div>
-        <div class="text-xs text-slate-500 mt-0.5">เลือกช่วงวันที่และฟอร์แมต (Excel / CSV / PDF) — ครบทุกรายการเสมอ</div>
-    </div>
-</button>
-
-{{-- ============ EXPORT MODAL ============ --}}
-<div id="dateRangeModal" class="{{ $errors->has('date_from') || $errors->has('date_to') ? '' : 'hidden' }} fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-5">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                <span class="msi text-blue-600">download</span>
-                Export รายงาน
-            </h3>
-            <button type="button" onclick="document.getElementById('dateRangeModal').classList.add('hidden')"
-                    class="text-slate-400 hover:text-slate-600 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">
-                <span class="msi">close</span>
-            </button>
-        </div>
-
-        <form method="GET">
-            <div class="grid grid-cols-2 gap-3 mb-2">
-                <div>
-                    <label for="dateFromInput" class="text-xs text-slate-500 font-medium block mb-1">วันที่เริ่มต้น</label>
-                    <input type="date" name="date_from" id="dateFromInput" required value="{{ old('date_from', $prefillFrom) }}"
-                           class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-                <div>
-                    <label for="dateToInput" class="text-xs text-slate-500 font-medium block mb-1">วันที่สิ้นสุด</label>
-                    <input type="date" name="date_to" id="dateToInput" required value="{{ old('date_to', $prefillTo) }}"
-                           class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-            </div>
-            <p class="text-xs text-slate-400 mb-4">ค่าเริ่มต้นคือช่วงที่กำลังดูอยู่ — แก้ไขได้ (สูงสุด 1 ปีงบประมาณ) แล้วเลือกฟอร์แมตด้านล่างเพื่อดาวน์โหลด</p>
-
-            <div class="grid grid-cols-3 gap-2">
-                <button type="submit" formaction="{{ route('kpi.export.excel', $ind->code) }}"
-                        class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium cursor-pointer transition-colors">
-                    Excel
-                </button>
-                <button type="submit" formaction="{{ route('kpi.export.csv', $ind->code) }}"
-                        class="px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-medium cursor-pointer transition-colors">
-                    CSV
-                </button>
-                <button type="submit" formaction="{{ route('kpi.export.pdf', $ind->code) }}"
-                        class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium cursor-pointer transition-colors">
-                    PDF
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-{{-- ============ DETAIL TABLE ============ --}}
-@php
-    $baseParams = ['code' => $ind->code, 'year' => $year];
-    if ($quarter) { $baseParams['quarter'] = $quarter; } else { $baseParams['month'] = $month; }
-    if ($sortCol) { $baseParams['sort'] = $sortCol; $baseParams['dir'] = $sortDir; }
-
-    $pageParams = $baseParams;
-    if ($search !== '') { $pageParams['q'] = $search; }
-    if ($colDateFrom) { $pageParams['col_date_from'] = $colDateFrom; }
-    if ($colDateTo) { $pageParams['col_date_to'] = $colDateTo; }
-
-    $hasActiveFilter = $search !== '' || $colDateFrom || $colDateTo;
-    $longTextCols = ['CC', 'HPI'];
-@endphp
-<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-    <div class="px-5 py-3 border-b border-slate-200 flex items-center justify-between gap-2 flex-wrap">
-        <div class="flex items-center gap-2 font-semibold text-sm text-slate-800">
-            <span class="msi text-blue-600">table_rows</span>
-            รายการข้อมูลรายกรณี
-        </div>
-        @if($detailsTotal > 0 || $hasActiveFilter)
-            <span class="text-xs text-slate-500">
-                @if($hasActiveFilter)
-                    พบ <b class="text-slate-700 tabular-nums">{{ number_format($detailsTotal) }}</b> จากทั้งหมด {{ number_format($detailsGrandTotal) }} รายการ
-                @else
-                    ทั้งหมด <b class="text-slate-700 tabular-nums">{{ number_format($detailsTotal) }}</b> รายการ
-                @endif
-                @if($detailsLastPage > 1)
-                    · หน้า <b class="text-slate-700 tabular-nums">{{ $detailsPage }}</b> จาก {{ $detailsLastPage }}
-                @endif
-            </span>
-        @endif
-    </div>
-
-    {{-- Search + date-column filter --}}
-    <div class="px-5 py-3 border-b border-slate-200 bg-slate-50/50">
-        <form method="GET" action="{{ route('dashboard.kpi', $ind->code) }}" class="flex flex-wrap items-center gap-2">
-            <input type="hidden" name="year" value="{{ $year }}">
-            @if($quarter)
-                <input type="hidden" name="quarter" value="{{ $quarter }}">
-            @else
-                <input type="hidden" name="month" value="{{ $month }}">
-            @endif
-            @if($sortCol)
-                <input type="hidden" name="sort" value="{{ $sortCol }}">
-                <input type="hidden" name="dir" value="{{ $sortDir }}">
-            @endif
-
-            <div class="relative flex-1 min-w-[200px] max-w-xs">
-                <span class="msi text-[1.1rem] text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
-                <input type="text" name="q" value="{{ $search }}" placeholder="ค้นหา HN, VN, ชื่อ..."
-                       class="w-full border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
-
-            <div class="flex items-center gap-1.5 text-xs text-slate-500 whitespace-nowrap">
-                <span>วันที่บริการ</span>
-                <input type="date" name="col_date_from" value="{{ $colDateFrom }}"
-                       class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                <span>ถึง</span>
-                <input type="date" name="col_date_to" value="{{ $colDateTo }}"
-                       class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
-
-            <button type="submit"
-                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium cursor-pointer transition-colors">
-                <span class="msi text-[1rem]">search</span> ค้นหา
-            </button>
-
-            @if($hasActiveFilter)
-                <a href="{{ route('dashboard.kpi', $baseParams) }}"
-                   class="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-red-600 cursor-pointer transition-colors">
-                    <span class="msi text-[1rem]">close</span> ล้างตัวกรอง
-                </a>
-            @endif
-        </form>
-    </div>
-
-    @if($details->isEmpty())
-        <div class="status-empty">
-            <span class="msi">{{ $hasActiveFilter ? 'search_off' : 'inbox' }}</span>
-            @if($hasActiveFilter)
-                <p class="font-medium">ไม่พบรายการที่ตรงกับตัวกรอง</p>
-                <p class="text-xs text-slate-400">ลองแก้คำค้นหาหรือช่วงวันที่ดู</p>
-            @else
-                <p class="font-medium">ยังไม่มีข้อมูลรายกรณี</p>
-                <p class="text-xs text-slate-400">ข้อมูลจะแสดงเมื่อ HOSxP Query ของตัวชี้วัดนี้พร้อมใช้งาน</p>
-            @endif
-        </div>
-    @else
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 text-slate-600 text-xs">
-                    <tr>
-                        @foreach(array_keys($details->first()) as $col)
-                            <th class="px-3 py-2.5 text-left font-semibold whitespace-nowrap border-b border-slate-200">
-                                <div class="inline-flex items-center gap-0.5">
-                                    <span>{{ $col }}</span>
-                                    <span class="inline-flex flex-col justify-center">
-                                        <a href="{{ route('dashboard.kpi', array_merge($pageParams, ['sort' => $col, 'dir' => 'asc', 'page' => 1])) }}"
-                                           title="เรียง {{ $col }} จากน้อยไปมาก" aria-label="เรียง {{ $col }} จากน้อยไปมาก"
-                                           class="msi text-[1rem] leading-[.6] cursor-pointer transition-colors
-                                                  {{ $sortCol === $col && $sortDir === 'asc' ? 'text-blue-600' : 'text-slate-300 hover:text-slate-500' }}">
-                                            arrow_drop_up
-                                        </a>
-                                        <a href="{{ route('dashboard.kpi', array_merge($pageParams, ['sort' => $col, 'dir' => 'desc', 'page' => 1])) }}"
-                                           title="เรียง {{ $col }} จากมากไปน้อย" aria-label="เรียง {{ $col }} จากมากไปน้อย"
-                                           class="msi text-[1rem] leading-[.6] -mt-1 cursor-pointer transition-colors
-                                                  {{ $sortCol === $col && $sortDir === 'desc' ? 'text-blue-600' : 'text-slate-300 hover:text-slate-500' }}">
-                                            arrow_drop_down
-                                        </a>
-                                    </span>
-                                </div>
-                            </th>
-                        @endforeach
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @foreach($details as $row)
-                        <tr class="hover:bg-blue-100 transition-colors">
-                            @foreach($row as $col => $val)
-                                @if(in_array($col, $longTextCols, true) && mb_strlen((string) $val) > 50)
-                                    <td class="px-3 py-2 text-slate-700 max-w-[220px]">
-                                        <div class="group/tip relative">
-                                            <div class="truncate cursor-help">{{ Str::limit((string) $val, 50) }}</div>
-                                            <div class="hidden group-hover/tip:block absolute z-20 left-0 top-full mt-1 w-80 max-w-[85vw] p-3
-                                                        bg-slate-800 text-white text-xs rounded-lg shadow-lg whitespace-pre-wrap leading-relaxed">
-                                                {{ $val }}
-                                            </div>
-                                        </div>
-                                    </td>
-                                @else
-                                    <td class="px-3 py-2 text-slate-700">{{ $val }}</td>
-                                @endif
-                            @endforeach
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        @if($detailsLastPage > 1)
-            <div class="px-5 py-3 border-t border-slate-200 flex items-center justify-between gap-2">
-                @if($detailsPage > 1)
-                    <a href="{{ route('dashboard.kpi', array_merge($pageParams, ['page' => $detailsPage - 1])) }}"
-                       class="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 cursor-pointer">
-                        <span class="msi text-[1rem]">chevron_left</span> ก่อนหน้า
-                    </a>
-                @else
-                    <span class="inline-flex items-center gap-1 text-sm text-slate-300">
-                        <span class="msi text-[1rem]">chevron_left</span> ก่อนหน้า
-                    </span>
-                @endif
-
-                <span class="text-xs text-slate-500 tabular-nums">หน้า {{ $detailsPage }} จาก {{ $detailsLastPage }}</span>
-
-                @if($detailsPage < $detailsLastPage)
-                    <a href="{{ route('dashboard.kpi', array_merge($pageParams, ['page' => $detailsPage + 1])) }}"
-                       class="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 cursor-pointer">
-                        ถัดไป <span class="msi text-[1rem]">chevron_right</span>
-                    </a>
-                @else
-                    <span class="inline-flex items-center gap-1 text-sm text-slate-300">
-                        ถัดไป <span class="msi text-[1rem]">chevron_right</span>
-                    </span>
-                @endif
-            </div>
-        @endif
     @endif
 </div>
 
@@ -819,7 +722,7 @@
                     title: 'ไม่พบข้อมูล',
                     text: 'ไม่พบเคสหญิงคลอดปกติครบกำหนดในช่วงเวลานี้',
                     confirmButtonText: 'รับทราบ',
-                    confirmButtonColor: '#2563eb',
+                    confirmButtonColor: '#4F46E5',
                 });
             } else {
                 Swal.fire({
@@ -842,8 +745,9 @@
     const catColor   = @json($meta['trend']);
     const activeMonths = @json($activeMonths);
 
-    const labels = trend.map(d => d.label);
-    const values = trend.map(d => d.pct);
+    const labels      = trend.map(d => d.label);
+    const values      = trend.map(d => d.pct);
+    const visitCounts = trend.map(d => d.den ?? 0);
     const pointColors = trend.map(d => ({
         pass:    'rgba(16,185,129,0.95)',
         warning: 'rgba(245,158,11,0.95)',
@@ -855,14 +759,23 @@
     const pointRadii        = isActive.map(a => a ? 8 : 5);
     const pointHoverRadii   = isActive.map(a => a ? 10 : 7);
     const pointBorderWidths = isActive.map(a => a ? 3 : 2);
-    const pointBorderColorsFinal = pointColors.map((c, i) => isActive[i] ? '#2563eb' : c);
+    const pointBorderColorsFinal = pointColors.map((c, i) => isActive[i] ? '#4F46E5' : c);
 
     new Chart(document.getElementById('trendChart'), {
-        type: 'line',
         data: {
             labels,
             datasets: [
                 {
+                    type: 'bar',
+                    label: 'จำนวน visit',
+                    data: visitCounts,
+                    backgroundColor: 'rgba(148,163,184,0.35)',
+                    borderRadius: 4,
+                    yAxisID: 'y1',
+                    order: 3,
+                },
+                {
+                    type: 'line',
                     label: 'ผลลัพธ์ (%)',
                     data: values,
                     borderColor: catColor,
@@ -874,6 +787,98 @@
                     tension: 0.35,
                     pointRadius: pointRadii,
                     pointHoverRadius: pointHoverRadii,
+                    spanGaps: true,
+                    borderWidth: 2.5,
+                    yAxisID: 'y',
+                    order: 1,
+                },
+                {
+                    type: 'line',
+                    label: 'เป้าหมาย (%)',
+                    data: labels.map(() => target),
+                    borderColor: 'rgba(79,70,229,0.7)',
+                    backgroundColor: 'transparent',
+                    borderDash: [6, 4],
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    borderWidth: 2,
+                    yAxisID: 'y',
+                    order: 2,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { font: { family: 'Sarabun, sans-serif', size: 12 } } },
+                tooltip: {
+                    titleFont: { family: 'Sarabun, sans-serif' },
+                    bodyFont:  { family: 'Sarabun, sans-serif' },
+                    callbacks: {
+                        label: (item) => {
+                            if (item.datasetIndex === 0) return ` จำนวน visit: ${item.parsed.y.toLocaleString()}`;
+                            if (item.datasetIndex === 2) return ` เป้าหมาย: ${item.parsed.y}%`;
+                            const d = trend[item.dataIndex];
+                            if (d.pct === null) return ' ไม่มีข้อมูล';
+                            return [` ผลลัพธ์: ${d.pct}%`, ` ${d.num ?? '-'} / ${d.den ?? '-'}`];
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: { ticks: { font: { family: 'Sarabun, sans-serif', size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                y: {
+                    type: 'linear', position: 'left', min: 0, max: 100,
+                    ticks: { callback: v => v + '%', font: { family: 'Sarabun, sans-serif', size: 11 } },
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                },
+                y1: {
+                    type: 'linear', position: 'right', min: 0,
+                    // Headroom above the tallest bar keeps bars from visually competing with the % line.
+                    suggestedMax: Math.max(1, ...visitCounts) * 2.2,
+                    ticks: { font: { family: 'Sarabun, sans-serif', size: 11 } },
+                    grid: { display: false },
+                },
+            },
+        },
+    });
+})();
+</script>
+<script>
+(function () {
+    const canvas = document.getElementById('cumulativeTrendChart');
+    if (!canvas) return;
+
+    const trend  = @json($trendData);
+    const target = {{ $ind->target_value }};
+    const labels = trend.map(d => d.label);
+
+    // Running cumulative rate from the start of the fiscal year through each month — sum(num)/sum(den)
+    // as of that month. A month with den=0 contributes nothing to either accumulator, so the cumulative
+    // value naturally holds flat at the prior month's level rather than needing special-case handling.
+    let cumNum = 0, cumDen = 0;
+    const cumPct = trend.map(d => {
+        cumNum += d.num ?? 0;
+        cumDen += d.den ?? 0;
+        return cumDen > 0 ? Math.round((cumNum / cumDen) * 1000) / 10 : null;
+    });
+
+    new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'อัตราเฉลี่ยสะสม (%)',
+                    data: cumPct,
+                    borderColor: '#4F46E5',
+                    backgroundColor: 'rgba(79,70,229,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#4F46E5',
                     spanGaps: true,
                     borderWidth: 2.5,
                 },
@@ -896,14 +901,11 @@
                 legend: { position: 'top', labels: { font: { family: 'Sarabun, sans-serif', size: 12 } } },
                 tooltip: {
                     titleFont: { family: 'Sarabun, sans-serif' },
-                    bodyFont:  { family: 'Sarabun, sans-serif' },
+                    bodyFont: { family: 'Sarabun, sans-serif' },
                     callbacks: {
-                        label: (item) => {
-                            if (item.datasetIndex === 1) return ` เป้าหมาย: ${item.parsed.y}%`;
-                            const d = trend[item.dataIndex];
-                            if (d.pct === null) return ' ไม่มีข้อมูล';
-                            return [` ผลลัพธ์: ${d.pct}%`, ` ${d.num ?? '-'} / ${d.den ?? '-'}`];
-                        },
+                        label: (item) => item.datasetIndex === 1
+                            ? ` เป้าหมาย: ${item.parsed.y}%`
+                            : ` สะสมนับตั้งแต่ต้นปีงบถึงเดือนนี้: ${item.parsed.y === null ? 'ไม่มีข้อมูล' : item.parsed.y + '%'}`,
                     },
                 },
             },
@@ -921,7 +923,7 @@
     if (!canvas) return; // hidden when there's no data at all for the year
 
     const quarterly = @json($quarterlyBreakdown);
-    const pieColors = ['#2563eb', '#7c3aed', '#f59e0b', '#e11d48'];
+    const pieColors = ['#4F46E5', '#818CF8', '#C7D2FE', '#E0E7FF'];
 
     const labels = quarterly.map(q => 'ไตรมาส ' + q.quarter);
     const values = quarterly.map(q => q.numerator);
@@ -983,6 +985,71 @@
 </script>
 <script>
 (function () {
+    const canvas = document.getElementById('visitProportionDonut');
+    if (!canvas) return; // hidden when there's no denominator data for the period
+
+    const received    = {{ $donutReceived ?? 0 }};
+    const notReceived = {{ $donutNotReceived ?? 0 }};
+    const total       = received + notReceived;
+    const colors      = ['#4F46E5', '#e2e8f0'];
+    const labels      = ['ได้ยาปฏิชีวนะ', 'ไม่ได้ยาปฏิชีวนะ'];
+    const values      = [received, notReceived];
+
+    new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels,
+            datasets: [{
+                data: values,
+                backgroundColor: colors,
+                borderColor: '#fff',
+                borderWidth: 3,
+                borderRadius: 6,
+                spacing: 2,
+                hoverOffset: 6,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    titleFont: { family: 'Sarabun, sans-serif' },
+                    bodyFont: { family: 'Sarabun, sans-serif' },
+                    callbacks: {
+                        label: (item) => {
+                            const pct = total > 0 ? (item.parsed / total * 100).toFixed(1) : '0.0';
+                            return ` ${item.label}: ${item.parsed.toLocaleString()} visit (${pct}%)`;
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    const legendEl = document.getElementById('visitProportionLegend');
+    if (legendEl) {
+        legendEl.innerHTML = labels.map((label, i) => {
+            const pct = total > 0 ? (values[i] / total * 100).toFixed(1) : '0.0';
+            return `
+                <div class="flex items-center justify-between text-sm">
+                    <span class="flex items-center gap-2 text-slate-600">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full" style="background:${colors[i]}"></span>
+                        ${label}
+                    </span>
+                    <span class="flex items-center gap-2 tabular-nums">
+                        <span class="text-slate-400">${values[i].toLocaleString()} visit</span>
+                        <span class="font-semibold text-slate-700 w-12 text-right">${pct}%</span>
+                    </span>
+                </div>`;
+        }).join('');
+    }
+})();
+</script>
+<script>
+(function () {
     const canvas = document.getElementById('drugUsageChart');
     if (!canvas) return; // hidden when there's no antibiotic data for the period
 
@@ -997,7 +1064,7 @@
             labels,
             datasets: [{
                 data: percents,
-                backgroundColor: 'rgba(37,99,235,0.75)',
+                backgroundColor: 'rgba(79,70,229,0.75)',
                 borderRadius: 4,
                 barThickness: 18,
             }],
@@ -1030,42 +1097,42 @@
     if (!canvas) return; // hidden when there's no diagnosis data for the period
 
     const items  = @json($icd10Ranking['items']);
-    const colors = ['#e11d48','#f97316','#eab308','#84cc16','#10b981','#06b6d4','#3b82f6','#8b5cf6','#d946ef','#f43f5e','#94a3b8'];
 
     const labels = items.map(i => i.code ? (i.code + (i.tname ? ' ' + i.tname : '')) : 'อื่นๆ');
     const values = items.map(i => i.count);
     const total  = values.reduce((a, b) => a + b, 0);
 
     new Chart(canvas, {
-        type: 'doughnut',
+        type: 'bar',
         data: {
             labels,
             datasets: [{
                 data: values,
-                backgroundColor: colors.slice(0, items.length),
-                borderColor: '#fff',
-                borderWidth: 3,
-                borderRadius: 6,
-                spacing: 2,
-                hoverOffset: 6,
+                backgroundColor: 'rgba(79,70,229,0.75)',
+                borderRadius: 4,
+                barThickness: 18,
             }],
         },
         options: {
+            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '68%',
             plugins: {
-                legend: { display: false }, // ranked list rendered server-side instead
+                legend: { display: false },
                 tooltip: {
                     titleFont: { family: 'Sarabun, sans-serif' },
                     bodyFont: { family: 'Sarabun, sans-serif' },
                     callbacks: {
                         label: (item) => {
-                            const pct = total > 0 ? (item.parsed / total * 100).toFixed(1) : '0.0';
-                            return ` ${item.label}: ${item.parsed.toLocaleString()} ครั้ง (${pct}%)`;
+                            const pct = total > 0 ? (item.parsed.x / total * 100).toFixed(1) : '0.0';
+                            return ` ${item.parsed.x.toLocaleString()} ครั้ง (${pct}%)`;
                         },
                     },
                 },
+            },
+            scales: {
+                x: { min: 0, ticks: { font: { family: 'Sarabun, sans-serif', size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                y: { ticks: { font: { family: 'Sarabun, sans-serif', size: 11 } }, grid: { display: false } },
             },
         },
     });

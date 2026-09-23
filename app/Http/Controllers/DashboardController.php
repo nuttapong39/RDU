@@ -8,7 +8,6 @@ use App\Models\RduIndicator;
 use App\Services\DoctorAliasService;
 use App\Services\RduCalculationService;
 use App\Services\RduQueryService;
-use App\Support\SimplePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -83,8 +82,6 @@ class DashboardController extends Controller
         ]);
     }
 
-    private const DETAILS_PER_PAGE = 50;
-
     /** Cap on distinct bars shown in the drug-usage chart before folding the rest into "อื่นๆ". */
     private const DRUG_USAGE_TOP_N = 12;
 
@@ -97,21 +94,11 @@ class DashboardController extends Controller
     /** KPI codes with real detail data rich enough to drive the deep-dive charts + quarterly-summary zone. */
     private const DEEP_DIVE_KPI_CODES = ['KPI01', 'KPI03', 'KPI04', 'KPI05'];
 
-    /** Detail-row keys a table column header may sort by (matches the associative keys every KpiQueryInterface::getDetails() row uses). */
-    private const SORTABLE_COLUMNS = ['HN', 'VN', 'AN', 'vstdate', 'dchdate', 'dx', 'fullname', 'CC', 'HPI', 'drugitems_name', 'doctor', 'attending_doctor'];
-
     public function kpi(Request $request, string $code): View
     {
         $year    = $this->sanitizeYear((int) $request->input('year', $this->calcService->currentFiscalYear()));
         $quarter = $this->sanitizeQuarter($request->input('quarter'));
         $month   = $quarter ? 0 : $this->sanitizeMonth((int) $request->input('month', 0));
-        $page    = max(1, (int) $request->input('page', 1));
-
-        $search      = trim((string) $request->input('q', ''));
-        $colDateFrom = $request->input('col_date_from') ?: null;
-        $colDateTo   = $request->input('col_date_to') ?: null;
-        $sortCol     = in_array($request->input('sort'), self::SORTABLE_COLUMNS, true) ? $request->input('sort') : null;
-        $sortDir     = $request->input('dir') === 'desc' ? 'desc' : 'asc';
 
         $indicator = RduIndicator::where('code', strtoupper($code))->firstOrFail();
         $trendData = $this->calcService->getTrend($indicator, $year);
@@ -134,10 +121,12 @@ class DashboardController extends Controller
         $drugUsage    = $hasDeepDive ? $this->aggregateDrugUsage($allDetails) : [];
         $icd10Ranking = $hasDeepDive ? $this->aggregateIcd10Ranking($allDetails) : ['items' => [], 'total' => 0];
         $doctorRate   = $hasDeepDive ? $this->aggregateDoctorRate($allDetails, $indicator) : [];
+        $coverageBreakdown   = $hasDeepDive ? $this->aggregateCoverageBreakdown($allDetails) : [];
+        $departmentBreakdown = $hasDeepDive ? $this->aggregateDepartmentBreakdown($allDetails) : [];
+        $roomBreakdown       = $hasDeepDive ? $this->aggregateRoomBreakdown($allDetails) : [];
+        $visitStats   = $this->aggregateVisitStats($allDetails, $indicator);
 
         $detailsGrandTotal = $allDetails->count();
-        $filteredDetails   = $this->filterAndSortDetails($allDetails, $search, $colDateFrom, $colDateTo, $sortCol, $sortDir);
-        $pagination        = SimplePaginator::paginate($filteredDetails, $page, self::DETAILS_PER_PAGE);
 
         $kpiByCategory = $kpiData->groupBy(fn ($i) => $i['indicator']->category);
 
@@ -158,17 +147,7 @@ class DashboardController extends Controller
             'item'               => $item,
             'quarterlyBreakdown' => $quarterlyBreakdown,
             'trendData'         => $trendData,
-            'details'           => $pagination['data'],
-            'detailsTotal'      => $pagination['total'],
             'detailsGrandTotal' => $detailsGrandTotal,
-            'detailsPage'       => $pagination['page'],
-            'detailsLastPage'   => $pagination['lastPage'],
-            'detailsPerPage'    => $pagination['perPage'],
-            'search'            => $search,
-            'colDateFrom'       => $colDateFrom,
-            'colDateTo'         => $colDateTo,
-            'sortCol'           => $sortCol,
-            'sortDir'           => $sortDir,
             'year'              => $year,
             'month'             => $month,
             'quarter'           => $quarter,
@@ -179,8 +158,12 @@ class DashboardController extends Controller
             'drugUsage'         => $drugUsage,
             'icd10Ranking'      => $icd10Ranking,
             'doctorRate'        => $doctorRate,
+            'coverageBreakdown'   => $coverageBreakdown,
+            'departmentBreakdown' => $departmentBreakdown,
+            'roomBreakdown'       => $roomBreakdown,
             'doctorRateMinVisits'   => self::DOCTOR_RATE_MIN_VISITS,
             'doctorRateThreshold'   => $this->doctorRateThreshold($indicator),
+            'visitStats'        => $visitStats,
             'hasDeepDive'       => $hasDeepDive,
         ]);
     }
@@ -283,6 +266,150 @@ class DashboardController extends Controller
         return $indicator->target_direction === 'higher'
             ? round(100 - $indicator->target_value, 2)
             : $indicator->target_value;
+    }
+
+    /**
+     * Whole-period visit counts backing the "always visible" stat cards (VISIT total, VISIT with ATB,
+     * gap from target) — shown for every KPI, not just the 4 with deep-dive data, since it only needs
+     * $allDetails, which every KpiQueryInterface implementation returns (empty for stubs -> zeros/null).
+     * gap_from_target is the plain signed `pct - target_value` shown as-is (matching the reference
+     * dashboard, e.g. "-3.2%" for a 'lower' KPI sitting under target) — its sign reads differently
+     * depending on target_direction, which is already shown separately ("ยิ่งสูง/ต่ำยิ่งดี") elsewhere
+     * on the page, so this value is intentionally not direction-corrected a second time.
+     *
+     * `gap_is_good` is direction-aware even though the gap NUMBER itself isn't: for a 'lower' KPI a
+     * negative gap is good (under target), but for a 'higher' KPI (KPI03) a negative gap is bad
+     * (under target) — the same sign means opposite things depending on direction, so the color/
+     * good-or-bad judgement can't be read off the sign alone.
+     *
+     * `atb_cost` sums the antibiotic-dispense cost (`opitemrece.sum_price`, the actual price charged at
+     * dispense time — not the current drugitems catalog price, which can drift from historical charges)
+     * across every row; non-ATB rows contribute 0 so this is equivalent to summing just the ATB-positive
+     * subset. `avg_drug_items` is deliberately NOT antibiotic-scoped — per the reference dashboard's own
+     * "ทุกชนิดรวมกัน" (all drug types combined) wording, it's the average COUNT OF ANY DISPENSED DRUG
+     * (total_drug_items, an unfiltered per-visit count each of the 4 real query classes now provides)
+     * across ALL visits in the period, not just the ones that got an antibiotic.
+     *
+     * @return array{total_visits: int, atb_visits: int, pct: ?float, gap_from_target: ?float, gap_is_good: ?bool, atb_cost: float, avg_drug_items: ?float}
+     */
+    private function aggregateVisitStats(Collection $allDetails, RduIndicator $indicator): array
+    {
+        $totalVisits = $allDetails->count();
+        $atbVisits   = $allDetails->filter(fn ($row) => trim((string) ($row['drugitems_name'] ?? '')) !== '')->count();
+        $pct         = $totalVisits > 0 ? round($atbVisits / $totalVisits * 100, 1) : null;
+        $gap         = $pct !== null ? round($pct - $indicator->target_value, 1) : null;
+        $atbCost     = (float) $allDetails->sum(fn ($row) => $row['atb_cost'] ?? 0);
+        $avgItems    = $totalVisits > 0 ? round($allDetails->sum(fn ($row) => $row['total_drug_items'] ?? 0) / $totalVisits, 1) : null;
+
+        return [
+            'total_visits'    => $totalVisits,
+            'atb_visits'      => $atbVisits,
+            'pct'             => $pct,
+            'gap_from_target' => $gap,
+            'gap_is_good'     => $gap !== null ? ($indicator->target_direction === 'higher' ? $gap >= 0 : $gap <= 0) : null,
+            'atb_cost'        => $atbCost,
+            'avg_drug_items'  => $avgItems,
+        ];
+    }
+
+    /**
+     * Per-coverage-type (สิทธิ์การรักษา, `pttype`) breakdown: visit count + ATB rate per group, sorted
+     * by visit count descending (most common coverage type first — this is a distribution table, not
+     * a graded pass/fail one like aggregateDoctorRate(), so there's no red/green here). Visits with no
+     * coverage recorded are bucketed as "ไม่ระบุ" rather than dropped, same spirit as the doctor
+     * table's unknown-doctor bucket. Groups with zero ATB cases are dropped entirely (not just hidden)
+     * — this table is about antibiotic use per coverage type, so a group that never received one isn't
+     * meaningful here, and cutting it keeps the list short enough for a single column.
+     *
+     * @return array<int, array{coverage: string, total: int, atb: int, rate: float}>
+     */
+    private function aggregateCoverageBreakdown(Collection $allDetails): array
+    {
+        $groups = [];
+
+        foreach ($allDetails as $row) {
+            $coverage = trim((string) ($row['coverage'] ?? ''));
+            $key      = $coverage !== '' ? $coverage : 'ไม่ระบุ';
+
+            $groups[$key] ??= ['total' => 0, 'atb' => 0];
+            $groups[$key]['total']++;
+            if (trim((string) ($row['drugitems_name'] ?? '')) !== '') {
+                $groups[$key]['atb']++;
+            }
+        }
+
+        $items = [];
+        foreach ($groups as $coverage => $g) {
+            if ($g['atb'] === 0) {
+                continue;
+            }
+            $items[] = [
+                'coverage' => $coverage,
+                'total'    => $g['total'],
+                'atb'      => $g['atb'],
+                'rate'     => $g['total'] > 0 ? round($g['atb'] / $g['total'] * 100, 1) : 0.0,
+            ];
+        }
+
+        usort($items, fn ($a, $b) => $b['total'] <=> $a['total']);
+
+        return $items;
+    }
+
+    /**
+     * Per-department (แผนก, `spclty`) count of ATB-POSITIVE visits only — unlike the coverage
+     * breakdown, this is a plain distribution (visit count only, no rate/%ATB column), matching the
+     * reference dashboard's own department table, which only ever shows the subset of visits that
+     * actually received an antibiotic. Visits with no department recorded are bucketed as "ไม่ระบุ".
+     *
+     * @return array<int, array{label: string, count: int}>
+     */
+    private function aggregateDepartmentBreakdown(Collection $allDetails): array
+    {
+        return $this->countAtbVisitsByGroup($allDetails, 'department');
+    }
+
+    /**
+     * Per-room/ward (ห้องตรวจ for OPD KPIs via `kskdepartment.main_dep`, หอผู้ป่วย/ward for the one
+     * IPT KPI via `ward` — both already unified under the same `room` row key by the 4 query classes)
+     * count of ATB-POSITIVE visits only, same shape as the department breakdown. This stays
+     * KPI-agnostic; only the Blade-side section label needs to know whether it's showing exam rooms
+     * or wards.
+     *
+     * @return array<int, array{label: string, count: int}>
+     */
+    private function aggregateRoomBreakdown(Collection $allDetails): array
+    {
+        return $this->countAtbVisitsByGroup($allDetails, 'room');
+    }
+
+    /**
+     * Shared grouping logic for aggregateDepartmentBreakdown()/aggregateRoomBreakdown(): filters to
+     * ATB-positive rows, counts by the given row key, sorted by count descending.
+     *
+     * @return array<int, array{label: string, count: int}>
+     */
+    private function countAtbVisitsByGroup(Collection $allDetails, string $rowKey): array
+    {
+        $counts = [];
+
+        foreach ($allDetails as $row) {
+            if (trim((string) ($row['drugitems_name'] ?? '')) === '') {
+                continue;
+            }
+            $value = trim((string) ($row[$rowKey] ?? ''));
+            $key   = $value !== '' ? $value : 'ไม่ระบุ';
+            $counts[$key] = ($counts[$key] ?? 0) + 1;
+        }
+
+        arsort($counts);
+
+        $items = [];
+        foreach ($counts as $label => $count) {
+            $items[] = ['label' => $label, 'count' => $count];
+        }
+
+        return $items;
     }
 
     /**
@@ -393,48 +520,6 @@ class DashboardController extends Controller
         }
 
         return $result;
-    }
-
-    /**
-     * Search + column date-filter + sort — all applied in PHP against the already-fetched
-     * (and already 1-hour cached by RduQueryService) full Collection, so this works against the
-     * *entire* matching dataset (not just the current page) without any new HOSxP query/cache key.
-     */
-    private function filterAndSortDetails(
-        Collection $details,
-        string $search,
-        ?string $colDateFrom,
-        ?string $colDateTo,
-        ?string $sortCol,
-        string $sortDir,
-    ): Collection {
-        // Row shape varies by KPI (KPI01 uses VN/vstdate for an OPD visit, KPI03 uses AN/dchdate for
-        // an inpatient admission) — fall back across both so search/date-filter work for either.
-        if ($search !== '') {
-            $needle = mb_strtolower($search);
-            $details = $details->filter(fn ($row) =>
-                str_contains(mb_strtolower((string) ($row['HN'] ?? '')), $needle)
-                || str_contains(mb_strtolower((string) ($row['VN'] ?? $row['AN'] ?? '')), $needle)
-                || str_contains(mb_strtolower((string) ($row['fullname'] ?? '')), $needle)
-            )->values();
-        }
-
-        if ($colDateFrom || $colDateTo) {
-            $details = $details->filter(function ($row) use ($colDateFrom, $colDateTo) {
-                $date = (string) ($row['vstdate'] ?? $row['dchdate'] ?? '');
-                if ($colDateFrom && $date < $colDateFrom) return false;
-                if ($colDateTo && $date > $colDateTo) return false;
-                return true;
-            })->values();
-        }
-
-        if ($sortCol !== null) {
-            $details = $sortDir === 'desc'
-                ? $details->sortByDesc(fn ($row) => $row[$sortCol])->values()
-                : $details->sortBy(fn ($row) => $row[$sortCol])->values();
-        }
-
-        return $details;
     }
 
     private function categories(): array
