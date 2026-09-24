@@ -273,14 +273,18 @@
             @endif
         </div>
         <div class="p-4">
-            <div style="height: 360px;">
+            <div style="height: 260px;">
                 <canvas id="trendChart"
-                        aria-label="กราฟรายเดือนของ {{ $ind->code }} 2 แผง: แผงบนเป็นผลลัพธ์ร้อยละเทียบกับเป้าหมาย {{ $ind->targetLabel() }} แผงล่างเป็นจำนวน visit ทั้งหมดและจำนวนการใช้ยา"
+                        aria-label="กราฟแท่งจำนวน visit ทั้งหมดและจำนวนการใช้ยาของ {{ $ind->code }} รายเดือน พร้อมเส้นผลลัพธ์ร้อยละเทียบกับเส้นเป้าหมาย"
                         role="img"></canvas>
             </div>
             <p class="mt-2 text-xs text-slate-500">
-                แผงบน: ผลลัพธ์ % เทียบเป้าหมาย {{ $ind->targetLabel() }} (เส้นประ) — พื้นเขียว = ผ่านเกณฑ์ · พื้นเหลือง = ใกล้เป้าหมาย · พื้นขาว = ไม่ผ่านเกณฑ์
-                <br>แผงล่าง: จำนวน visit และจำนวนการใช้ยา — บอกปริมาณงานเท่านั้น สถานะผ่าน/ไม่ผ่านดูจาก % ในแผงบน
+                แท่ง = จำนวน (แกนขวา) · เส้นทึบ = ผลลัพธ์ % และเส้นประ = เป้าหมาย {{ $ind->targetLabel() }} (แกนซ้าย) —
+                @if($ind->target_direction === 'lower')
+                    ตัวชี้วัดนี้ยิ่งต่ำยิ่งดี: เส้นทึบอยู่เหนือเส้นประ = ไม่ผ่านเป้า
+                @else
+                    ตัวชี้วัดนี้ยิ่งสูงยิ่งดี: เส้นทึบอยู่ต่ำกว่าเส้นประ = ไม่ผ่านเป้า
+                @endif
             </p>
         </div>
     </div>
@@ -753,13 +757,10 @@
 (function () {
     const trend      = @json($trendData);
     const target     = {{ $ind->target_value }};
-    const direction  = @json($ind->target_direction);
-    const nearBand   = {{ \App\Services\RduCalculationService::NEAR_THRESHOLD }};
     const catColor   = @json($meta['trend']);
     const activeMonths = @json($activeMonths);
-    const numLabel   = @json($numeratorLabel);
-    const fontSans   = window.RDU_FONT_SANS || 'Sarabun, sans-serif';
-    const fontPx     = px => Math.round(px * (window.RDU_FONT_SCALE || 1));
+
+    const numLabel = @json($numeratorLabel);
 
     const labels      = trend.map(d => d.label);
     const visitCounts = trend.map(d => d.den ?? 0);
@@ -780,67 +781,7 @@
     const pointBorderWidths = isActive.map(a => a ? 3 : 2);
     const pointBorderColorsFinal = pointColors.map((c, i) => isActive[i] ? '#4F46E5' : c);
 
-    // Status zones behind the % panel, mirroring RduCalculationService::getStatus(): the pass zone runs
-    // from the target to the good end of the scale, the near zone is the NEAR_THRESHOLD band just past it,
-    // and the rest is the (unshaded) fail zone.
-    const clampPct = v => Math.min(100, Math.max(0, v));
-    const higher   = direction === 'higher';
-    const nearEdge = clampPct(higher ? target - nearBand : target + nearBand);
-    const zones = {
-        pass: { from: higher ? target : 0, to: higher ? 100 : target, fill: 'rgba(16,185,129,0.09)', label: 'ผ่านเกณฑ์' },
-        near: { from: Math.min(target, nearEdge), to: Math.max(target, nearEdge), fill: 'rgba(245,158,11,0.12)', label: 'ใกล้เป้าหมาย' },
-        fail: { from: higher ? 0 : nearEdge, to: higher ? nearEdge : 100, fill: null, label: 'ไม่ผ่านเกณฑ์' },
-    };
-    const statusZones = {
-        id: 'statusZones',
-        beforeDatasetsDraw(chart) {
-            const { ctx, chartArea, scales: { y } } = chart;
-            const labelH = fontPx(11) + 4;
-            const labelX = chartArea.right - 6;
-            const span = z => ({ top: y.getPixelForValue(z.to), bottom: y.getPixelForValue(z.from) });
-            const text = (label, py, baseline) => { ctx.textBaseline = baseline; ctx.fillText(label, labelX, py); };
-            ctx.save();
-            ctx.font = `${fontPx(11)}px ${fontSans}`;
-            ctx.textAlign = 'right';
-            [zones.pass, zones.near].forEach(z => {
-                const { top, bottom } = span(z);
-                if (bottom > top) {
-                    ctx.fillStyle = z.fill;
-                    ctx.fillRect(chartArea.left, top, chartArea.right - chartArea.left, bottom - top);
-                }
-            });
-            ctx.fillStyle = '#64748b';
-            // Pass: label centred when the band is tall enough (a very low 'lower' target leaves no room).
-            const pass = span(zones.pass);
-            if (pass.bottom - pass.top >= labelH) text(zones.pass.label, (pass.top + pass.bottom) / 2, 'middle');
-            // Near: the 5-point band is usually thinner than a line of text, so its label sits just
-            // outside the band on the fail side instead of being dropped.
-            const near = span(zones.near);
-            const nearFits = near.bottom - near.top >= labelH;
-            if (near.bottom > near.top) {
-                if (nearFits) text(zones.near.label, (near.top + near.bottom) / 2, 'middle');
-                else if (higher) text(zones.near.label, near.bottom + 2, 'top');
-                else text(zones.near.label, near.top - 2, 'bottom');
-            }
-            // Fail: unshaded, labelled at its far end so it never meets the near label.
-            const fail = span(zones.fail);
-            if (fail.bottom - fail.top >= labelH * (nearFits ? 1 : 2)) {
-                if (higher) text(zones.fail.label, fail.bottom - 2, 'bottom');
-                else text(zones.fail.label, fail.top + 2, 'top');
-            }
-            // Divider between the % panel (top) and the count panel (bottom).
-            ctx.strokeStyle = '#cbd5e1';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(chartArea.left, y.bottom + 0.5);
-            ctx.lineTo(chartArea.right, y.bottom + 0.5);
-            ctx.stroke();
-            ctx.restore();
-        },
-    };
-
     new Chart(document.getElementById('trendChart'), {
-        plugins: [statusZones],
         data: {
             labels,
             datasets: [
@@ -879,7 +820,6 @@
                     pointHoverRadius: pointHoverRadii,
                     spanGaps: true,
                     borderWidth: 2.5,
-                    clip: 10, // let a point at exactly 0% or 100% draw fully instead of being cut at the edge
                     yAxisID: 'y',
                     order: 1,
                 },
@@ -888,8 +828,7 @@
                     key: 'target',
                     label: 'เป้าหมาย (' + target + '%)',
                     data: labels.map(() => target),
-                    // Neutral slate, not indigo — so the eye does not pair the target with the indigo drug-use bars.
-                    borderColor: 'rgba(71,85,105,0.9)',
+                    borderColor: 'rgba(79,70,229,0.7)',
                     backgroundColor: 'transparent',
                     borderDash: [6, 4],
                     pointRadius: 0,
@@ -905,10 +844,10 @@
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'top', labels: { font: { family: fontSans, size: fontPx(12) } } },
+                legend: { position: 'top', labels: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(12 * (window.RDU_FONT_SCALE || 1)) } } },
                 tooltip: {
-                    titleFont: { family: fontSans },
-                    bodyFont:  { family: fontSans },
+                    titleFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
+                    bodyFont:  { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
                     callbacks: {
                         label: (item) => {
                             const d = trend[item.dataIndex];
@@ -924,29 +863,19 @@
                     },
                 },
             },
-            // Two stacked panels sharing the month axis, instead of two y-scales overlaid in one plot:
-            // bars on a count scale never share space with the % target line. Same-side scales in one
-            // stack are laid out top-down by descending `weight`, so `y` (weight 1) is the upper panel.
             scales: {
-                x: { ticks: { font: { family: fontSans, size: fontPx(11) } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                x: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } }, grid: { color: 'rgba(0,0,0,0.04)' } },
                 y: {
-                    type: 'linear', position: 'left', stack: 'trend', stackWeight: 3, weight: 1,
-                    min: 0, max: 100,
-                    title: { display: true, text: 'ผลลัพธ์ (%)', font: { family: fontSans, size: fontPx(11) } },
-                    ticks: { callback: v => v + '%', font: { family: fontSans, size: fontPx(11) } },
+                    type: 'linear', position: 'left', min: 0, max: 100,
+                    ticks: { callback: v => v + '%', font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } },
                     grid: { color: 'rgba(0,0,0,0.05)' },
                 },
                 y1: {
-                    type: 'linear', position: 'left', stack: 'trend', stackWeight: 2, weight: 0,
-                    min: 0, suggestedMax: Math.max(1, ...visitCounts) * 1.1,
-                    title: { display: true, text: 'จำนวน visit', font: { family: fontSans, size: fontPx(11) } },
-                    // Blank the top tick label so it does not collide with the 0% label of the panel above.
-                    ticks: {
-                        precision: 0,
-                        callback: (v, i, ticks) => i === ticks.length - 1 ? '' : v.toLocaleString(),
-                        font: { family: fontSans, size: fontPx(11) },
-                    },
-                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    type: 'linear', position: 'right', min: 0,
+                    // Headroom above the tallest bar keeps the bars in the lower part of the chart so they compete less with the % line.
+                    suggestedMax: Math.max(1, ...visitCounts) * 2.2,
+                    ticks: { precision: 0, font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } },
+                    grid: { display: false },
                 },
             },
         },

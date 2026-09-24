@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 
 class RduCalculationService
 {
-    public const NEAR_THRESHOLD = 5.0;
+    private const NEAR_THRESHOLD = 5.0;
 
     public function __construct(private RduQueryService $queryService) {}
 
