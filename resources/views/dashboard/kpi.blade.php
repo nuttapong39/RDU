@@ -275,11 +275,11 @@
         <div class="p-4">
             <div style="height: 260px;">
                 <canvas id="trendChart"
-                        aria-label="กราฟแท่งเปรียบเทียบจำนวน visit ทั้งหมดกับจำนวนการใช้ยาของ {{ $ind->code }} รายเดือน พร้อมเส้นแนวโน้มและเส้นจำนวนที่เป็นไปตามเป้า"
+                        aria-label="กราฟแท่งจำนวน visit ทั้งหมดและจำนวนการใช้ยาของ {{ $ind->code }} รายเดือน พร้อมเส้นผลลัพธ์ร้อยละเทียบกับเส้นเป้าหมาย"
                         role="img"></canvas>
             </div>
             <p class="mt-2 text-xs text-slate-500">
-                เส้นประ = จำนวนที่เป็นไปตามเป้า ({{ rtrim(rtrim(number_format((float) $ind->target_value, 2, '.', ''), '0'), '.') }}% ของ visit ทั้งหมดในเดือนนั้น) —
+                แท่ง = จำนวน (แกนขวา) · เส้นทึบ = ผลลัพธ์ % และเส้นประ = เป้าหมาย {{ $ind->targetLabel() }} (แกนซ้าย) —
                 @if($ind->target_direction === 'lower')
                     ตัวชี้วัดนี้ยิ่งต่ำยิ่งดี: เส้นทึบอยู่เหนือเส้นประ = ไม่ผ่านเป้า
                 @else
@@ -765,11 +765,9 @@
     const labels      = trend.map(d => d.label);
     const visitCounts = trend.map(d => d.den ?? 0);
     const useCounts   = trend.map(d => d.num ?? 0);
-    // The line follows the drug-use bars but skips months with no data instead of dropping to 0.
-    // (a stored month with no visits comes back with pct = 0, not null — so test the denominator)
-    const useLine     = trend.map(d => d.den ? (d.num ?? 0) : null);
-    // Count that would exactly meet the target for that month's visits — the % target expressed on the count axis.
-    const expected    = trend.map(d => d.den ? Math.round(target / 100 * d.den * 10) / 10 : null);
+    // Skip months with no visits instead of plotting 0% — a stored month with no visits comes back
+    // with pct = 0 rather than null, so test the denominator.
+    const values      = trend.map(d => d.den ? d.pct : null);
     const pointColors = trend.map(d => ({
         pass:    'rgba(16,185,129,0.95)',
         warning: 'rgba(245,158,11,0.95)',
@@ -794,6 +792,7 @@
                     data: visitCounts,
                     backgroundColor: 'rgba(148,163,184,0.45)',
                     borderRadius: 4,
+                    yAxisID: 'y1',
                     order: 4,
                 },
                 {
@@ -803,13 +802,14 @@
                     data: useCounts,
                     backgroundColor: 'rgba(79,70,229,0.75)',
                     borderRadius: 4,
+                    yAxisID: 'y1',
                     order: 3,
                 },
                 {
                     type: 'line',
-                    key: 'line',
-                    label: 'แนวโน้ม' + numLabel,
-                    data: useLine,
+                    key: 'result',
+                    label: 'ผลลัพธ์ (%)',
+                    data: values,
                     borderColor: catColor,
                     backgroundColor: 'transparent',
                     pointBackgroundColor: pointColors,
@@ -820,20 +820,21 @@
                     pointHoverRadius: pointHoverRadii,
                     spanGaps: true,
                     borderWidth: 2.5,
+                    yAxisID: 'y',
                     order: 1,
                 },
                 {
                     type: 'line',
-                    key: 'expected',
-                    label: 'จำนวนที่เป็นไปตามเป้า (' + target + '% ของ visit)',
-                    data: expected,
+                    key: 'target',
+                    label: 'เป้าหมาย (' + target + '%)',
+                    data: labels.map(() => target),
                     borderColor: 'rgba(79,70,229,0.7)',
                     backgroundColor: 'transparent',
                     borderDash: [6, 4],
                     pointRadius: 0,
                     pointHoverRadius: 0,
                     borderWidth: 2,
-                    spanGaps: true,
+                    yAxisID: 'y',
                     order: 2,
                 },
             ],
@@ -843,28 +844,20 @@
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: {
-                    position: 'top',
-                    // The line just traces the drug-use bars, so it does not need its own legend entry.
-                    labels: {
-                        filter: (item, data) => data.datasets[item.datasetIndex].key !== 'line',
-                        font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(12 * (window.RDU_FONT_SCALE || 1)) },
-                    },
-                },
+                legend: { position: 'top', labels: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(12 * (window.RDU_FONT_SCALE || 1)) } } },
                 tooltip: {
                     titleFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
                     bodyFont:  { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
-                    // The drug-use count and its line share one value; list it once (with the % result).
-                    filter: (item) => item.dataset.key !== 'use',
                     callbacks: {
                         label: (item) => {
                             const d = trend[item.dataIndex];
                             switch (item.dataset.key) {
-                                case 'visit':    return ` จำนวน visit ทั้งหมด: ${(d.den ?? 0).toLocaleString()}`;
-                                case 'expected': return ` จำนวนที่เป็นไปตามเป้า (${target}%): ${item.parsed.y}`;
+                                case 'visit':  return ` จำนวน visit ทั้งหมด: ${(d.den ?? 0).toLocaleString()}`;
+                                case 'use':    return ` ${numLabel}: ${(d.num ?? 0).toLocaleString()}`;
+                                case 'target': return ` เป้าหมาย: ${target}%`;
                                 default:
-                                    if (!d.den) return ' ไม่มีข้อมูล';
-                                    return [` ${numLabel}: ${(d.num ?? 0).toLocaleString()}`, ` ผลลัพธ์: ${d.pct}% (${d.num ?? '-'} / ${d.den ?? '-'})`];
+                                    if (!d.den) return ' ผลลัพธ์: ไม่มีข้อมูล';
+                                    return ` ผลลัพธ์: ${d.pct}% (${d.num ?? '-'} / ${d.den ?? '-'})`;
                             }
                         },
                     },
@@ -873,11 +866,16 @@
             scales: {
                 x: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } }, grid: { color: 'rgba(0,0,0,0.04)' } },
                 y: {
-                    type: 'linear', position: 'left', min: 0,
-                    // Headroom so the tallest bar does not touch the legend.
-                    suggestedMax: Math.max(1, ...visitCounts) * 1.15,
-                    ticks: { precision: 0, font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } },
+                    type: 'linear', position: 'left', min: 0, max: 100,
+                    ticks: { callback: v => v + '%', font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } },
                     grid: { color: 'rgba(0,0,0,0.05)' },
+                },
+                y1: {
+                    type: 'linear', position: 'right', min: 0,
+                    // Headroom above the tallest bar keeps the bars in the lower part of the chart so they compete less with the % line.
+                    suggestedMax: Math.max(1, ...visitCounts) * 2.2,
+                    ticks: { precision: 0, font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } },
+                    grid: { display: false },
                 },
             },
         },
