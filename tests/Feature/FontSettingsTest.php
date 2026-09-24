@@ -27,7 +27,7 @@ class FontSettingsTest extends TestCase
     {
         $this->actingAs($this->member())->get(route('admin.database.show'))->assertForbidden();
         $this->actingAs($this->member())
-            ->post(route('admin.fonts.update'), ['font_sans' => 'Sarabun', 'font_mono' => 'Fira Code'])
+            ->post(route('admin.fonts.update'), ['font_sans' => 'Sarabun', 'font_mono' => 'Fira Code', 'font_scale' => '100'])
             ->assertForbidden();
     }
 
@@ -43,19 +43,21 @@ class FontSettingsTest extends TestCase
     public function test_admin_can_save_fonts_and_layouts_use_them(): void
     {
         $this->actingAs($this->admin())
-            ->post(route('admin.fonts.update'), ['font_sans' => 'Noto Sans Thai', 'font_mono' => 'JetBrains Mono'])
+            ->post(route('admin.fonts.update'), ['font_sans' => 'Noto Sans Thai', 'font_mono' => 'JetBrains Mono', 'font_scale' => '112.5'])
             ->assertRedirect();
 
         $this->assertSame('Noto Sans Thai', Setting::getValue('font_sans'));
         $this->assertDatabaseHas('audit_logs', ['action' => 'font_config.update']);
 
-        $this->get(route('dashboard'))->assertSee("--font-sans:'Noto Sans Thai'", false);
+        $this->get(route('dashboard'))
+            ->assertSee("--font-sans:'Noto Sans Thai'", false)
+            ->assertSee('html{font-size:112.5%;}', false);
     }
 
     public function test_unknown_font_names_are_rejected(): void
     {
         $this->actingAs($this->admin())
-            ->post(route('admin.fonts.update'), ['font_sans' => 'Evil"; } body{display:none', 'font_mono' => 'Fira Code'])
+            ->post(route('admin.fonts.update'), ['font_sans' => 'Evil"; } body{display:none', 'font_mono' => 'Fira Code', 'font_scale' => '100'])
             ->assertSessionHasErrors('font_sans');
 
         $this->assertNull(Setting::getValue('font_sans'));
@@ -64,7 +66,7 @@ class FontSettingsTest extends TestCase
     public function test_reset_restores_default_fonts(): void
     {
         $admin = $this->admin();
-        $this->actingAs($admin)->post(route('admin.fonts.update'), ['font_sans' => 'Noto Sans Thai', 'font_mono' => 'JetBrains Mono']);
+        $this->actingAs($admin)->post(route('admin.fonts.update'), ['font_sans' => 'Noto Sans Thai', 'font_mono' => 'JetBrains Mono', 'font_scale' => '112.5']);
         $this->post(route('admin.fonts.reset'))->assertRedirect();
 
         $this->assertSame(

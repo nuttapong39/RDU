@@ -12,6 +12,11 @@ class FontService
 
     private const KEY_SANS = 'font_sans';
     private const KEY_MONO = 'font_mono';
+    private const KEY_SCALE = 'font_scale';
+
+    public const DEFAULT_SCALE = '100';
+    /** Root font-size presets in percent — Tailwind's rem-based sizes/spacing scale with them. */
+    public const SCALES = ['90' => 'เล็ก', '100' => 'ปกติ', '112.5' => 'ใหญ่', '125' => 'ใหญ่มาก'];
     private const WEIGHTS  = [300, 400, 500, 600, 700, 800];
 
     /** @var array<string, array{f:string,c:string,t:int,w:int[]}>|null */
@@ -63,16 +68,25 @@ class FontService
         return $current['sans'] !== self::DEFAULT_SANS || $current['mono'] !== self::DEFAULT_MONO;
     }
 
-    public function save(string $sans, string $mono): void
+    /** Root font-size in percent, as a key of SCALES. */
+    public function scale(): string
+    {
+        $value = $this->settings()[self::KEY_SCALE] ?? self::DEFAULT_SCALE;
+
+        return array_key_exists($value, self::SCALES) ? $value : self::DEFAULT_SCALE;
+    }
+
+    public function save(string $sans, string $mono, string $scale = self::DEFAULT_SCALE): void
     {
         Setting::putValue(self::KEY_SANS, $sans, 'ฟอนต์หลักของระบบ (Google Fonts)');
         Setting::putValue(self::KEY_MONO, $mono, 'ฟอนต์ monospace ของระบบ (Google Fonts)');
+        Setting::putValue(self::KEY_SCALE, $scale, 'ขนาดตัวอักษรของระบบ (% ของค่ามาตรฐาน)');
         Cache::forget('rdu.fonts.settings');
     }
 
     public function reset(): void
     {
-        Setting::forgetKeys([self::KEY_SANS, self::KEY_MONO]);
+        Setting::forgetKeys([self::KEY_SANS, self::KEY_MONO, self::KEY_SCALE]);
         Cache::forget('rdu.fonts.settings');
     }
 
@@ -114,7 +128,7 @@ class FontService
     {
         return Cache::remember('rdu.fonts.settings', 300, function () {
             try {
-                return Setting::query()->whereIn('key', [self::KEY_SANS, self::KEY_MONO])->pluck('value', 'key')->all();
+                return Setting::query()->whereIn('key', [self::KEY_SANS, self::KEY_MONO, self::KEY_SCALE])->pluck('value', 'key')->all();
             } catch (\Throwable) {
                 return [];
             }

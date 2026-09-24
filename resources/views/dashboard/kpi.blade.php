@@ -811,7 +811,7 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'top', labels: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 12 } } },
+                legend: { position: 'top', labels: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(12 * (window.RDU_FONT_SCALE || 1)) } } },
                 tooltip: {
                     titleFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
                     bodyFont:  { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
@@ -827,17 +827,17 @@
                 },
             },
             scales: {
-                x: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                x: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } }, grid: { color: 'rgba(0,0,0,0.04)' } },
                 y: {
                     type: 'linear', position: 'left', min: 0, max: 100,
-                    ticks: { callback: v => v + '%', font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } },
+                    ticks: { callback: v => v + '%', font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } },
                     grid: { color: 'rgba(0,0,0,0.05)' },
                 },
                 y1: {
                     type: 'linear', position: 'right', min: 0,
                     // Headroom above the tallest bar keeps bars from visually competing with the % line.
                     suggestedMax: Math.max(1, ...visitCounts) * 2.2,
-                    ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } },
+                    ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } },
                     grid: { display: false },
                 },
             },
@@ -898,7 +898,7 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'top', labels: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 12 } } },
+                legend: { position: 'top', labels: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(12 * (window.RDU_FONT_SCALE || 1)) } } },
                 tooltip: {
                     titleFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
                     bodyFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
@@ -910,8 +910,8 @@
                 },
             },
             scales: {
-                x: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
-                y: { min: 0, max: 100, ticks: { callback: v => v + '%', font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                x: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                y: { min: 0, max: 100, ticks: { callback: v => v + '%', font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } }, grid: { color: 'rgba(0,0,0,0.05)' } },
             },
         },
     });
@@ -1084,8 +1084,8 @@
                 },
             },
             scales: {
-                x: { min: 0, ticks: { callback: v => v + '%', font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
-                y: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { display: false } },
+                x: { min: 0, ticks: { callback: v => v + '%', font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                y: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } }, grid: { display: false } },
             },
         },
     });
@@ -1131,8 +1131,8 @@
                 },
             },
             scales: {
-                x: { min: 0, ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
-                y: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { display: false } },
+                x: { min: 0, ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                y: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: Math.round(11 * (window.RDU_FONT_SCALE || 1)) } }, grid: { display: false } },
             },
         },
     });

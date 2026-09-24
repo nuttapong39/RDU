@@ -237,6 +237,23 @@
             </div>
         @endforeach
 
+        <fieldset>
+            <legend class="block text-sm font-semibold text-gray-700 mb-1.5">ขนาดตัวอักษร</legend>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                @foreach (\App\Services\FontService::SCALES as $value => $label)
+                    @php $value = (string) $value; $checked = old('font_scale', $fontScale) === $value; @endphp
+                    <label class="flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition-colors duration-150
+                                  has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-800 has-[:checked]:font-semibold
+                                  border-gray-300 text-gray-700 hover:bg-gray-50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-500">
+                        <input type="radio" name="font_scale" value="{{ $value }}" class="sr-only" @checked($checked)>
+                        {{ $label }} <span class="text-xs text-gray-400">{{ $value }}%</span>
+                    </label>
+                @endforeach
+            </div>
+            @error('font_scale') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
+            <p class="text-xs text-gray-500 mt-1">ปรับขนาดข้อความและระยะห่างทั้งระบบพร้อมกัน (หน้า Login คงขนาดเดิม)</p>
+        </fieldset>
+
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
             <div class="text-xs font-semibold text-gray-500 mb-2">ตัวอย่าง</div>
             <div id="preview-sans" class="text-base text-gray-900">การใช้ยาอย่างสมเหตุผล — Rational Drug Use 0123456789 (ร้อยละ 20.5)</div>
@@ -295,6 +312,17 @@
         const stack = role === 'mono' ? `'${name}', monospace` : `'${name}', sans-serif`;
         previews[role].forEach(el => el.style.fontFamily = stack);
     }
+
+    // Preview sizes are absolute px (16 / 14 base) so they show the effect of the chosen scale
+    // regardless of the scale this page itself is currently rendered at.
+    function applyPreviewScale() {
+        const checked = document.querySelector('input[name=font_scale]:checked');
+        const factor  = checked ? parseFloat(checked.value) / 100 : 1;
+        previews.sans.forEach(el => el.style.fontSize = (16 * factor) + 'px');
+        previews.mono.forEach(el => el.style.fontSize = (14 * factor) + 'px');
+    }
+    document.querySelectorAll('input[name=font_scale]').forEach(r => r.addEventListener('change', applyPreviewScale));
+    applyPreviewScale();
 
     document.querySelectorAll('.font-picker').forEach(function (picker) {
         const role   = picker.dataset.role;

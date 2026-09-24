@@ -12,5 +12,6 @@
 @if($fontUrl)
     <link href="{{ $fontUrl }}" rel="stylesheet">
 @endif
-<style>:root{--font-sans:{!! $fontSansStack !!};--font-mono:{!! $fontMonoStack !!};}</style>
-<script>window.RDU_FONT_SANS = @json($fontSansStack); window.RDU_FONT_MONO = @json($fontMonoStack);</script>
+@php $fontScale = $fontSvc->scale(); @endphp
+<style>:root{--font-sans:{!! $fontSansStack !!};--font-mono:{!! $fontMonoStack !!};}@if($fontScale !== \App\Services\FontService::DEFAULT_SCALE) html{font-size:{{ $fontScale }}%;}@endif</style>
+<script>window.RDU_FONT_SANS = @json($fontSansStack); window.RDU_FONT_MONO = @json($fontMonoStack); window.RDU_FONT_SCALE = {{ (float) $fontScale / 100 }};</script>

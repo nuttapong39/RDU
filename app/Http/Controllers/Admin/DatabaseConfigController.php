@@ -27,6 +27,7 @@ class DatabaseConfigController extends Controller
             'hasConfig'   => $this->configService->hasConfig(),
             'fontCatalog' => $this->fonts->catalog(),
             'fontCurrent' => $this->fonts->current(),
+            'fontScale'   => $this->fonts->scale(),
         ]);
     }
 
