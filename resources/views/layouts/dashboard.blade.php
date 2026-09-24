@@ -74,6 +74,7 @@
                             <div class="text-slate-500 text-[.7rem] font-semibold tracking-wide px-3 mb-1">
                                 {{ $catLabel }}
                             </div>
+                            <div class="divide-y divide-slate-100 mx-1">
                             @foreach($kpiByCategory[$catKey] as $item)
                                 @php
                                     $isActive = request()->routeIs('dashboard.kpi')
@@ -87,7 +88,7 @@
                                 @endphp
                                 <a href="{{ route('dashboard.kpi', $item['indicator']->code) }}"
                                    title="{{ $item['indicator']->code }} — {{ $item['indicator']->name }}"
-                                   class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
+                                   class="flex items-center gap-2.5 px-3 py-2 transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500
                                           {{ $isActive ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
                                    aria-current="{{ $isActive ? 'page' : 'false' }}">
 
@@ -97,6 +98,7 @@
                                     <span class="text-xs truncate min-w-0">{{ $item['indicator']->name }}</span>
                                 </a>
                             @endforeach
+                            </div>
                         </div>
                     @endif
                 @endforeach
