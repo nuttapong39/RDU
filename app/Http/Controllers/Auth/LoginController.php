@@ -8,6 +8,7 @@ use App\Services\HisAuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
@@ -51,7 +52,7 @@ class LoginController extends Controller
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
-        if (! $this->hisAuthService->isAvailable()) {
+        if (! $this->hisAuthService->isAvailable() && Gate::forUser($user)->allows('manage-settings')) {
             return redirect()->route('admin.database.show')
                 ->with('info', 'กรุณาตั้งค่าการเชื่อมต่อ HOSxP ก่อนเริ่มใช้งาน');
         }

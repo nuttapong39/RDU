@@ -146,6 +146,10 @@ a{text-decoration:none;color:inherit}
   .footer .dev{margin-top:6px;padding:6px 16px}
 }
 </style>
+@if(app(\App\Services\FontService::class)->isCustomized())
+@include('partials.fonts')
+<style>body{font-family:var(--font-sans)}</style>
+@endif
 </head>
 <body>
 

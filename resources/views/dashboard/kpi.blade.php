@@ -811,10 +811,10 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'top', labels: { font: { family: 'Sarabun, sans-serif', size: 12 } } },
+                legend: { position: 'top', labels: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 12 } } },
                 tooltip: {
-                    titleFont: { family: 'Sarabun, sans-serif' },
-                    bodyFont:  { family: 'Sarabun, sans-serif' },
+                    titleFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
+                    bodyFont:  { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
                     callbacks: {
                         label: (item) => {
                             if (item.datasetIndex === 0) return ` จำนวน visit: ${item.parsed.y.toLocaleString()}`;
@@ -827,17 +827,17 @@
                 },
             },
             scales: {
-                x: { ticks: { font: { family: 'Sarabun, sans-serif', size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                x: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
                 y: {
                     type: 'linear', position: 'left', min: 0, max: 100,
-                    ticks: { callback: v => v + '%', font: { family: 'Sarabun, sans-serif', size: 11 } },
+                    ticks: { callback: v => v + '%', font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } },
                     grid: { color: 'rgba(0,0,0,0.05)' },
                 },
                 y1: {
                     type: 'linear', position: 'right', min: 0,
                     // Headroom above the tallest bar keeps bars from visually competing with the % line.
                     suggestedMax: Math.max(1, ...visitCounts) * 2.2,
-                    ticks: { font: { family: 'Sarabun, sans-serif', size: 11 } },
+                    ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } },
                     grid: { display: false },
                 },
             },
@@ -898,10 +898,10 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'top', labels: { font: { family: 'Sarabun, sans-serif', size: 12 } } },
+                legend: { position: 'top', labels: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 12 } } },
                 tooltip: {
-                    titleFont: { family: 'Sarabun, sans-serif' },
-                    bodyFont: { family: 'Sarabun, sans-serif' },
+                    titleFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
+                    bodyFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
                     callbacks: {
                         label: (item) => item.datasetIndex === 1
                             ? ` เป้าหมาย: ${item.parsed.y}%`
@@ -910,8 +910,8 @@
                 },
             },
             scales: {
-                x: { ticks: { font: { family: 'Sarabun, sans-serif', size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
-                y: { min: 0, max: 100, ticks: { callback: v => v + '%', font: { family: 'Sarabun, sans-serif', size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                x: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                y: { min: 0, max: 100, ticks: { callback: v => v + '%', font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
             },
         },
     });
@@ -950,8 +950,8 @@
             plugins: {
                 legend: { display: false }, // custom legend rendered below instead
                 tooltip: {
-                    titleFont: { family: 'Sarabun, sans-serif' },
-                    bodyFont: { family: 'Sarabun, sans-serif' },
+                    titleFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
+                    bodyFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
                     callbacks: {
                         label: (item) => {
                             const pct = total > 0 ? (item.parsed / total * 100).toFixed(1) : '0.0';
@@ -1016,8 +1016,8 @@
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    titleFont: { family: 'Sarabun, sans-serif' },
-                    bodyFont: { family: 'Sarabun, sans-serif' },
+                    titleFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
+                    bodyFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
                     callbacks: {
                         label: (item) => {
                             const pct = total > 0 ? (item.parsed / total * 100).toFixed(1) : '0.0';
@@ -1076,16 +1076,16 @@
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    titleFont: { family: 'Sarabun, sans-serif' },
-                    bodyFont: { family: 'Sarabun, sans-serif' },
+                    titleFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
+                    bodyFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
                     callbacks: {
                         label: (item) => ` ${counts[item.dataIndex].toLocaleString()} ครั้ง (${item.parsed.x}%)`,
                     },
                 },
             },
             scales: {
-                x: { min: 0, ticks: { callback: v => v + '%', font: { family: 'Sarabun, sans-serif', size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
-                y: { ticks: { font: { family: 'Sarabun, sans-serif', size: 11 } }, grid: { display: false } },
+                x: { min: 0, ticks: { callback: v => v + '%', font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                y: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { display: false } },
             },
         },
     });
@@ -1120,8 +1120,8 @@
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    titleFont: { family: 'Sarabun, sans-serif' },
-                    bodyFont: { family: 'Sarabun, sans-serif' },
+                    titleFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
+                    bodyFont: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif') },
                     callbacks: {
                         label: (item) => {
                             const pct = total > 0 ? (item.parsed.x / total * 100).toFixed(1) : '0.0';
@@ -1131,8 +1131,8 @@
                 },
             },
             scales: {
-                x: { min: 0, ticks: { font: { family: 'Sarabun, sans-serif', size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
-                y: { ticks: { font: { family: 'Sarabun, sans-serif', size: 11 } }, grid: { display: false } },
+                x: { min: 0, ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                y: { ticks: { font: { family: (window.RDU_FONT_SANS || 'Sarabun, sans-serif'), size: 11 } }, grid: { display: false } },
             },
         },
     });

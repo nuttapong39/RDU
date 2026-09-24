@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\DatabaseConfigRequest;
 use App\Models\AuditLog;
 use App\Services\DatabaseConfigService;
+use App\Services\FontService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,8 @@ use Illuminate\View\View;
 class DatabaseConfigController extends Controller
 {
     public function __construct(
-        private DatabaseConfigService $configService
+        private DatabaseConfigService $configService,
+        private FontService $fonts
     ) {}
 
     public function show(): View
@@ -23,6 +25,8 @@ class DatabaseConfigController extends Controller
         return view('admin.database.show', [
             'config'      => $this->configService->getSafeConfig(),
             'hasConfig'   => $this->configService->hasConfig(),
+            'fontCatalog' => $this->fonts->catalog(),
+            'fontCurrent' => $this->fonts->current(),
         ]);
     }
 

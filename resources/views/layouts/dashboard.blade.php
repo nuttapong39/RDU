@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') — RDU Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    @include('partials.fonts')
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {{-- Sidebar state — set before render to avoid FOUC --}}
@@ -105,6 +103,7 @@
             @endif
 
             {{-- Divider --}}
+            @can('manage-settings')
             <div class="border-t border-slate-200 my-3 mx-1"></div>
 
             {{-- Section: Settings --}}
@@ -119,6 +118,7 @@
                 <span class="msi text-[1.1rem]">storage</span>
                 <span>ตั้งค่าฐานข้อมูล HOSxP</span>
             </a>
+            @endcan
         </nav>
 
         {{-- User Section --}}

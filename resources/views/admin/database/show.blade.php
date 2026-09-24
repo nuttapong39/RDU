@@ -210,10 +210,150 @@
         </div>
     </div>
 
+    {{-- ============ System Fonts (Google Fonts) ============ --}}
+    <form id="fontForm" method="POST" action="{{ route('admin.fonts.update') }}"
+          class="mt-8 scroll-mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-5">
+        @csrf
+        <div id="fonts">
+            <h2 class="text-lg font-bold text-gray-900">ฟอนต์ของระบบ</h2>
+            <p class="text-gray-500 mt-1 text-sm">เลือกจาก Google Fonts — มีผลกับผู้ใช้ทุกคน ทุกหน้า (รวมหน้า Login และกราฟ)</p>
+        </div>
+
+        @foreach (['font_sans' => ['sans', 'ฟอนต์หลัก (ข้อความทั่วไป)'], 'font_mono' => ['mono', 'ฟอนต์ Monospace (รหัสตัวชี้วัด/ตัวเลข)']] as $field => [$role, $label])
+            <div class="font-picker" data-role="{{ $role }}">
+                <label for="search-{{ $role }}" class="block text-sm font-semibold text-gray-700 mb-1.5">{{ $label }}</label>
+                <input type="hidden" name="{{ $field }}" value="{{ old($field, $fontCurrent[$role]) }}">
+                <div class="flex items-center justify-between gap-3 mb-2">
+                    <input type="search" id="search-{{ $role }}" placeholder="ค้นหาชื่อฟอนต์…" autocomplete="off"
+                           class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none">
+                    <label class="flex items-center gap-1.5 text-xs text-gray-600 whitespace-nowrap cursor-pointer">
+                        <input type="checkbox" class="filter-toggle rounded border-gray-300" checked>
+                        {{ $role === 'sans' ? 'เฉพาะที่รองรับภาษาไทย' : 'เฉพาะ Monospace' }}
+                    </label>
+                </div>
+                <div class="font-list border border-gray-200 rounded-lg max-h-48 overflow-y-auto divide-y divide-gray-100" role="listbox" aria-label="{{ $label }}"></div>
+                <p class="text-xs text-gray-500 mt-1">ที่เลือก: <strong class="picked-name text-gray-800"></strong> <span class="list-note text-gray-400"></span></p>
+                @error($field) <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+        @endforeach
+
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <div class="text-xs font-semibold text-gray-500 mb-2">ตัวอย่าง</div>
+            <div id="preview-sans" class="text-base text-gray-900">การใช้ยาอย่างสมเหตุผล — Rational Drug Use 0123456789 (ร้อยละ 20.5)</div>
+            <div id="preview-sans-bold" class="text-base font-bold text-gray-900 mt-1">โรงพยาบาลเชียงกลาง จังหวัดน่าน</div>
+            <div id="preview-mono" class="text-sm text-gray-700 mt-2">KPI01 · 12,345 ครั้ง · 85.2%</div>
+        </div>
+
+        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+            <button type="submit" form="fontResetForm"
+                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer
+                           focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400">
+                คืนค่าเริ่มต้น ({{ \App\Services\FontService::DEFAULT_SANS }} + {{ \App\Services\FontService::DEFAULT_MONO }})
+            </button>
+            <button type="submit"
+                    class="px-6 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-sm font-semibold transition-colors duration-150 cursor-pointer
+                           focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1">
+                บันทึกฟอนต์
+            </button>
+        </div>
+    </form>
+    <form id="fontResetForm" method="POST" action="{{ route('admin.fonts.reset') }}">@csrf</form>
+
 </div>
 @endsection
 
 @push('scripts')
+<script>
+(function () {
+    const catalog = @json(array_values($fontCatalog));
+    const byName  = Object.fromEntries(catalog.map(f => [f.f, f]));
+    const MAX_ROWS = 120;
+
+    function cssUrl(name) {
+        const f = byName[name];
+        if (!f) return null;
+        let ws = f.w.filter(w => w === 400 || w === 700);
+        if (!ws.length) ws = [f.w[0]];
+        return 'https://fonts.googleapis.com/css2?family=' + name.replace(/ /g, '+') + ':wght@' + ws.join(';') + '&display=swap';
+    }
+    const loaded = {};
+    function loadFont(name) {
+        const url = cssUrl(name);
+        if (!url || loaded[name]) return;
+        loaded[name] = true;
+        const link = document.createElement('link');
+        link.rel = 'stylesheet'; link.href = url;
+        document.head.appendChild(link);
+    }
+
+    const previews = {
+        sans: [document.getElementById('preview-sans'), document.getElementById('preview-sans-bold')],
+        mono: [document.getElementById('preview-mono')],
+    };
+    function applyPreview(role, name) {
+        loadFont(name);
+        const stack = role === 'mono' ? `'${name}', monospace` : `'${name}', sans-serif`;
+        previews[role].forEach(el => el.style.fontFamily = stack);
+    }
+
+    document.querySelectorAll('.font-picker').forEach(function (picker) {
+        const role   = picker.dataset.role;
+        const hidden = picker.querySelector('input[type=hidden]');
+        const search = picker.querySelector('input[type=search]');
+        const toggle = picker.querySelector('.filter-toggle');
+        const list   = picker.querySelector('.font-list');
+        const picked = picker.querySelector('.picked-name');
+        const note   = picker.querySelector('.list-note');
+
+        function select(name) {
+            hidden.value = name;
+            picked.textContent = name;
+            applyPreview(role, name);
+            render();
+        }
+
+        function render() {
+            const q = search.value.trim().toLowerCase();
+            let rows = catalog.filter(f => {
+                if (q && !f.f.toLowerCase().includes(q)) return false;
+                if (toggle.checked) return role === 'sans' ? f.t === 1 : f.c === 'Monospace';
+                return true;
+            });
+            const total = rows.length;
+            rows = rows.slice(0, MAX_ROWS);
+            if (!rows.some(f => f.f === hidden.value) && byName[hidden.value]) rows.unshift(byName[hidden.value]);
+
+            list.innerHTML = '';
+            rows.forEach(f => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.setAttribute('role', 'option');
+                const on = f.f === hidden.value;
+                btn.setAttribute('aria-selected', on ? 'true' : 'false');
+                btn.className = 'w-full text-left px-3 py-1.5 text-sm flex items-center justify-between gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 '
+                    + (on ? 'bg-blue-50 text-blue-800 font-semibold' : 'text-gray-700 hover:bg-gray-50');
+                const nameEl = document.createElement('span');
+                nameEl.textContent = f.f;
+                const meta = document.createElement('span');
+                meta.className = 'text-xs text-gray-400 whitespace-nowrap';
+                meta.textContent = f.c + (f.t ? ' · ไทย' : '');
+                btn.append(nameEl, meta);
+                btn.addEventListener('click', () => select(f.f));
+                list.appendChild(btn);
+            });
+            if (!rows.length) list.innerHTML = '<div class="px-3 py-3 text-sm text-gray-400">ไม่พบฟอนต์ที่ตรงกับเงื่อนไข</div>';
+            note.textContent = total > MAX_ROWS ? `(แสดง ${MAX_ROWS} จาก ${total} — พิมพ์ค้นหาเพื่อกรอง)` : `(${total} ฟอนต์)`;
+        }
+
+        // The saved font may fall outside the default filter (e.g. Fira Code is not Thai) — still show it as selected.
+        picked.textContent = hidden.value;
+        applyPreview(role, hidden.value);
+        search.addEventListener('input', render);
+        toggle.addEventListener('change', render);
+        render();
+    });
+})();
+</script>
 <script>
 (function () {
     const toggleBtn = document.getElementById('toggleDbPassword');

@@ -19,6 +19,7 @@ use App\Queries\Kpi\PatientSafety\CorticosteroidInjectionQuery;
 use App\Queries\Kpi\PatientSafety\ElderlyNsaidsQuery;
 use App\Queries\Kpi\PatientSafety\ElderlyPolypharmacyQuery;
 use App\Queries\Kpi\PatientSafety\VitB1InjectionQuery;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -61,5 +62,11 @@ class AppServiceProvider extends ServiceProvider
             }
         }
         ReadonlyConnection::install();
+
+        Gate::define('manage-settings', fn ($user) => in_array(
+            strtolower((string) $user->username),
+            config('rdu.settings_admins', []),
+            true
+        ));
     }
 }
