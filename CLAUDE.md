@@ -157,6 +157,8 @@ Admin → Config Page → DatabaseConfigService → Validate → Encrypt → JSO
 - `DatabaseConfigService` เท่านั้นที่อ่าน/เขียน JSON — ห้าม Controller อ่านโดยตรง
 - Password ต้อง Encrypt ด้วย Laravel Encryption ก่อนบันทึก และ Decrypt เมื่อใช้งาน
 - ห้ามแสดง Password ใน Response, Error Message, หรือ Log
+- **KPI ใหม่ทุกตัวต้องทำตาม `docs/KPI-REFERENCE-IMPLEMENTATION.md`** — KPI01, KPI03, KPI04, KPI05 คือแบบอ้างอิง
+  (query class, reference SQL, key ของข้อมูลรายกรณี, การลงทะเบียน และหน้าแสดงผล) อ่านก่อนเริ่มทุกครั้ง
 
 ---
 
@@ -219,6 +221,7 @@ PHP Extensions ที่ต้องการ: `OpenSSL, PDO, PDO_PGSQL, Mbstrin
 | Security Rules (ละเอียด) | `docs/DATABASE-SECURITY.md` |
 | DB Config & JSON | `docs/DATABASE-CONFIGURATION.md` |
 | KPI Specification | `docs/KPI-SPECIFICATION.md` |
+| KPI Reference Implementation (แบบอ้างอิง KPI ใหม่) | `docs/KPI-REFERENCE-IMPLEMENTATION.md` |
 | UI/UX Design | `docs/UI-UX-SPECIFICATION.md` |
 | Testing Strategy | `docs/TESTING-STRATEGY.md` |
 | Phase Roadmap | `docs/DEVELOPMENT-PHASES.md` |
