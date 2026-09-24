@@ -290,20 +290,10 @@
     </div>
 </div>
 
-{{-- ============ CUMULATIVE YTD TREND — shown for every KPI, stub or real ============ --}}
-<div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] overflow-hidden mb-10">
-    <div class="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
-        <span class="msi text-indigo-600">show_chart</span>
-        <span class="font-semibold text-sm text-slate-800">แนวโน้มอัตราเฉลี่ยสะสม (ปีงบประมาณ {{ $year }})</span>
-    </div>
-    <div class="p-4">
-        <div style="height: 220px;">
-            <canvas id="cumulativeTrendChart" aria-label="กราฟอัตราเฉลี่ยสะสมรายปี" role="img"></canvas>
-        </div>
-    </div>
-</div>
-
-{{-- ============ VISIT PROPORTION DONUT (ได้ยา/ไม่ได้ยา) — shown for every KPI, stub or real ============ --}}
+{{-- ============ VISIT PROPORTION DONUT (1/3) + CUMULATIVE YTD TREND (2/3) — shown for every KPI, stub or real ============ --}}
+{{-- Same 1/3 + 2/3 grid as the hero row above, so the cumulative chart sits under the monthly trend chart
+     and the donut sits under the metric card. (Month positions are close but not identical: the monthly
+     chart has an extra right-hand count axis that narrows its plot area.) --}}
 @php
     // KPI03's numerator counts visits that did NOT get an antibiotic (target_direction='higher' — the
     // opposite of every other KPI here) — swap which raw count maps to "ได้ยา"/"ไม่ได้ยา" so the donut's
@@ -315,28 +305,46 @@
         ? $item['denominator'] - $donutReceived
         : null;
 @endphp
-<div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7 mb-10">
-    <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
-        <span class="msi text-indigo-600">donut_small</span>
-        สัดส่วน VISIT
-    </div>
-    @if($donutReceived !== null && $item['denominator'] > 0)
-        <div class="flex flex-col sm:flex-row items-center gap-6">
-            <div class="relative mx-auto flex-shrink-0" style="height: 180px; width: 180px;">
-                <canvas id="visitProportionDonut" aria-label="สัดส่วน visit ที่ได้และไม่ได้รับยาปฏิชีวนะ" role="img"></canvas>
-                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span class="text-xl font-bold text-slate-800 tabular-nums">{{ number_format($item['denominator']) }}</span>
-                    <span class="text-[.65rem] text-slate-400">visit ทั้งหมด</span>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-10">
+    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
+        <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
+            <span class="msi text-indigo-600">donut_small</span>
+            สัดส่วน VISIT
+        </div>
+        @if($donutReceived !== null && $item['denominator'] > 0)
+            {{-- Stacked (donut above legend): a 1/3 column is too narrow for the donut and legend side by side. --}}
+            <div class="flex flex-col items-center gap-5">
+                <div class="relative mx-auto flex-shrink-0" style="height: 180px; width: 180px;">
+                    <canvas id="visitProportionDonut" aria-label="สัดส่วน visit ที่ได้และไม่ได้รับยาปฏิชีวนะ" role="img"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span class="text-xl font-bold text-slate-800 tabular-nums">{{ number_format($item['denominator']) }}</span>
+                        <span class="text-[.65rem] text-slate-400">visit ทั้งหมด</span>
+                    </div>
                 </div>
+                <div id="visitProportionLegend" class="w-full flex flex-col gap-2"></div>
             </div>
-            <div id="visitProportionLegend" class="flex-1 w-full flex flex-col gap-2"></div>
+        @else
+            <div class="status-empty py-8">
+                <span class="msi">donut_small</span>
+                <p class="font-medium text-sm">ยังไม่มีข้อมูลเพียงพอสำหรับช่วงเวลานี้</p>
+            </div>
+        @endif
+    </div>
+
+    <div class="lg:col-span-2 bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] overflow-hidden flex flex-col">
+        <div class="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+            <span class="msi text-indigo-600">show_chart</span>
+            <span class="font-semibold text-sm text-slate-800">แนวโน้มอัตราเฉลี่ยสะสม (ปีงบประมาณ {{ $year }})</span>
         </div>
-    @else
-        <div class="status-empty py-8">
-            <span class="msi">donut_small</span>
-            <p class="font-medium text-sm">ยังไม่มีข้อมูลเพียงพอสำหรับช่วงเวลานี้</p>
+        {{-- Grows to the height of the donut card beside it (never below the original 220px). The canvas is
+             absolutely positioned so only this box decides the chart size — a canvas in normal flow would
+             feed its own height back into the stretched box and never let it shrink on resize. --}}
+        <div class="p-4 flex-1 flex flex-col">
+            <div class="relative flex-1" style="min-height: 220px;">
+                <canvas id="cumulativeTrendChart" class="absolute inset-0" aria-label="กราฟอัตราเฉลี่ยสะสมรายปี" role="img"></canvas>
+            </div>
         </div>
-    @endif
+    </div>
 </div>
 
 {{-- ============ VISIT STAT CARDS — shown for every KPI, stub or real ============ --}}
