@@ -23,13 +23,7 @@
 <body class="bg-slate-50 text-slate-900 font-sans antialiased overflow-x-hidden">
 
 @php
-    $catIcons = [
-        'Antibiotic'     => 'medication',
-        'DrugQuality'    => 'prescriptions',
-        'PatientSafety'  => 'health_and_safety',
-        'ChronicDisease' => 'bloodtype',
-    ];
-    $userName    = auth()->user()?->name ?? 'Guest';
+    $userName   = auth()->user()?->name ?? 'Guest';
     $userInitial = strtoupper(mb_substr($userName, 0, 1));
     $userEmail   = auth()->user()?->email ?? '';
 @endphp
@@ -41,17 +35,17 @@
 <aside id="rduSidebar" aria-label="เมนูหลัก">
 
         {{-- Brand Header --}}
-        <div class="px-4 py-4 border-b border-blue-800/40 flex-shrink-0">
+        <div class="px-4 py-4 border-b border-slate-200 flex-shrink-0">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm bg-white p-0.5">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ring-1 ring-slate-200 bg-white p-0.5">
                     <img src="{{ asset('images/logo_ck.png') }}" alt="ตราสัญลักษณ์โรงพยาบาลเชียงกลาง" class="w-full h-full object-contain rounded-full">
                 </div>
                 <div class="min-w-0">
-                    <div class="text-sm font-bold text-white leading-snug">
+                    <div class="text-sm font-bold text-slate-800 leading-snug">
                         RDU Dashboard
-                        <span class="text-[.65rem] font-medium text-blue-300 ml-1">V.1.0</span>
+                        <span class="text-[.65rem] font-medium text-slate-400 ml-1">V.1.0</span>
                     </div>
-                    <div class="text-blue-300 text-xs leading-tight mt-0.5">รพ.เชียงกลาง จ.น่าน</div>
+                    <div class="text-slate-500 text-xs leading-tight mt-0.5">รพ.เชียงกลาง จ.น่าน</div>
                 </div>
             </div>
         </div>
@@ -60,13 +54,13 @@
         <nav class="flex-1 px-3 py-3 overflow-y-auto sidebar-scroll text-sm" aria-label="เมนูหลัก">
 
             {{-- Section: Main --}}
-            <div class="text-blue-200/90 text-[.68rem] font-semibold uppercase tracking-wider px-3 pt-1 pb-1.5">
+            <div class="text-slate-500 text-[.7rem] font-semibold tracking-wide px-3 pt-1 pb-1.5">
                 เมนูหลัก
             </div>
 
             <a href="{{ route('dashboard') }}"
-               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150 cursor-pointer
-                      {{ request()->routeIs('dashboard') ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-100 hover:bg-blue-800/60 hover:text-white' }}"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
+                      {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
                aria-current="{{ request()->routeIs('dashboard') ? 'page' : 'false' }}">
                 <span class="msi text-[1.1rem]">dashboard</span>
                 <span>ภาพรวม 13 ตัวชี้วัด</span>
@@ -76,34 +70,31 @@
             @if(isset($kpiByCategory))
                 @foreach($categories as $catKey => $catLabel)
                     @if($kpiByCategory->has($catKey))
-                        <div class="pt-3 pb-0.5">
-                            <div class="text-blue-200/90 text-[.68rem] font-semibold uppercase tracking-wider px-3 mb-1.5 flex items-center gap-1.5">
-                                <span class="msi text-[.85rem] opacity-80">{{ $catIcons[$catKey] ?? 'category' }}</span>
+                        <div class="pt-4 pb-0.5">
+                            <div class="text-slate-500 text-[.7rem] font-semibold tracking-wide px-3 mb-1">
                                 {{ $catLabel }}
                             </div>
                             @foreach($kpiByCategory[$catKey] as $item)
                                 @php
                                     $isActive = request()->routeIs('dashboard.kpi')
                                         && request()->route('code') === $item['indicator']->code;
-                                    $statusIcon = match($item['status']) {
-                                        'pass'    => ['check_circle', 'text-emerald-400'],
-                                        'warning' => ['warning', 'text-amber-400'],
-                                        'fail'    => ['cancel', 'text-red-400'],
-                                        default   => ['remove', 'text-slate-400'],
+                                    [$statusDot, $statusText] = match($item['status']) {
+                                        'pass'    => ['bg-emerald-500', 'ผ่านเกณฑ์'],
+                                        'warning' => ['bg-amber-500', 'ใกล้เป้าหมาย'],
+                                        'fail'    => ['bg-red-500', 'ไม่ผ่านเกณฑ์'],
+                                        default   => ['bg-slate-300', 'ไม่มีข้อมูล'],
                                     };
                                 @endphp
                                 <a href="{{ route('dashboard.kpi', $item['indicator']->code) }}"
-                                   title="{{ $item['indicator']->name }}"
-                                   class="flex items-start gap-2 px-3 py-1.5 rounded-lg transition-all duration-150 cursor-pointer
-                                          {{ $isActive ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-100 hover:bg-blue-800/60 hover:text-white' }}"
+                                   title="{{ $item['indicator']->code }} — {{ $item['indicator']->name }}"
+                                   class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
+                                          {{ $isActive ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
                                    aria-current="{{ $isActive ? 'page' : 'false' }}">
 
-                                    <span class="msi text-[.85rem] flex-shrink-0 mt-0.5 {{ $statusIcon[1] }}">{{ $statusIcon[0] }}</span>
+                                    <span class="w-2 h-2 rounded-full flex-shrink-0 {{ $statusDot }}" role="img" aria-label="{{ $statusText }}"></span>
 
-                                    <div class="min-w-0 flex-1">
-                                        <div class="font-mono text-xs font-semibold leading-tight">{{ $item['indicator']->code }}</div>
-                                        <div class="text-xs opacity-95 leading-snug break-words">{{ $item['indicator']->name }}</div>
-                                    </div>
+                                    <span class="font-mono text-xs font-semibold flex-shrink-0">{{ $item['indicator']->code }}</span>
+                                    <span class="text-xs truncate min-w-0">{{ $item['indicator']->name }}</span>
                                 </a>
                             @endforeach
                         </div>
@@ -112,16 +103,16 @@
             @endif
 
             {{-- Divider --}}
-            <div class="border-t border-blue-800/30 my-3 mx-1"></div>
+            <div class="border-t border-slate-200 my-3 mx-1"></div>
 
             {{-- Section: Settings --}}
-            <div class="text-blue-200/90 text-[.68rem] font-semibold uppercase tracking-wider px-3 pb-1.5">
+            <div class="text-slate-500 text-[.7rem] font-semibold tracking-wide px-3 pb-1.5">
                 ตั้งค่าระบบ
             </div>
 
             <a href="{{ route('admin.database.show') }}"
-               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150 cursor-pointer
-                      {{ request()->routeIs('admin.database.*') ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-100 hover:bg-blue-800/60 hover:text-white' }}"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
+                      {{ request()->routeIs('admin.database.*') ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
                aria-current="{{ request()->routeIs('admin.database.*') ? 'page' : 'false' }}">
                 <span class="msi text-[1.1rem]">storage</span>
                 <span>ตั้งค่าฐานข้อมูล HOSxP</span>
@@ -129,24 +120,12 @@
         </nav>
 
         {{-- User Section --}}
-        <div class="px-4 py-3 border-t border-blue-800/40 flex-shrink-0">
-            <div class="flex items-center gap-2.5 mb-2.5">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 select-none"
-                     aria-hidden="true">
-                    {{ $userInitial }}
-                </div>
-                <div class="min-w-0 flex-1">
-                    <div class="text-white text-xs font-medium truncate flex items-center gap-1">
-                        {{ $userName }}
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" aria-label="ออนไลน์"></span>
-                    </div>
-                </div>
-            </div>
+        <div class="px-3 py-3 border-t border-slate-200 flex-shrink-0">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit"
-                        class="flex items-center gap-1.5 text-xs text-blue-200 hover:text-red-300 transition-colors duration-150 cursor-pointer py-0.5">
-                    <span class="msi text-[.9rem]">logout</span>
+                        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500">
+                    <span class="msi text-[1.1rem]">logout</span>
                     ออกจากระบบ
                 </button>
             </form>
