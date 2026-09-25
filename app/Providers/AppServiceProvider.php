@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\DataSources\HosxpRduDataSource;
 use App\DataSources\MockRduDataSource;
 use App\DataSources\RduDataSourceInterface;
+use App\DataSources\UnconfiguredRduDataSource;
 use App\Database\ReadonlyConnection;
 use App\Queries\Kpi\Antibiotic\AccidentWoundAntibioticQuery;
 use App\Queries\Kpi\Antibiotic\AcuteDiarrheaAntibioticQuery;
@@ -45,9 +46,12 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(RduDataSourceInterface::class, function ($app) {
-            $configService = $app->make(\App\Services\DatabaseConfigService::class);
-            if ($app->environment('testing') || ! $configService->hasConfig()) {
+            // Fake figures only ever in the test suite; an unconfigured app shows "no data", never mock numbers.
+            if ($app->environment('testing')) {
                 return $app->make(MockRduDataSource::class);
+            }
+            if (! $app->make(\App\Services\DatabaseConfigService::class)->hasConfig()) {
+                return $app->make(UnconfiguredRduDataSource::class);
             }
             return $app->make(HosxpRduDataSource::class);
         });

@@ -10,6 +10,7 @@ use App\Services\FontService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -41,6 +42,9 @@ class DatabaseConfigController extends Controller
 
         // Reload the 'rdu' connection so it picks up the new config
         DB::purge('rdu');
+
+        // Cached KPI query results were computed against the previous (or missing) connection.
+        Cache::flush();
 
         AuditLog::record('db_config.update', [
             'subject'   => 'HOSxP Database Configuration',

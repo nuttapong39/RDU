@@ -76,7 +76,7 @@
 {{-- ============ HDC COMPARISON MODAL — data loaded on open from dashboard.kpi.hdc ============ --}}
 <dialog id="hdcModal" aria-labelledby="hdcModalTitle"
         class="m-auto w-[calc(100%-2rem)] max-w-4xl max-h-[calc(100vh-2rem)] rounded-2xl p-0 shadow-2xl backdrop:bg-slate-900/40">
-    <div class="flex items-start justify-between gap-3 px-6 py-4 border-b border-slate-100 sticky top-0 bg-white">
+    <div class="flex items-start justify-between gap-3 px-6 py-4 border-b border-slate-100 sticky top-0 z-10 bg-white">
         <div>
             <h2 id="hdcModalTitle" class="font-bold text-slate-800">เทียบข้อมูล HOSxP กับ HDC — {{ $ind->code }}</h2>
             <p class="text-xs text-slate-500 mt-0.5">ยอดรวมทั้งปีงบประมาณ {{ $year }} ทั้งสองฝั่ง (ไม่ขึ้นกับไตรมาส/เดือนที่กรองอยู่)</p>
@@ -1356,7 +1356,16 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'top', labels: { font: { family: fontSans, size: fontPx(12) } } },
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: { family: fontSans, size: fontPx(12) },
+                            // Bars take their colour from each hospital's status, so the result swatch is
+                            // neutral grey — by default Chart.js would copy the first bar's (often green).
+                            generateLabels: c => Chart.defaults.plugins.legend.labels.generateLabels(c).map(l =>
+                                l.datasetIndex === 0 ? { ...l, fillStyle: '#94a3b8', strokeStyle: '#94a3b8', lineWidth: 0 } : l),
+                        },
+                    },
                     tooltip: {
                         titleFont: { family: fontSans },
                         bodyFont: { family: fontSans },

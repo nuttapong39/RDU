@@ -184,6 +184,20 @@
             </div>
         </header>
 
+        {{-- HOSxP not configured: say so instead of letting every KPI silently read as "no data" --}}
+        @unless(app(\App\Services\DatabaseConfigService::class)->hasConfig())
+            <div class="mx-4 lg:mx-6 mt-3 p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-sm flex items-center gap-2" role="alert">
+                <span class="msi text-amber-600" aria-hidden="true">link_off</span>
+                <span>ยังไม่ได้เชื่อมต่อฐานข้อมูล HOSxP — ตัวชี้วัดทั้งหมดจะแสดงเป็น "ไม่มีข้อมูล" จนกว่าจะตั้งค่าการเชื่อมต่อ
+                    @can('manage-settings')
+                        <a href="{{ route('admin.database.show') }}" class="font-semibold underline">ตั้งค่าตอนนี้</a>
+                    @else
+                        (กรุณาแจ้งผู้ดูแลระบบ)
+                    @endcan
+                </span>
+            </div>
+        @endunless
+
         {{-- Flash Messages --}}
         @if(session('success'))
             <div class="mx-4 lg:mx-6 mt-3 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-sm flex items-center gap-2" role="alert">

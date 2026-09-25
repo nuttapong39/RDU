@@ -100,16 +100,15 @@ class HdcComparisonService
         ];
     }
 
-    /** Full fiscal year (all 12 months) from HOSxP, regardless of any quarter/month filter on the page. */
+    /**
+     * Full fiscal year (all 12 months) from HOSxP, regardless of any quarter/month filter on the page —
+     * the same whole-year figure the KPI page headline shows (month 0), so the two never disagree.
+     */
     private function hosxpFullYear(RduIndicator $indicator, int $fyYear): array
     {
-        $trend = $this->calcService->getTrend($indicator, $fyYear);
+        $year = $this->calcService->getOrCalculate($indicator, $fyYear, 0);
 
-        return $this->figure(
-            (int) array_sum(array_column($trend, 'num')),
-            (int) array_sum(array_column($trend, 'den')),
-            $indicator
-        );
+        return $this->figure((int) $year['numerator'], (int) $year['denominator'], $indicator);
     }
 
     private function figure(int $num, int $den, RduIndicator $indicator): array

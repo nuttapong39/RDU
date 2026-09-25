@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
- * The HOSxP side comes from MockRduDataSource (testing environment): per month KPI01 = 340/399,
- * KPI03 = 182/200, so a full fiscal year is 12× those values.
+ * The HOSxP side comes from MockRduDataSource (testing environment), which returns KPI01 = 340/399 for
+ * any period — including the whole-year (month 0) figure the comparison uses.
  */
 class HdcComparisonTest extends TestCase
 {
@@ -68,8 +68,8 @@ class HdcComparisonTest extends TestCase
             ->assertOk()
             ->assertJsonPath('linked', true)
             ->assertJsonPath('hospcode', '11179')
-            ->assertJsonPath('ours.hosxp.num', 340 * 12)
-            ->assertJsonPath('ours.hosxp.den', 399 * 12)
+            ->assertJsonPath('ours.hosxp.num', 340)
+            ->assertJsonPath('ours.hosxp.den', 399)
             ->assertJsonPath('ours.hdc.num', 923)
             ->assertJsonPath('ours.hdc.den', 1670)
             ->assertJsonPath('ours.hdc.pct', 55.3)
