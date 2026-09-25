@@ -54,7 +54,7 @@ class FullQaTest extends TestCase
         $this->post(route('login'), [
             'username' => $user->username,
             'password' => 'password',
-        ])->assertRedirect(route('admin.database.show'));
+        ])->assertRedirect(route('dashboard')); // only settings admins are sent to the HOSxP setup page
     }
 
     public function test_invalid_credentials_return_to_login_with_error(): void

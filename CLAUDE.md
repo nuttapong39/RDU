@@ -46,6 +46,19 @@ join() / leftJoin() / groupBy() / orderBy() / having()
 count() / sum() / avg() / min() / max() / exists() / paginate()
 ```
 
+### ⛔ การลบทุกชนิด ต้องขออนุญาตผู้ใช้ก่อนทุกครั้ง — ห้ามทำเองโดยเด็ดขาด
+
+ก่อนสั่งงานใดๆ ที่**ลบ**ข้อมูล ต้องบอกผู้ใช้ว่าจะลบอะไร และรอให้ผู้ใช้ตอบอนุญาตชัดเจนก่อนทุกครั้ง แม้เป็นส่วนหนึ่งของงานที่อนุมัติไว้แล้ว
+ครอบคลุม:
+- ลบไฟล์หรือโฟลเดอร์ (`rm`, `unlink`, `Remove-Item`, `File::delete`, ลบไฟล์ผ่าน editor)
+- คำสั่ง `DELETE` / `TRUNCATE` / `DROP` บนฐานข้อมูลใดก็ตาม (รวม `rdu_dashboard`), `migrate:fresh`, `migrate:rollback`, `db:wipe`
+- คำสั่ง git ที่ทิ้งงาน (`reset --hard`, `clean`, `checkout -- .`, `restore`, `branch -D`, `stash drop`, force push)
+- `cache:clear` / `view:clear` / `config:clear` ไม่นับเป็นการลบข้อมูล ใช้ได้ตามปกติ
+- **การรันชุดทดสอบ (`php artisan test`) ที่มี test สร้าง/ลบไฟล์จริง** — ตรวจก่อนว่าทุก test ใช้ storage ชั่วคราว
+  (`tests/TestCase.php` ตั้งไว้แล้ว) ถ้าไม่แน่ใจให้ถามก่อน
+
+เหตุผล: เคยเกิดเหตุ 2 ครั้ง (2026-09-23 และ 2026-09-25) ที่การรัน test ลบไฟล์ `rdu_database.json` ตัวจริง ทำให้ระบบเชื่อม HOSxP ไม่ได้และ login ไม่ได้
+
 ### กฎเพิ่มเติมที่ห้ามละเมิด
 
 - **ห้าม `php artisan migrate` บน HOSxP** — Migration ใช้กับ `rdu_dashboard` เท่านั้น

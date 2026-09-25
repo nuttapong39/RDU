@@ -146,7 +146,8 @@ class DatabaseConfigTest extends TestCase
 
     public function test_update_route_saves_config_and_redirects(): void
     {
-        $user = User::factory()->create();
+        // Settings pages are limited to SETTINGS_ADMIN_USERNAMES (default: nuttapong).
+        $user = User::factory()->create(['username' => 'nuttapong']);
         $response = $this->actingAs($user)->post(route('admin.database.update'), [
             'host'     => '192.168.1.100',
             'port'     => 5432,
