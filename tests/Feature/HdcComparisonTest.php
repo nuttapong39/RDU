@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\RduIndicator;
 use App\Models\User;
+use App\Services\RduCalculationService;
 use Database\Seeders\RduIndicatorSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -93,16 +95,96 @@ class HdcComparisonTest extends TestCase
             ->assertJsonPath('ours.hdc.den', 10);
     }
 
-    public function test_kpi02_is_not_linked_until_its_seed_is_corrected(): void
+    public function test_kpi02_uses_the_second_column_pair_and_has_no_hosxp_side(): void
     {
-        Http::fake();
+        $this->fakeHdc([$this->row('11179', '55090111', ['target' => 1670, 'result' => 923, 'target1' => 1214, 'result1' => 613])]);
 
         $this->actingAs($this->user())
             ->getJson(route('dashboard.kpi.hdc', ['code' => 'KPI02', 'year' => 2569]))
             ->assertOk()
-            ->assertJsonPath('linked', false);
+            ->assertJsonPath('ours.hdc.num', 613)
+            ->assertJsonPath('ours.hdc.den', 1214)
+            ->assertJsonPath('ours.hdc.status', 'fail') // 50.5% against the corrected ≤ 40% target
+            ->assertJsonPath('ours.hosxp.den', 0);     // KPI02 has no HOSxP query yet
+    }
 
+    // ---- KPIs without a HOSxP query show their HDC whole-year figure ----
+
+    public function test_kpi_without_hosxp_query_shows_the_hdc_figure_on_its_page_and_overview(): void
+    {
+        $this->fakeHdc([$this->row('11179', '55090111', ['target' => 1478, 'result' => 1422])]); // s_rdu12, metformin
+        $user = $this->user();
+
+        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI10', 'year' => 2569]))
+            ->assertOk()
+            ->assertSee('แสดงผลจาก HDC (ข้อมูลส่วนกลาง) แทนชั่วคราว', false)
+            ->assertSee('96.2')                  // 1422 / 1478
+            ->assertSee('ผ่านเกณฑ์');           // ≥ 80%, higher is better
+
+        $this->actingAs($user)->get(route('dashboard', ['year' => 2569]))
+            ->assertOk()->assertSee('HDC · ทั้งปี', false)
+            ->assertDontSee('ไม่เปลี่ยนตามเดือนที่เลือก', false);
+
+        $this->actingAs($user)->get(route('dashboard', ['year' => 2569, 'month' => 3]))
+            ->assertOk()->assertSee('ไม่เปลี่ยนตามเดือนที่เลือก', false);
+    }
+
+    public function test_hdc_whole_year_figure_is_not_spread_over_quarter_cards_or_the_visit_donut(): void
+    {
+        $this->fakeHdc([$this->row('11179', '55090111', ['target' => 1478, 'result' => 1422])]);
+
+        $this->actingAs($this->user())->get(route('dashboard.kpi', ['code' => 'KPI10', 'year' => 2569, 'quarter' => 2]))
+            ->assertOk()
+            ->assertSee('ตัวเลขนี้จึงไม่เปลี่ยนตามช่วงเวลาที่เลือก', false)
+            ->assertDontSee('id="visitProportionDonut"', false)
+            ->assertDontSee('id="quarterPieChart"', false)
+            ->assertDontSee('1,422 / 1,478');     // quarter cards would print "num / den ราย"
+    }
+
+    public function test_kpi_with_hosxp_query_ignores_hdc(): void
+    {
+        Http::fake();
+        $kpi01 = RduIndicator::where('code', 'KPI01')->first();
+
+        $item = app(RduCalculationService::class)->getOrCalculate($kpi01, 2569, 0);
+        $this->assertSame(340, $item['numerator']); // MockRduDataSource KPI01 = 340/399
+        $this->assertNotSame('hdc', $item['source'] ?? 'hosxp');
         Http::assertNothingSent();
+
+        // (The page still fetches HDC for the sidebar's HDC-backed KPIs — just not for KPI01 itself.)
+        $this->actingAs($this->user())->get(route('dashboard.kpi', ['code' => 'KPI01', 'year' => 2569]))
+            ->assertOk()
+            ->assertDontSee('แสดงผลจาก HDC (ข้อมูลส่วนกลาง) แทนชั่วคราว', false)
+            ->assertSee('85.2');
+    }
+
+    public function test_hdc_outage_shows_no_data_with_a_note_and_is_not_retried_on_every_page_load(): void
+    {
+        Http::fake(['opendata.moph.go.th/*' => Http::response('down', 500)]);
+        $user = $this->user();
+
+        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI10', 'year' => 2569]))
+            ->assertOk()
+            ->assertSee('ดึงข้อมูลจาก HDC ไม่ได้ในขณะนี้', false);
+        $sent = count(Http::recorded());
+
+        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI10', 'year' => 2569]))->assertOk();
+        $this->actingAs($user)->get(route('dashboard', ['year' => 2569]))
+            ->assertOk()->assertSee('HDC ไม่ตอบสนอง', false);
+        $this->assertSame($sent, count(Http::recorded()), 'HDC was called again although it just failed');
+    }
+
+    public function test_hdc_timeout_is_waited_out_once_per_page_not_once_per_hdc_table(): void
+    {
+        $attempts = 0;
+        Http::fake(function () use (&$attempts) {
+            $attempts++;
+            throw new \Illuminate\Http\Client\ConnectionException('timed out');
+        });
+
+        // The overview needs five HDC tables (KPI02, 08, 09, 10, 13); only the first may hit the network.
+        $this->actingAs($this->user())->get(route('dashboard', ['year' => 2569]))->assertOk();
+        $this->assertSame(1, $attempts);
     }
 
     public function test_unlinked_kpi_reports_not_linked_without_calling_hdc(): void

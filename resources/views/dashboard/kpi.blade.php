@@ -8,6 +8,8 @@
     $ind    = $item['indicator'];
     $pct    = $item['percentage'];
     $status = $item['status'];
+    // KPIs without a HOSxP query yet show their HDC whole-year figure (see RduCalculationService::hdcFallback)
+    $fromHdc = ($item['source'] ?? 'hosxp') === 'hdc';
 
     $catMeta = [
         'Antibiotic'     => ['label' => 'ยาปฏิชีวนะ',  'icon' => 'medication',        'catBadge' => 'cat-badge-antibiotic', 'trend' => '#dc2626'],
@@ -88,6 +90,26 @@
     </div>
     <div id="hdcModalBody" class="px-6 py-5" aria-live="polite"></div>
 </dialog>
+
+@if($fromHdc)
+    <div class="mb-5 p-4 rounded-xl border border-[#28a745]/30 bg-[#28a745]/5 text-sm text-slate-700 flex items-start gap-3" role="note">
+        <span class="msi text-[#1e7e34] mt-0.5" aria-hidden="true">cloud</span>
+        <div>
+            <div class="font-semibold text-slate-800">ตัวชี้วัดนี้ยังไม่มี query จาก HOSxP — แสดงผลจาก HDC (ข้อมูลส่วนกลาง) แทนชั่วคราว</div>
+            @if($item['hdc_error'] ?? false)
+                <p class="mt-1 text-red-700">ดึงข้อมูลจาก HDC ไม่ได้ในขณะนี้ จึงแสดงเป็น "ไม่มีข้อมูล" กรุณาลองใหม่ภายหลัง</p>
+            @else
+                <p class="mt-1">ตัวเลขผลลัพธ์เป็น<b>ยอดรวมทั้งปีงบประมาณ {{ $year }}</b> ของหน่วยบริการ {{ config('rdu.hdc.hospcode') }}
+                    @if($item['hdc_processed_at']) · HDC ประมวลผล {{ $item['hdc_processed_at'] }} @endif
+                </p>
+            @endif
+            @if($quarter || $month)
+                <p class="mt-1 text-amber-800">ข้อมูล HDC มีเฉพาะยอดทั้งปี ไม่แยกไตรมาส/เดือน — ตัวเลขนี้จึงไม่เปลี่ยนตามช่วงเวลาที่เลือก</p>
+            @endif
+            <p class="mt-1 text-slate-500">การ์ดรายไตรมาส กราฟรายเดือน และข้อมูลรายกรณีด้านล่างจะแสดงเมื่อมี query จาก HOSxP</p>
+        </div>
+    </div>
+@endif
 
 {{-- ============ QUARTERLY HERO CARDS ============ --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
@@ -198,7 +220,7 @@
 
         <div class="ml-auto flex items-center gap-1.5 text-xs text-slate-400">
             <span class="msi text-[.9rem]">history</span>
-            คำนวณจาก HOSxP · โหมด Read-Only
+            {{ $fromHdc ? 'ตัวเลขหลักจาก HDC (ยังไม่มี query HOSxP)' : 'คำนวณจาก HOSxP · โหมด Read-Only' }}
         </div>
     </div>
 
@@ -229,6 +251,13 @@
             <span class="msi text-[1rem]">{{ $statusMeta['icon'] }}</span>
             {{ $statusMeta['label'] }}
         </span>
+
+        @if($fromHdc)
+            <div class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#1e7e34] bg-[#28a745]/10 px-2.5 py-1 rounded-lg">
+                <span class="msi text-[.95rem]" aria-hidden="true">cloud</span>
+                ที่มา: HDC · ยอดรวมทั้งปีงบ {{ $year }}
+            </div>
+        @endif
 
         {{-- Progress bar with a dashed tick marking the exact target position --}}
         @if($pct !== null)
@@ -320,10 +349,11 @@
     // KPI03's numerator counts visits that did NOT get an antibiotic (target_direction='higher' — the
     // opposite of every other KPI here) — swap which raw count maps to "ได้ยา"/"ไม่ได้ยา" so the donut's
     // labels stay truthful instead of silently reusing the other KPIs' numerator-is-received assumption.
-    $donutReceived = $item['numerator'] !== null && $item['denominator'] !== null
+    // An HDC-backed figure is not a visit count, so it gets no visit donut.
+    $donutReceived = !$fromHdc && $item['numerator'] !== null && $item['denominator'] !== null
         ? ($ind->target_direction === 'higher' ? $item['denominator'] - $item['numerator'] : $item['numerator'])
         : null;
-    $donutNotReceived = $item['numerator'] !== null && $item['denominator'] !== null
+    $donutNotReceived = $donutReceived !== null
         ? $item['denominator'] - $donutReceived
         : null;
 @endphp

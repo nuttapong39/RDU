@@ -101,6 +101,15 @@
     </div>
 </form>
 
+{{-- HDC-backed KPIs (no HOSxP query yet) only have a whole-year figure, so a month filter can't narrow them. --}}
+@if($month !== 0 && $kpiByCategory->flatten(1)->contains(fn ($i) => ($i['source'] ?? 'hosxp') === 'hdc'))
+    <div class="-mt-3 mb-6 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+        <span class="msi text-[1rem]">info</span>
+        ตัวชี้วัดที่มีป้าย "HDC · ทั้งปี" แสดงยอดรวมทั้งปีงบประมาณเสมอ ไม่เปลี่ยนตามเดือนที่เลือก
+        (ยังไม่มี query จาก HOSxP และ HDC ไม่มีข้อมูลรายเดือน)
+    </div>
+@endif
+
 {{-- ============ STATUS SUMMARY BAR ============ --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
     @foreach($summaryItems as $key => $cfg)
@@ -200,8 +209,17 @@
                     </span>
 
                     {{-- Header: code chip only --}}
-                    <div class="relative">
+                    <div class="relative flex items-center gap-1.5">
                         <span class="cat-badge {{ $meta['catBadge'] }}">{{ $ind->code }}</span>
+                        @if(($item['source'] ?? 'hosxp') === 'hdc')
+                            @if($item['hdc_error'] ?? false)
+                                <span class="text-[.65rem] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700"
+                                      title="ยังไม่มี query HOSxP และดึงข้อมูลจาก HDC ไม่ได้ในขณะนี้">HDC ไม่ตอบสนอง</span>
+                            @else
+                                <span class="text-[.65rem] font-bold px-1.5 py-0.5 rounded bg-[#28a745]/10 text-[#1e7e34]"
+                                      title="ยังไม่มี query HOSxP — แสดงยอดรวมทั้งปีงบจาก HDC (ข้อมูลส่วนกลาง)">HDC · ทั้งปี</span>
+                            @endif
+                        @endif
                     </div>
 
                     {{-- Name --}}

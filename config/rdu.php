@@ -7,7 +7,11 @@ return [
         explode(',', (string) env('SETTINGS_ADMIN_USERNAMES', 'nuttapong'))
     ))),
 
-    // MOPH Open Data (HDC) — used only for the "เทียบ HDC" comparison, never as a KPI data source
+    // KPIs whose HOSxP query is implemented (not a stub). These always use HOSxP; every other KPI
+    // falls back to its HDC whole-year figure when one is linked (see HdcDataService::MAPPING).
+    'hosxp_kpis' => ['KPI01', 'KPI03', 'KPI04', 'KPI05'],
+
+    // MOPH Open Data (HDC) — comparison modal, and the stand-in result for KPIs listed above as not yet on HOSxP
     'hdc' => [
         'base_url'  => env('HDC_BASE_URL', 'https://opendata.moph.go.th/api'),
         'hospcode'  => (string) env('HDC_HOSPCODE', '11179'),

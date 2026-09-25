@@ -40,6 +40,12 @@ class RduIndicator extends Model
         return $query->where('category', $category);
     }
 
+    /** Whether this KPI's HOSxP query is implemented (config rdu.hosxp_kpis); the rest are still query stubs. */
+    public function hasHosxpQuery(): bool
+    {
+        return in_array($this->code, config('rdu.hosxp_kpis', []), true);
+    }
+
     public function targetLabel(): string
     {
         $op = $this->target_direction === 'higher' ? '≥' : '≤';

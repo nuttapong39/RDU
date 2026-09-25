@@ -91,9 +91,6 @@ class DashboardController extends Controller
     /** Doctors with fewer visits than this are excluded from red/green judgement in the doctor-rate table (too few cases for the rate to be meaningful) — still listed, just ungraded. */
     private const DOCTOR_RATE_MIN_VISITS = 5;
 
-    /** KPI codes with real detail data rich enough to drive the deep-dive charts + quarterly-summary zone. */
-    private const DEEP_DIVE_KPI_CODES = ['KPI01', 'KPI03', 'KPI04', 'KPI05'];
-
     public function kpi(Request $request, string $code): View
     {
         $year    = $this->sanitizeYear((int) $request->input('year', $this->calcService->currentFiscalYear()));
@@ -117,7 +114,8 @@ class DashboardController extends Controller
 
         // Feature charts (drug usage / ICD-10 ranking / doctor rate) and the quarterly-summary zone
         // are only meaningful for KPIs with real detail data — the rest are still query stubs.
-        $hasDeepDive  = in_array($indicator->code, self::DEEP_DIVE_KPI_CODES, true);
+        // Deep-dive charts need HOSxP case-level detail, so only KPIs whose HOSxP query is implemented get them.
+        $hasDeepDive  = $indicator->hasHosxpQuery();
         $drugUsage    = $hasDeepDive ? $this->aggregateDrugUsage($allDetails) : [];
         $icd10Ranking = $hasDeepDive ? $this->aggregateIcd10Ranking($allDetails) : ['items' => [], 'total' => 0];
         $doctorRate   = $hasDeepDive ? $this->aggregateDoctorRate($allDetails, $indicator) : [];
@@ -132,8 +130,12 @@ class DashboardController extends Controller
 
         // Per-quarter breakdown for this fiscal year — drives the 4 hero cards and the quarterly
         // pie chart (always all 4 quarters of $year, regardless of the page's own month/quarter filter).
-        $quarterlyBreakdown = collect([1, 2, 3, 4])->map(function (int $q) use ($indicator, $year) {
-            $result = $this->calcService->getOrCalculateQuarter($indicator, $year, $q);
+        // An HDC-backed figure is a whole-year total only, so it cannot fill per-quarter cards.
+        $fromHdc = ($item['source'] ?? 'hosxp') === 'hdc';
+        $quarterlyBreakdown = collect([1, 2, 3, 4])->map(function (int $q) use ($indicator, $year, $fromHdc) {
+            $result = $fromHdc
+                ? ['numerator' => 0, 'denominator' => 0, 'percentage' => null, 'status' => 'na']
+                : $this->calcService->getOrCalculateQuarter($indicator, $year, $q);
             return [
                 'quarter'     => $q,
                 'numerator'   => $result['numerator'],

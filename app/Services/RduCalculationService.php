@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\HdcUnavailableException;
 use App\Models\RduIndicator;
 use App\Models\RduIndicatorResult;
 use App\Support\FiscalDateRange;
@@ -11,7 +12,47 @@ class RduCalculationService
 {
     private const NEAR_THRESHOLD = 5.0;
 
-    public function __construct(private RduQueryService $queryService) {}
+    public function __construct(
+        private RduQueryService $queryService,
+        private HdcDataService $hdc
+    ) {}
+
+    /**
+     * KPIs whose HOSxP query is not implemented yet show their HDC whole-year figure instead (for any
+     * month/quarter selection — HDC has no monthly data). Returns null for KPIs on HOSxP, or with no
+     * linked HDC table, which then take the normal HOSxP path. An HDC outage yields a "no data" item
+     * flagged `hdc_error` so the page can say why.
+     */
+    private function hdcFallback(RduIndicator $indicator, int $fyYear): ?array
+    {
+        if ($indicator->hasHosxpQuery() || ! $this->hdc->isLinked($indicator->code)) {
+            return null;
+        }
+
+        $error = false;
+        try {
+            $row = $this->hdc->ours($indicator->code, $fyYear);
+        } catch (HdcUnavailableException) {
+            $row   = null;
+            $error = true;
+        }
+
+        $num = $row['num'] ?? 0;
+        $den = $row['den'] ?? 0;
+        $pct = $den > 0 ? round($num / $den * 100, 1) : null;
+
+        return [
+            'indicator'        => $indicator,
+            'numerator'        => $num,
+            'denominator'      => $den,
+            'percentage'       => $pct,
+            'status'           => $this->getStatus($pct, $indicator->target_value, $indicator->target_direction),
+            'from_cache'       => false,
+            'source'           => 'hdc',
+            'hdc_processed_at' => HdcDataService::formatProcessedAt($row['date_com'] ?? null),
+            'hdc_error'        => $error,
+        ];
+    }
 
     // -------------------------------------------------------------------------
     // Core calculation — computes one KPI and persists the result
@@ -67,6 +108,10 @@ class RduCalculationService
      */
     public function getOrCalculate(RduIndicator $indicator, int $year, int $month): array
     {
+        if ($fallback = $this->hdcFallback($indicator, $year)) {
+            return $fallback;
+        }
+
         if ($month !== 0) {
             $stored = RduIndicatorResult::where('indicator_id', $indicator->id)
                 ->where('year', $year)
@@ -115,6 +160,9 @@ class RduCalculationService
                 ->keyBy('indicator_id');
 
             return $indicators->map(function (RduIndicator $ind) use ($year, $month, $stored) {
+                if ($fallback = $this->hdcFallback($ind, $year)) {
+                    return $fallback;
+                }
                 $result = $stored->get($ind->id);
                 if ($result !== null) {
                     return [
@@ -147,6 +195,10 @@ class RduCalculationService
      */
     public function getOrCalculateQuarter(RduIndicator $indicator, int $year, int $quarter): array
     {
+        if ($fallback = $this->hdcFallback($indicator, $year)) {
+            return $fallback;
+        }
+
         $num = 0;
         $den = 0;
         foreach (FiscalDateRange::quarterMonths($quarter) as $m) {
