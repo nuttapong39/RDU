@@ -66,11 +66,12 @@
                 <p class="text-slate-500 text-sm mt-2">{{ $ind->description }}</p>
             @endif
         </div>
+        {{-- Logo only: the button's name comes from aria-label/title. --}}
         <button type="button" id="hdcCompareBtn"
-                class="ml-auto inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#28a745] hover:bg-[#218838] active:bg-[#1e7e34] text-white text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#28a745] focus-visible:ring-offset-2"
+                class="ml-auto inline-flex items-center justify-center h-10 px-3.5 rounded-xl bg-white border border-hdc hover:bg-hdc/10 active:bg-hdc/20 shadow-sm hover:shadow-md transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-hdc focus-visible:ring-offset-2"
+                aria-label="เทียบข้อมูลกับ HDC" title="เทียบข้อมูลกับ HDC"
                 aria-haspopup="dialog" aria-controls="hdcModal">
-            <span class="msi text-[1.1rem]" aria-hidden="true">compare_arrows</span>
-            เทียบ HDC
+            <img src="{{ asset('images/hdc-logo.png') }}" alt="" class="h-6 w-auto" width="59" height="24">
         </button>
     </div>
 </div>
@@ -80,7 +81,10 @@
         class="m-auto w-[calc(100%-2rem)] max-w-4xl max-h-[calc(100vh-2rem)] rounded-2xl p-0 shadow-2xl backdrop:bg-slate-900/40">
     <div class="flex items-start justify-between gap-3 px-6 py-4 border-b border-slate-100 sticky top-0 z-10 bg-white">
         <div>
-            <h2 id="hdcModalTitle" class="font-bold text-slate-800">เทียบข้อมูล HOSxP กับ HDC — {{ $ind->code }}</h2>
+            <div class="flex items-center gap-2.5">
+                <img src="{{ asset('images/hdc-logo.png') }}" alt="" class="h-5 w-auto" width="49" height="20">
+                <h2 id="hdcModalTitle" class="font-bold text-slate-800">เทียบข้อมูล HOSxP กับ HDC — {{ $ind->code }}</h2>
+            </div>
             <p class="text-xs text-slate-500 mt-0.5">ยอดรวมทั้งปีงบประมาณ {{ $year }} ทั้งสองฝั่ง (ไม่ขึ้นกับไตรมาส/เดือนที่กรองอยู่)</p>
         </div>
         <button type="button" id="hdcModalClose" aria-label="ปิด"
@@ -92,8 +96,8 @@
 </dialog>
 
 @if($fromHdc)
-    <div class="mb-5 p-4 rounded-xl border border-[#28a745]/30 bg-[#28a745]/5 text-sm text-slate-700 flex items-start gap-3" role="note">
-        <span class="msi text-[#1e7e34] mt-0.5" aria-hidden="true">cloud</span>
+    <div class="mb-5 p-4 rounded-xl border border-hdc/30 bg-hdc/5 text-sm text-slate-700 flex items-start gap-3" role="note">
+        <span class="msi text-hdc-ink mt-0.5" aria-hidden="true">cloud</span>
         <div>
             <div class="font-semibold text-slate-800">ตัวชี้วัดนี้ยังไม่มี query จาก HOSxP — แสดงผลจาก HDC (ข้อมูลส่วนกลาง) แทนชั่วคราว</div>
             @if($item['hdc_error'] ?? false)
@@ -253,7 +257,7 @@
         </span>
 
         @if($fromHdc)
-            <div class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#1e7e34] bg-[#28a745]/10 px-2.5 py-1 rounded-lg">
+            <div class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-hdc-ink bg-hdc/10 px-2.5 py-1 rounded-lg">
                 <span class="msi text-[.95rem]" aria-hidden="true">cloud</span>
                 ที่มา: HDC · ยอดรวมทั้งปีงบ {{ $year }}
             </div>

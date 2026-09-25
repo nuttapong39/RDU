@@ -95,7 +95,7 @@
                                     <span class="font-mono text-xs font-semibold flex-shrink-0">{{ $item['indicator']->code }}</span>
                                     <span class="text-xs truncate min-w-0">{{ $item['indicator']->name }}</span>
                                     @if(($item['source'] ?? 'hosxp') === 'hdc')
-                                        <span class="ml-auto flex-shrink-0 text-[.6rem] font-bold px-1 rounded bg-[#28a745]/10 text-[#1e7e34]" title="แสดงผลจาก HDC (ยังไม่มี query HOSxP)">HDC</span>
+                                        <span class="ml-auto flex-shrink-0 text-[.6rem] font-bold px-1 rounded bg-hdc/10 text-hdc-ink" title="แสดงผลจาก HDC (ยังไม่มี query HOSxP)">HDC</span>
                                     @endif
                                 </a>
                             @endforeach

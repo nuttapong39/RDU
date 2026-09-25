@@ -9,6 +9,11 @@
     --font-sans: 'Sarabun', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    /* HDC (MOPH Health Data Center) — the logo's green marks anything sourced from HDC.
+       `hdc-ink` is a darker shade for small text on an hdc tint (AA contrast). */
+    --color-hdc: #38855c;
+    --color-hdc-ink: #2c6a49;
 }
 
 /* ==========================================================================

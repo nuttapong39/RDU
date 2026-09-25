@@ -216,7 +216,7 @@
                                 <span class="text-[.65rem] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700"
                                       title="ยังไม่มี query HOSxP และดึงข้อมูลจาก HDC ไม่ได้ในขณะนี้">HDC ไม่ตอบสนอง</span>
                             @else
-                                <span class="text-[.65rem] font-bold px-1.5 py-0.5 rounded bg-[#28a745]/10 text-[#1e7e34]"
+                                <span class="text-[.65rem] font-bold px-1.5 py-0.5 rounded bg-hdc/10 text-hdc-ink"
                                       title="ยังไม่มี query HOSxP — แสดงยอดรวมทั้งปีงบจาก HDC (ข้อมูลส่วนกลาง)">HDC · ทั้งปี</span>
                             @endif
                         @endif

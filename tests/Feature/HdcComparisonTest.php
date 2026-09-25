@@ -233,4 +233,18 @@ class HdcComparisonTest extends TestCase
                 ->assertOk()->assertSee('id="hdcCompareBtn"', false);
         }
     }
+
+    public function test_compare_button_is_the_hdc_logo_with_an_accessible_name(): void
+    {
+        $html = $this->actingAs($this->user())->get(route('dashboard.kpi', 'KPI01'))->assertOk()->getContent();
+
+        preg_match('/<button[^>]*id="hdcCompareBtn".*?<\/button>/s', $html, $m);
+        $this->assertNotEmpty($m, 'compare button not found');
+        $button = $m[0];
+
+        $this->assertStringContainsString('aria-label="เทียบข้อมูลกับ HDC"', $button);
+        $this->assertStringContainsString('images/hdc-logo.png', $button);
+        $this->assertStringNotContainsString('เทียบ HDC', strip_tags($button)); // logo only, no visible label
+        $this->assertFileExists(public_path('images/hdc-logo.png'));
+    }
 }
