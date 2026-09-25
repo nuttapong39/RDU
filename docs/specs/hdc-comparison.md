@@ -43,7 +43,7 @@ KPI ที่ยังไม่มีตาราง HDC คู่กัน ย�
 15. As a user, I want each row in the provincial table to show its denominator, numerator and result %, so that I can judge whether a hospital's rate rests on many or few cases.
 16. As a user, I want the result status (pass / near target / fail) shown on the HDC figures using the KPI's own target and direction, so that I read them the same way as the rest of the dashboard.
 17. As a user of KPI03, I want the HDC figures converted to the same direction as our KPI (visits that did NOT receive an antibiotic), so that the two sides are comparable.
-18. As a user of KPI02, I want to see the HDC figures even though the HOSxP side of KPI02 is not implemented yet, with a clear note that our side has no data yet.
+18. As a user of KPI02, I want the modal to say no HDC equivalent is linked yet (rather than show pass/fail judged with KPI02's currently wrong seeded direction), until KPI02 is implemented and its seed corrected.
 19. As a user of a KPI with no matching HDC table, I want the button to still be there and the modal to say that no HDC equivalent is linked yet, so that I understand it is not an error.
 20. As a user, I want a loading state while the HDC data is being fetched, so that I know the modal is working.
 21. As a user, I want a clear message and a "ลองใหม่" button if HDC cannot be reached, so that I can retry without reloading the page.
@@ -67,7 +67,7 @@ KPI ที่ยังไม่มีตาราง HDC คู่กัน ย�
   - HDC returns only hospital codes and area codes, no hospital names.
 - **KPI ↔ HDC mapping** (a single mapping owned by the new module):
   - KPI01 → `s_rdu8`, columns `target` (denominator) / `result` (numerator: visits that received an antibiotic)
-  - KPI02 → `s_rdu8`, columns `target1` / `result1`
+  - KPI02 → **not linked yet** (decided 2026-09-25). HDC `s_rdu8` `target1` / `result1` matches KPI02's name, but KPI02's seeded direction/target (higher, 80%) was copied from a diarrhea indicator, so HDC rows would be judged backwards. Link it when KPI02 is implemented and its seed is corrected.
   - KPI03 → `s_rdu9`, `target` / `result`; HDC `result` counts deliveries that **received** an antibiotic, so the HDC numerator shown is `target − result` to match KPI03's direction (not received)
   - KPI04 → `s_rdu6`, `target` / `result`
   - KPI05 → `s_rdu7`, `target` / `result`
@@ -86,7 +86,7 @@ KPI ที่ยังไม่มีตาราง HDC คู่กัน ย�
 - **Primary seam: one feature test of the new comparison endpoint**, with the HDC API faked by the HTTP client's fake and the HOSxP side supplied by the mock data source already used in testing. It covers:
   - KPI01: correct HOSxP vs HDC numbers, difference and HDC date for hospital 11179, and provincial rows sorted by %, with our row flagged and the weighted province average
   - KPI03: HDC numerator converted to "not received"
-  - KPI02: HDC shown while the HOSxP side is marked as having no data
+  - KPI02: reported as not linked, and HDC is never called
   - An unlinked KPI (e.g. KPI06): the "not linked" state, and HDC is never called
   - HDC timeout or HTTP error: the error state, not a 500
   - A second request is served from cache (the HDC fake is hit once)

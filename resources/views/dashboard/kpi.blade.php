@@ -64,8 +64,30 @@
                 <p class="text-slate-500 text-sm mt-2">{{ $ind->description }}</p>
             @endif
         </div>
+        <button type="button" id="hdcCompareBtn"
+                class="ml-auto inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#28a745] hover:bg-[#218838] active:bg-[#1e7e34] text-white text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#28a745] focus-visible:ring-offset-2"
+                aria-haspopup="dialog" aria-controls="hdcModal">
+            <span class="msi text-[1.1rem]" aria-hidden="true">compare_arrows</span>
+            เทียบ HDC
+        </button>
     </div>
 </div>
+
+{{-- ============ HDC COMPARISON MODAL — data loaded on open from dashboard.kpi.hdc ============ --}}
+<dialog id="hdcModal" aria-labelledby="hdcModalTitle"
+        class="m-auto w-[calc(100%-2rem)] max-w-4xl max-h-[calc(100vh-2rem)] rounded-2xl p-0 shadow-2xl backdrop:bg-slate-900/40">
+    <div class="flex items-start justify-between gap-3 px-6 py-4 border-b border-slate-100 sticky top-0 bg-white">
+        <div>
+            <h2 id="hdcModalTitle" class="font-bold text-slate-800">เทียบข้อมูล HOSxP กับ HDC — {{ $ind->code }}</h2>
+            <p class="text-xs text-slate-500 mt-0.5">ยอดรวมทั้งปีงบประมาณ {{ $year }} ทั้งสองฝั่ง (ไม่ขึ้นกับไตรมาส/เดือนที่กรองอยู่)</p>
+        </div>
+        <button type="button" id="hdcModalClose" aria-label="ปิด"
+                class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+            <span class="msi" aria-hidden="true">close</span>
+        </button>
+    </div>
+    <div id="hdcModalBody" class="px-6 py-5" aria-live="polite"></div>
+</dialog>
 
 {{-- ============ QUARTERLY HERO CARDS ============ --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
@@ -1181,6 +1203,216 @@
             },
         },
     });
+})();
+</script>
+<script>
+(function () {
+    const btn    = document.getElementById('hdcCompareBtn');
+    const modal  = document.getElementById('hdcModal');
+    const body   = document.getElementById('hdcModalBody');
+    const url    = @json(route('dashboard.kpi.hdc', ['code' => $ind->code, 'year' => $year]));
+    const numLabel  = @json($numeratorLabel);
+    const targetTxt = @json($ind->targetLabel());
+    let loaded = false;
+
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const fmt = n => (n ?? 0).toLocaleString();
+    const pct = p => p === null || p === undefined ? '—' : p + '%';
+    const STATUS = {
+        pass:    ['ผ่านเกณฑ์',    'bg-emerald-50 text-emerald-700'],
+        warning: ['ใกล้เป้าหมาย', 'bg-amber-50 text-amber-700'],
+        fail:    ['ไม่ผ่านเกณฑ์', 'bg-red-50 text-red-700'],
+        na:      ['ไม่มีข้อมูล',    'bg-slate-100 text-slate-500'],
+    };
+    const chip = s => { const [t, c] = STATUS[s] ?? STATUS.na; return `<span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium ${c}">${t}</span>`; };
+
+    function card(title, f, note) {
+        if (!f) {
+            return `<div class="rounded-xl border border-slate-200 p-4"><div class="text-xs font-semibold text-slate-500 mb-2">${title}</div>
+                    <p class="text-sm text-slate-500">${esc(note)}</p></div>`;
+        }
+        return `<div class="rounded-xl border border-slate-200 p-4">
+            <div class="flex items-center justify-between gap-2 mb-2"><span class="text-xs font-semibold text-slate-500">${title}</span>${chip(f.status)}</div>
+            <div class="text-3xl font-bold text-slate-800 tabular-nums">${pct(f.pct)}</div>
+            <div class="text-xs text-slate-500 mt-1 tabular-nums">${esc(numLabel)} ${fmt(f.num)} / visit ทั้งหมด ${fmt(f.den)}</div>
+            ${note ? `<div class="text-xs text-slate-400 mt-2">${esc(note)}</div>` : ''}
+        </div>`;
+    }
+
+    function render(d) {
+        if (!d.linked) {
+            body.innerHTML = `<div class="status-empty py-8"><span class="msi">link_off</span>
+                <p class="font-medium text-sm">ยังไม่มีข้อมูล HDC คู่กันสำหรับตัวชี้วัดนี้</p>
+                <p class="text-xs text-slate-400 mt-1">จะผูกกับตาราง HDC เมื่อ implement ตัวชี้วัดนี้ตามแบบอ้างอิง</p></div>`;
+            return;
+        }
+        const h = d.ours.hosxp, c = d.ours.hdc;
+        const hosxpNote = h.den === 0 ? 'ยังไม่มีข้อมูลฝั่ง HOSxP สำหรับตัวชี้วัดนี้' : 'คำนวณจาก HOSxP ของโรงพยาบาลโดยตรง';
+        const diff = d.ours.diff_pp;
+        const diffTxt = diff === null ? '' :
+            `<p class="text-sm text-slate-600 mt-3">ส่วนต่าง: HOSxP ${diff > 0 ? 'สูงกว่า' : diff < 0 ? 'ต่ำกว่า' : 'เท่ากับ'} HDC
+             <b class="tabular-nums">${Math.abs(diff)}</b> จุดร้อยละ</p>`;
+
+        const rows = d.province.rows.map((r, i) => `
+            <tr class="border-b border-slate-100 last:border-0 ${r.is_ours ? 'bg-indigo-50 font-semibold' : ''}">
+                <td class="py-2 pr-3 text-slate-400 tabular-nums">${i + 1}</td>
+                <td class="py-2 pr-3 text-slate-700">${esc(r.label)}${r.is_ours ? ' <span class="text-xs text-indigo-700">(รพ.เรา)</span>' : ''}</td>
+                <td class="py-2 pr-3 text-right tabular-nums text-slate-500">${fmt(r.den)}</td>
+                <td class="py-2 pr-3 text-right tabular-nums text-slate-500">${fmt(r.num)}</td>
+                <td class="py-2 pr-3 text-right tabular-nums text-slate-800">${pct(r.pct)}</td>
+                <td class="py-2 text-right">${chip(r.status)}</td>
+            </tr>`).join('');
+
+        body.innerHTML = `
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                ${card('HOSxP (ระบบนี้)', h, hosxpNote)}
+                ${card('HDC (ส่วนกลาง) · หน่วยบริการ ' + esc(d.hospcode), c,
+                       c ? 'ประมวลผลโดย HDC: ' + (c.processed_at ?? '—') : 'ไม่พบหน่วยบริการ ' + d.hospcode + ' ในข้อมูล HDC')}
+            </div>
+            ${diffTxt}
+            <p class="text-xs text-slate-400 mt-2">เป้าหมาย ${esc(targetTxt)} · ตัวเลขสองฝั่งอาจต่างกันได้ เพราะใช้นิยาม แหล่งข้อมูล และวันตัดข้อมูลต่างกัน (HDC ใช้ข้อมูล 43 แฟ้มที่ส่งเข้าส่วนกลาง)</p>
+
+            <h3 class="font-semibold text-sm text-slate-800 mt-6 mb-1">กราฟเปรียบเทียบผลลัพธ์ในจังหวัด</h3>
+            <p class="text-xs text-slate-500 mb-2">สีแท่งตามสถานะ · แท่งขอบม่วงคือ รพ.เชียงกลาง (แท่งสีจาง = HOSxP ระบบนี้, แท่งสีเต็ม = HDC) · เส้นประ = เป้าหมาย</p>
+            <div class="relative" style="height: 300px;">
+                <canvas id="hdcCompareChart" role="img" aria-label="กราฟแท่งผลลัพธ์ร้อยละของโรงพยาบาลในจังหวัดจากข้อมูล HDC เทียบกับผลจาก HOSxP ของโรงพยาบาลเชียงกลาง"></canvas>
+            </div>
+
+            <h3 class="font-semibold text-sm text-slate-800 mt-6 mb-2">โรงพยาบาลในจังหวัดจากข้อมูล HDC (เรียงจากผลดีที่สุด)</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="text-left text-xs text-slate-500 border-b border-slate-200">
+                        <th class="py-2 pr-3 font-medium">#</th><th class="py-2 pr-3 font-medium">หน่วยบริการ</th>
+                        <th class="py-2 pr-3 font-medium text-right">visit ทั้งหมด</th><th class="py-2 pr-3 font-medium text-right">${esc(numLabel)}</th>
+                        <th class="py-2 pr-3 font-medium text-right">ผลลัพธ์</th><th class="py-2 font-medium text-right">สถานะ</th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                    <tfoot><tr class="border-t border-slate-200 text-slate-700">
+                        <td></td><td class="py-2 pr-3 font-semibold">เฉลี่ยทั้งจังหวัด</td>
+                        <td class="py-2 pr-3 text-right tabular-nums">${fmt(d.province.total_den)}</td>
+                        <td class="py-2 pr-3 text-right tabular-nums">${fmt(d.province.total_num)}</td>
+                        <td class="py-2 pr-3 text-right tabular-nums font-semibold">${pct(d.province.avg_pct)}</td><td></td>
+                    </tr></tfoot>
+                </table>
+            </div>`;
+        drawChart(d);
+    }
+
+    // Same look as the overview bar chart on the dashboard: vertical % bars coloured by status + dashed target.
+    const target = {{ $ind->target_value }};
+    const fontSans = window.RDU_FONT_SANS || 'Sarabun, sans-serif';
+    const fontPx = px => Math.round(px * (window.RDU_FONT_SCALE || 1));
+    const STATUS_FILL = {
+        pass: 'rgba(16,185,129,0.85)', warning: 'rgba(245,158,11,0.85)', fail: 'rgba(239,68,68,0.85)', na: 'rgba(148,163,184,0.4)',
+    };
+    const fade = rgba => rgba.replace(/[\d.]+\)$/, '0.35)');
+    let chart = null;
+
+    function drawChart(d) {
+        const canvas = document.getElementById('hdcCompareChart');
+        if (!canvas || typeof Chart === 'undefined') return;
+
+        // Province rows (already sorted best→worst) with our HOSxP figure inserted just before our HDC bar.
+        const bars = [];
+        const h = d.ours.hosxp;
+        const hosxpBar = district => ({ label: district + ' (HOSxP)', title: 'รพ.เรา — HOSxP (ระบบนี้)', pct: h.den > 0 ? h.pct : null, num: h.num, den: h.den, status: h.status, ours: true, hosxp: true });
+        d.province.rows.forEach(r => {
+            const district = String(r.label).replace(/^อ\./, '').replace(/\s*\(.*\)$/, '');
+            if (r.is_ours) bars.push(hosxpBar(district));
+            bars.push({ label: district + (r.is_ours ? ' (HDC)' : ''), title: r.label + (r.is_ours ? ' — HDC' : ''), pct: r.pct, num: r.num, den: r.den, status: r.status, ours: r.is_ours, hosxp: false });
+        });
+        // Our hospital missing from the HDC data: still show our HOSxP result, at the end.
+        if (!d.ours.hdc) bars.push(hosxpBar('รพ.เรา'));
+
+        if (chart) chart.destroy();
+        chart = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: bars.map(b => b.label),
+                datasets: [
+                    {
+                        label: 'ผลลัพธ์ (%)',
+                        data: bars.map(b => b.pct),
+                        backgroundColor: bars.map(b => { const c = STATUS_FILL[b.status] ?? STATUS_FILL.na; return b.hosxp ? fade(c) : c; }),
+                        borderColor: bars.map(b => b.ours ? '#4F46E5' : 'transparent'),
+                        borderWidth: bars.map(b => b.ours ? 2 : 0),
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    },
+                    {
+                        label: 'เป้าหมาย (%)',
+                        type: 'line',
+                        data: bars.map(() => target),
+                        borderColor: 'rgba(79,70,229,0.9)',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [6, 4],
+                        pointRadius: 0,
+                        tension: 0,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { font: { family: fontSans, size: fontPx(12) } } },
+                    tooltip: {
+                        titleFont: { family: fontSans },
+                        bodyFont: { family: fontSans },
+                        callbacks: {
+                            title: items => bars[items[0].dataIndex].title,
+                            label: item => {
+                                if (item.datasetIndex === 1) return ` เป้าหมาย: ${targetTxt}`;
+                                const b = bars[item.dataIndex];
+                                if (b.pct === null) return ' ไม่มีข้อมูล';
+                                return [` ผลลัพธ์: ${b.pct}% (${STATUS[b.status]?.[0] ?? ''})`, ` ${numLabel} ${fmt(b.num)} / visit ทั้งหมด ${fmt(b.den)}`];
+                            },
+                        },
+                    },
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            autoSkip: false, maxRotation: 60, minRotation: 0,
+                            font: ctx => ({ family: fontSans, size: fontPx(11), weight: bars[ctx.index]?.ours ? 'bold' : 'normal' }),
+                            color: ctx => bars[ctx.index]?.ours ? '#4338ca' : '#64748b',
+                        },
+                        grid: { display: false },
+                    },
+                    y: { min: 0, max: 100, ticks: { callback: v => v + '%', font: { family: fontSans, size: fontPx(11) } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                },
+            },
+        });
+    }
+
+    function showError(message) {
+        body.innerHTML = `<div class="status-empty py-8"><span class="msi">cloud_off</span>
+            <p class="font-medium text-sm">${esc(message)}</p>
+            <button type="button" id="hdcRetry" class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                <span class="msi text-[1rem]" aria-hidden="true">refresh</span> ลองใหม่</button></div>`;
+        document.getElementById('hdcRetry').addEventListener('click', load);
+    }
+
+    async function load() {
+        body.innerHTML = `<div class="flex items-center justify-center gap-2 py-10 text-sm text-slate-500">
+            <span class="msi animate-spin" aria-hidden="true">progress_activity</span> กำลังดึงข้อมูลจาก HDC…</div>`;
+        try {
+            const res  = await fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) { showError(data.message || 'ไม่สามารถดึงข้อมูลจาก HDC ได้ในขณะนี้'); return; }
+            render(data);
+            loaded = true;
+        } catch (e) {
+            showError('เชื่อมต่อไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่');
+        }
+    }
+
+    btn.addEventListener('click', () => { modal.showModal(); if (!loaded) load(); });
+    document.getElementById('hdcModalClose').addEventListener('click', () => modal.close());
+    // Click on the backdrop (outside the dialog box) closes it; Escape is handled natively by <dialog>.
+    modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
+    modal.addEventListener('close', () => btn.focus());
 })();
 </script>
 @endpush

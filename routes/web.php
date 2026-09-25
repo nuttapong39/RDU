@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\DatabaseConfigController;
 use App\Http\Controllers\Admin\FontConfigController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HdcComparisonController;
 use Illuminate\Support\Facades\Route;
 
 // ---- Public ----
@@ -20,6 +21,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->midd
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/kpi/{code}', [DashboardController::class, 'kpi'])->name('dashboard.kpi');
+    Route::get('/dashboard/kpi/{code}/hdc', [HdcComparisonController::class, 'show'])->name('dashboard.kpi.hdc');
 });
 
 // ---- Admin (auth required) ----
