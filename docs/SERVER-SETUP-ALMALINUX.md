@@ -20,8 +20,10 @@ Stack บนเครื่องใหม่:
 
 ## การตัดสินใจ (ยืนยันแล้ว 2026-10-06)
 
-1. **URL:** `https://rdu.chk.local` — 1 ชื่อเครื่องต่อ 1 dashboard (ระบบถัดไปใช้แบบเดียวกัน เช่น `xxx.chk.local`)
-   - ต้องเพิ่ม DNS record `rdu.chk.local → <SERVER_IP>` ใน DNS ภายในของโรงพยาบาล (AD/router) ก่อน Phase 6
+1. **URL:** `https://rdu.ckhospital.local` — 1 ชื่อเครื่องต่อ 1 dashboard (ระบบถัดไปใช้แบบเดียวกัน เช่น `xxx.ckhospital.local`)
+   - โดเมน AD ขององค์กรคือ `ckhospital.local` → เพิ่ม A record `rdu` → `<SERVER_IP>` ในโซนเดิมของ AD (ไม่ต้องสร้างโซนใหม่)
+   - ระหว่างรอ DNS ทดสอบได้โดยเพิ่ม `<SERVER_IP>   rdu.ckhospital.local` ในไฟล์ `hosts` ของเครื่องที่ใช้ทดสอบ แล้วลบออกเมื่อ DNS พร้อม
+   - เครื่องนี้มีระบบ `ck-asset-registry` ใช้ IP `<SERVER_IP>` ตรงๆ อยู่แล้ว → RDU ต้องใช้ชื่อเครื่องเท่านั้น (`server_name` ห้ามใส่ IP ซ้ำ)
    - `.local` ใช้ Let's Encrypt ไม่ได้ → HTTPS ใช้ certificate จาก CA ภายในของโรงพยาบาล (หรือ self-signed ที่ติดตั้งให้เครื่องผู้ใช้เชื่อถือ)
 2. **ข้อมูลแอปเดิม:** ย้ายด้วย `pg_dump` **เฉพาะฐาน `rdu_dashboard`** (ฐานของแอป RDU — บน PostgreSQL เครื่อง XAMPP
    มีแค่ `postgres` กับ `rdu_dashboard`) ไม่ใช้ `pg_dumpall` และไม่ย้าย role/ผู้ใช้ของ PostgreSQL (สร้างใหม่ใน Phase 3)
@@ -188,7 +190,7 @@ sudo systemctl enable --now nginx php-fpm
 ```nginx
 server {
     listen 80;
-    server_name rdu.chk.local;
+    server_name rdu.ckhospital.local;
     root /var/www/rdu/public;
     index index.php;
     charset utf-8;
@@ -270,7 +272,7 @@ cd /var/www/rdu
 ```dotenv
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://rdu.chk.local
+APP_URL=https://rdu.ckhospital.local
 LOG_CHANNEL=daily
 LOG_LEVEL=warning
 
@@ -285,7 +287,10 @@ RDU_DB_PASSWORD=
 ```
 
 ```bash
-chmod 640 .env storage/app/private/config/rdu_database.json
+chmod 640 .env
+# แอป (PHP-FPM รันเป็น nginx) ต้องเขียนไฟล์นี้ได้ตอนกด "บันทึก" ในหน้าตั้งค่า HOSxP — ไม่งั้นได้ 500
+sudo chown nginx:nginx storage/app/private/config/rdu_database.json
+sudo chmod 600 storage/app/private/config/rdu_database.json
 ```
 
 ### 6.3 ย้ายฐานข้อมูลแอปจากเครื่องเดิม (แนะนำ)
@@ -341,11 +346,12 @@ sudo nginx -t && sudo systemctl reload nginx php-fpm
 ```
 
 **ตรวจผ่าน**
-- [ ] เปิด `http(s)://rdu.chk.local` → หน้า login แสดงครบ (CSS/ฟอนต์/โลโก้)
+- [ ] เปิด `http(s)://rdu.ckhospital.local` → หน้า login แสดงครบ (CSS/ฟอนต์/โลโก้)
 - [ ] login ด้วยผู้ใช้จริงได้ (ผู้ใช้จาก officer ใน HOSxP)
 - [ ] `sudo ausearch -m avc -ts recent` → ไม่มี SELinux denial ของ nginx/php-fpm (LXC: ข้าม)
-- [ ] `curl -sI https://rdu.chk.local | grep -i x-powered-by` → ไม่มีผลลัพธ์
-- [ ] `ls -la storage/app/private/config/` → `rdu_database.json` สิทธิ์ `-rw-r-----`
+- [ ] `curl -sI https://rdu.ckhospital.local | grep -i x-powered-by` → ไม่มีผลลัพธ์
+- [ ] `ls -la storage/app/private/config/` → `rdu_database.json` เป็น `-rw------- nginx nginx`
+- [ ] หน้าตั้งค่าฐานข้อมูล HOSxP กด **บันทึก** ได้ (ไม่ขึ้น 500)
 
 ---
 
@@ -403,7 +409,7 @@ EOF
 
 1. แจ้งผู้ใช้ช่วงเวลาสลับ (ใช้เวลาประมาณ 30 นาที)
 2. เครื่อง XAMPP: หยุดรับงาน แล้ว `pg_dump` ฐานแอปรอบสุดท้าย → restore ทับบนเครื่องใหม่ (ทำ 6.3 ซ้ำ)
-3. ยืนยัน DNS `rdu.chk.local → <SERVER_IP>` และแจ้งผู้ใช้ให้ใช้ URL ใหม่ `https://rdu.chk.local` (แทน `http://192.168.1.25/rdu`)
+3. ยืนยัน DNS `rdu.ckhospital.local → <SERVER_IP>` และแจ้งผู้ใช้ให้ใช้ URL ใหม่ `https://rdu.ckhospital.local` (แทน `http://192.168.1.25/rdu`)
 4. ตรวจ Phase 7 ซ้ำบนระบบจริงอีกครั้ง
 5. **เครื่อง XAMPP เก็บไว้สภาพเดิมอย่างน้อย 2 สัปดาห์** เป็นแผนถอยกลับ (แค่หยุด Apache ไม่ลบอะไร)
 
@@ -421,7 +427,7 @@ EOF
 |---|---|
 | โฟลเดอร์ | `/var/www/xxx` + SELinux context แบบ 6.5 |
 | ฐานข้อมูล + ผู้ใช้ | `xxx_dashboard` / `xxx_app` (Phase 3) |
-| nginx | `/etc/nginx/conf.d/xxx.conf`, `server_name xxx.chk.local` |
+| nginx | `/etc/nginx/conf.d/xxx.conf`, `server_name xxx.ckhospital.local` |
 | PHP-FPM pool (แนะนำเมื่อมี 3 ระบบขึ้นไป) | `/etc/php-fpm.d/xxx.conf` socket `/run/php-fpm/xxx.sock` |
 | Backup | เพิ่มบรรทัดใน `/etc/cron.d/` |
 
