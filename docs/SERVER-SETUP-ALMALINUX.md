@@ -433,9 +433,30 @@ EOF
 
 ---
 
+## อัปเดตโค้ด (deploy ครั้งถัดไป)
+
+```
+XAMPP (dev) ──git push──► GitHub ──./scripts/deploy.sh──► Server
+```
+
+1. เครื่อง dev (XAMPP): ทดสอบให้ผ่าน แล้ว `git commit` + `git push origin main`
+2. Server:
+   ```bash
+   ssh nuttapong@192.168.1.244
+   cd /var/www/rdu && ./scripts/deploy.sh
+   ```
+
+สคริปต์ทำ: ตรวจความปลอดภัย (`APP_ENV=production`, `DB_DATABASE=rdu_dashboard`, ไม่มีไฟล์ถูกแก้บน server) →
+เปิดหน้าปิดปรับปรุง → `git merge --ff-only` → `composer install --no-dev` → `npm ci && npm run build` →
+`migrate --force` → cache → `reload php-fpm` → ปิดหน้าปิดปรับปรุง
+
+- ล้มเหลว**ก่อน**เปลี่ยนโค้ด → เว็บกลับมาใช้โค้ดเดิมเอง
+- ล้มเหลว**หลัง**เปลี่ยนโค้ด → เว็บค้างที่หน้าปิดปรับปรุง แก้สาเหตุแล้วรัน `./scripts/deploy.sh` ซ้ำ จะทำขั้นที่เหลือต่อจนจบ
+- ไม่แตะ `.env` และ `rdu_database.json` — ถ้าเพิ่มค่าใหม่ใน `.env` ต้องเพิ่มบน server เอง ก่อนรันสคริปต์
+- ห้ามแก้ไฟล์โค้ดบน server โดยตรง (สคริปต์จะไม่ยอม deploy)
+
 ## งานต่อเนื่อง (ทำหลังใช้งานจริงแล้ว)
 
 - **Redis เป็น cache** แทน `CACHE_STORE=database` เมื่อมีหลาย dashboard หรือหน้าเริ่มช้า
   (`dnf module enable redis:7`, `dnf install redis php-pecl-redis6`, ตั้ง `CACHE_STORE=redis`)
-- **สคริปต์ deploy สำหรับ Linux** แทน `deploy.ps1` (git pull → composer → npm build → migrate → cache → reload php-fpm)
 - **อัปเดตเอกสาร** `CLAUDE.md` (Technology Stack, XAMPP Setup), `DEPLOYMENT.md` และ `vhost.conf` ให้ตรงกับ stack ใหม่
