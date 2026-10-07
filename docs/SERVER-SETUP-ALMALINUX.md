@@ -331,7 +331,13 @@ php artisan config:cache && php artisan route:cache && php artisan view:cache
 
 ```bash
 sudo chown -R <ADMIN_USER>:nginx /var/www/rdu
-sudo chmod -R 775 /var/www/rdu/storage /var/www/rdu/bootstrap/cache
+# โฟลเดอร์ 775 / ไฟล์ 664 — ห้ามใช้ chmod -R 775 (ไฟล์จะได้สิทธิ์ execute แล้ว git เห็นว่าถูกแก้
+# ทำให้ scripts/deploy.sh ไม่ยอม deploy)
+sudo find /var/www/rdu/storage /var/www/rdu/bootstrap/cache -type d -exec chmod 775 {} +
+sudo find /var/www/rdu/storage /var/www/rdu/bootstrap/cache -type f -exec chmod 664 {} +
+# สองบรรทัดบนเปลี่ยนไฟล์ config HOSxP ด้วย — ตั้งกลับ: แอป (nginx) ต้องเขียนได้ คนอื่นห้ามอ่าน
+sudo chown nginx:nginx /var/www/rdu/storage/app/private/config/rdu_database.json
+sudo chmod 600 /var/www/rdu/storage/app/private/config/rdu_database.json
 
 # nginx/PHP-FPM เขียนได้เฉพาะ storage และ bootstrap/cache
 sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/rdu/storage(/.*)?"
