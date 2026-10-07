@@ -107,7 +107,7 @@ php artisan db:seed --class=RduIndicatorSeeder
 | หน้าตั้งค่า HOSxP กด **บันทึก** แล้ว 500 (`file_put_contents ... Permission denied`) | `rdu_database.json` ไม่ใช่ของผู้ใช้ `nginx` | `sudo chown nginx:nginx` + `sudo chmod 600` ไฟล์นั้น |
 | `deploy.sh`: "Files tracked by git were edited on the server" แต่ไม่ได้แก้อะไร | ใช้ `chmod -R 775` → ไฟล์ได้สิทธิ์ execute | โฟลเดอร์ `775` / ไฟล์ `664` ด้วย `find` (ดู `docs/SERVER-SETUP-ALMALINUX.md` 6.5) |
 | เปิดชื่อเครื่องแล้วเจอระบบอื่น / `nginx: conflicting server name` | `server_name` ซ้ำกับระบบอื่นบน server | ระบบละ 1 ชื่อเครื่อง ห้ามใส่ IP ใน `server_name` ของ RDU |
-| เครื่องผู้ใช้เปิด `rdu.ckhospital.local` ไม่ได้ | ยังไม่มี A record ใน DNS ของ AD | เพิ่ม `rdu` → `192.168.1.244` ในโซน `ckhospital.local` |
+| เครื่องผู้ใช้เปิด `rdu.ckhospital.local` ไม่ได้ | ไม่มี A record ใน DNS ของ AD (Univention UCS) | หน้าเว็บ UCS → Domain → DNS → `ckhospital.local` → Host Record (ดู `docs/SERVER-SETUP-ALMALINUX.md` การตัดสินใจข้อ 1) |
 | `could not find driver` (เครื่อง dev) | ยังไม่เปิด `pdo_pgsql` ใน `php.ini` | เปิด extension แล้ว restart Apache |
 | `password authentication failed for user "rdu_readonly"` | รหัสใน `rdu_database.json` ผิด หรือ `APP_KEY` ไม่ตรงกับตอนบันทึก | กรอกใหม่ในหน้าตั้งค่า HOSxP |
 | `no pg_hba.conf entry for host "<IP>"` | HOSxP ยังไม่อนุญาต IP เครื่องนั้น | ผู้ดูแล HOSxP เพิ่มบรรทัดใน `pg_hba.conf` ของ HOSxP สำหรับ `rdu_readonly` |

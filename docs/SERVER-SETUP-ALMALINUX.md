@@ -22,6 +22,11 @@ Stack บนเครื่องใหม่:
 
 1. **URL:** `https://rdu.ckhospital.local` — 1 ชื่อเครื่องต่อ 1 dashboard (ระบบถัดไปใช้แบบเดียวกัน เช่น `xxx.ckhospital.local`)
    - โดเมน AD ขององค์กรคือ `ckhospital.local` → เพิ่ม A record `rdu` → `<SERVER_IP>` ในโซนเดิมของ AD (ไม่ต้องสร้างโซนใหม่)
+   - AD คือ **Univention Corporate Server 5.2** (`ckadprod01`, 192.168.1.120 / .121) — เพิ่ม record ผ่านหน้าเว็บเท่านั้น
+     (ไม่ใช้ `samba-tool` และ DNS Manager ของ Windows เชื่อมต่อไม่ได้):
+     `https://192.168.1.120/univention/management` → **Domain → DNS** → คลิกโซน `ckhospital.local` ในต้นไม้ซ้าย →
+     **+ ADD** → Type **DNS: Host Record** → Hostname `rdu`, IP `<SERVER_IP>` → **Create DNS object**
+     ตรวจ: `nslookup rdu.ckhospital.local` บนเครื่องผู้ใช้ต้องได้ `<SERVER_IP>` (ทำแล้ว 2026-10-07)
    - ระหว่างรอ DNS ทดสอบได้โดยเพิ่ม `<SERVER_IP>   rdu.ckhospital.local` ในไฟล์ `hosts` ของเครื่องที่ใช้ทดสอบ แล้วลบออกเมื่อ DNS พร้อม
    - เครื่องนี้มีระบบ `ck-asset-registry` ใช้ IP `<SERVER_IP>` ตรงๆ อยู่แล้ว → RDU ต้องใช้ชื่อเครื่องเท่านั้น (`server_name` ห้ามใส่ IP ซ้ำ)
    - `.local` ใช้ Let's Encrypt ไม่ได้ → HTTPS ใช้ certificate จาก CA ภายในของโรงพยาบาล (หรือ self-signed ที่ติดตั้งให้เครื่องผู้ใช้เชื่อถือ)
