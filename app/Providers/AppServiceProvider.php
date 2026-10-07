@@ -59,13 +59,23 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        if (! $this->app->environment('testing')) {
-            $configService = $this->app->make(\App\Services\DatabaseConfigService::class);
-            if ($configService->hasConfig()) {
-                config(['database.connections.rdu' => $configService->getConnectionConfig()]);
+        // The HOSxP connection is built from rdu_database.json when first used, not at boot:
+        // `config:cache` would otherwise write the decrypted password into bootstrap/cache/config.php,
+        // and artisan commands that never touch HOSxP would need to read the file. Building it here
+        // also re-attaches the read-only guard every time the connection is (re)made, e.g. after a purge.
+        $this->app['db']->extend('rdu', function (array $config, string $name) {
+            if (! $this->app->environment('testing')) {
+                $configService = $this->app->make(\App\Services\DatabaseConfigService::class);
+                if ($configService->hasConfig()) {
+                    $config = array_merge($config, $configService->getConnectionConfig());
+                }
             }
-        }
-        ReadonlyConnection::install();
+
+            $connection = $this->app['db.factory']->make($config, $name);
+            ReadonlyConnection::installOn($connection);
+
+            return $connection;
+        });
 
         Gate::define('manage-settings', fn ($user) => in_array(
             strtolower((string) $user->username),

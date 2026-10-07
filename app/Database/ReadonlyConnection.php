@@ -3,7 +3,6 @@
 namespace App\Database;
 
 use App\Exceptions\ReadonlyDatabaseException;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Second layer of read-only enforcement on the 'rdu' connection.
@@ -17,11 +16,6 @@ class ReadonlyConnection
         'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'ALTER',
         'DROP', 'TRUNCATE', 'REPLACE', 'GRANT', 'REVOKE',
     ];
-
-    public static function install(): void
-    {
-        self::installOn(DB::connection('rdu'));
-    }
 
     public static function installOn(\Illuminate\Database\Connection $connection): void
     {
