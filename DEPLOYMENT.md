@@ -1,420 +1,133 @@
-# DEPLOYMENT.md — คู่มือการติดตั้ง RDU Dashboard
+# DEPLOYMENT.md — การพัฒนาและ deploy RDU Dashboard
 ## โรงพยาบาลเชียงกลาง จ.น่าน
 
-คู่มือนี้ครอบคลุมทั้ง **การติดตั้งครั้งแรก** และ **การอัปเดตรายวัน** บนเครื่อง target ใน VLAN โรงพยาบาล
-โดยใช้ GitHub (Private repo) เป็น source of truth
+พัฒนาบนเครื่อง XAMPP (Windows) → push ขึ้น GitHub → server production (AlmaLinux 9) ดึงไปใช้ด้วย `scripts/deploy.sh`
+GitHub private repo `nuttapong39/RDU` เป็น source of truth ของโค้ด
+
+- ติดตั้ง server production ใหม่ทั้งเครื่อง (ทีละ phase พร้อมรายการตรวจผ่าน): **`docs/SERVER-SETUP-ALMALINUX.md`**
+- เอกสารนี้: ภาพรวม, การอัปเดตประจำ, เครื่อง dev, ไฟล์ที่ไม่อยู่ใน git, ปัญหาที่เคยเจอ
 
 ---
 
-## สารบัญ
-
-- [1. Architecture Overview](#1-architecture-overview)
-- [2. Prerequisites (สิ่งที่ต้องติดตั้งก่อน)](#2-prerequisites)
-- [3. Dev Machine (บ้าน) — Push code ขึ้น GitHub](#3-dev-machine-บ้าน)
-- [4. Target Machine (Office) — Clone ครั้งแรก](#4-target-machine-office--clone-ครั้งแรก)
-- [5. Target Machine — Update ปกติ](#5-target-machine--update-ปกติ)
-- [6. Configuration](#6-configuration)
-- [7. Apache Setup](#7-apache-setup)
-- [8. Troubleshooting](#8-troubleshooting)
-- [9. Security Checklist](#9-security-checklist)
-
----
-
-## 1. Architecture Overview
+## 1. Architecture
 
 ```
-┌─────────────────────┐         VPN         ┌─────────────────────┐
-│   บ้าน (Dev)         │  ────────────────►  │  Office VLAN         │
-│                     │                     │  192.168.1.0/24      │
-│  C:\xampp\htdocs\RDU│                     │                      │
-│         │           │                     │  ┌────────────────┐  │
-│         ▼           │                     │  │ Target Machine │  │
-│      git push       │                     │  │  (Apache+PHP)  │  │
-│         │           │                     │  │                │  │
-└─────────┼───────────┘                     │  │  git pull      │  │
-          │                                 │  │      ▲         │  │
-          ▼                                 │  └──────┼─────────┘  │
-   ┌─────────────┐                          │         │            │
-   │  GitHub     │  ◄───── HTTPS ─────────  │         │  ┌───────┐ │
-   │  (Private)  │        (token/SSH)       │         └──┤ HOSxP │ │
-   └─────────────┘                          │            │ DB    │ │
-                                            │            └───────┘ │
-                                            └──────────────────────┘
+ Dev (XAMPP, Windows)              GitHub (private)            Production — dashboard-srv (192.168.1.244)
+ C:\xampp\htdocs\RDU   ─git push─►  nuttapong39/RDU  ─fetch─►  Proxmox LXC · AlmaLinux 9
+ Apache + PHP 8.2                                              nginx + PHP-FPM 8.3 + PostgreSQL 16
+ PostgreSQL 18 (rdu_dashboard)                                 /var/www/rdu → http://rdu.ckhospital.local
+          │                                                              │
+          └──────────── SELECT only (rdu_readonly) ──► HOSxP 192.168.1.119 (chk_hosxe) ◄──┘
+                                                       HDC: opendata.moph.go.th (HTTPS)
 ```
 
-**ข้อสำคัญ:**
-- **Code** (blade views, controllers, migrations) → ผ่าน GitHub
-- **Config** (`.env`, `storage/app/private/config/rdu_database.json`) → ตั้งค่าแยกในแต่ละเครื่อง (ไม่อยู่ใน git — มี `.example` เป็น template)
-- **HOSxP credentials** → ไม่อยู่ใน GitHub เด็ดขาด (encrypted แล้วเก็บใน JSON local เท่านั้น)
-
----
-
-## 2. Prerequisites
-
-**ต้องติดตั้งก่อนบน target machine (ครั้งเดียว):**
-
-| Software | Version | Note |
+| | Dev | Production |
 |---|---|---|
-| **XAMPP** | Apache + PHP **8.3+** | https://www.apachefriends.org/ |
-| **PostgreSQL** | 15+ | ติดตั้งแยก (ไม่รวมใน XAMPP) — https://www.postgresql.org/download/ |
-| **Composer** | 2.x | https://getcomposer.org/download/ |
-| **Node.js** | 20+ LTS | https://nodejs.org/ |
-| **Git** | 2.30+ | https://git-scm.com/download/win |
+| URL | `http://localhost/...` (XAMPP) | `http://rdu.ckhospital.local` (DNS A record `rdu` ในโซน AD `ckhospital.local`) |
+| เข้าเครื่อง | — | `ssh nuttapong@192.168.1.244` (SSH key เท่านั้น — root/รหัสผ่านถูกปิด) |
+| ฐานข้อมูลแอป | `rdu_dashboard` (ผู้ใช้ `postgres`) | `rdu_dashboard` (ผู้ใช้ `rdu_app`, localhost เท่านั้น) |
+| Test | รัน `php artisan test` ที่นี่ | **ไม่รัน test** (ติดตั้งแบบ `--no-dev`) |
+| Backup | — | `pg_dump` ทุกคืน 01:30 → `/backup/rdu/` (เก็บ 14 วัน) |
 
-**PHP Extensions ที่ต้องเปิด** (ใน `C:\xampp\php\php.ini`):
-```ini
-extension=openssl
-extension=pdo_pgsql
-extension=pgsql
-extension=mbstring
-extension=tokenizer
-extension=xml
-extension=ctype
-extension=fileinfo
-extension=bcmath
-```
-
-**ตรวจว่าครบ:**
-```powershell
-php -v                  # ต้องขึ้น PHP 8.3.x
-composer --version      # Composer 2.x
-node -v                 # v20+
-git --version           # 2.30+
-psql --version          # PostgreSQL 15+
-```
+บน server เดียวกันมีระบบอื่น (`ck-asset-registry`) ใช้ IP ตรงๆ อยู่ — RDU ใช้ชื่อเครื่อง `rdu.ckhospital.local` เท่านั้น
 
 ---
 
-## 3. Dev Machine (บ้าน)
+## 2. อัปเดตโค้ด (ทำประจำ)
 
-### 3.1 ครั้งแรก — Push โปรเจกต์ขึ้น GitHub
-
-**Step 1: สร้าง GitHub Private Repo**
-
-1. เปิด https://github.com/new
-2. Repository name: `RDU` (หรือ `rdu-dashboard`)
-3. Visibility: **Private** ✅
-4. ⚠️ **อย่า** เลือก "Add README" / ".gitignore" / "license" (โปรเจกต์มีอยู่แล้ว)
-5. คลิก **Create repository**
-6. Copy URL ที่ได้ (เช่น `https://github.com/nutta/RDU.git`)
-
-**Step 2: สร้าง Personal Access Token** (สำหรับ push/pull)
-
-1. https://github.com/settings/tokens → **Generate new token (classic)**
-2. Note: `RDU Deployment`
-3. Expiration: **90 days** (หรือ No expiration ตามความเสี่ยงที่รับได้)
-4. Scopes: เลือก `repo` (ทั้ง block) ✅
-5. Generate → **copy token เก็บไว้ทันที** (จะไม่ขึ้นอีก)
-
-**Step 3: Push code ครั้งแรก (จาก Dev machine)**
-
+**เครื่อง dev:**
 ```powershell
 cd C:\xampp\htdocs\RDU
-
-# ตรวจว่า sensitive files ถูก gitignore แล้ว
-git status                              # ไม่ควรเห็น .env / rdu_database.json
-
-git remote add origin https://github.com/YOUR_USERNAME/RDU.git
-git branch -M main
-git push -u origin main
-# ใส่ username + paste token เป็น password
-```
-
-### 3.2 Update ปกติ — Push การเปลี่ยนแปลง
-
-```powershell
-cd C:\xampp\htdocs\RDU
-
-git add .
+php artisan test                      # ต้องไม่มี test ใหม่ที่ fail
+git add <ไฟล์ที่แก้>
 git commit -m "อธิบายการเปลี่ยนแปลง"
-git push
+git push origin main
 ```
+
+**Server:**
+```bash
+ssh nuttapong@192.168.1.244
+cd /var/www/rdu && ./scripts/deploy.sh
+```
+
+`scripts/deploy.sh` ตรวจความปลอดภัย (`APP_ENV=production`, `DB_DATABASE=rdu_dashboard`, ไม่มีไฟล์ที่ git ติดตามถูกแก้บน server)
+→ เปิดหน้าปิดปรับปรุง → ดึงโค้ด → `composer install --no-dev` → `npm ci && npm run build` → `migrate --force`
+→ cache → `reload php-fpm` → เปิดเว็บ
+
+- ล้มเหลวก่อนเปลี่ยนโค้ด → เว็บกลับมาใช้โค้ดเดิมเอง
+- ล้มเหลวหลังเปลี่ยนโค้ด → เว็บค้างหน้าปิดปรับปรุง แก้สาเหตุแล้วรัน `./scripts/deploy.sh` ซ้ำ จะทำขั้นที่เหลือจนจบ
+- ต้องมีค่าใหม่ใน `.env` → เพิ่มบน server ด้วยมือ **ก่อน** รันสคริปต์ (สคริปต์ไม่แตะ `.env`)
+- แก้โค้ดบนเครื่อง dev เสมอ — server รับโค้ดผ่าน GitHub เท่านั้น
 
 ---
 
-## 4. Target Machine (Office) — Clone ครั้งแรก
+## 3. ตั้งเครื่อง dev ใหม่ (XAMPP)
 
-### 4.1 Clone code
-
-```powershell
-cd C:\xampp\htdocs
-
-# Clone จาก GitHub — ใส่ username + paste token เป็น password
-git clone https://github.com/YOUR_USERNAME/RDU.git
-
-cd RDU
-```
-
-### 4.2 Setup PHP dependencies
+| Software | หมายเหตุ |
+|---|---|
+| XAMPP | Apache + PHP 8.2+ เปิด extension `openssl, pdo_pgsql, pgsql, mbstring, fileinfo, bcmath` (แนะนำ `intl` — ไม่มีแล้ว test ที่ใช้ factory จะ fail) ใน `C:\xampp\php\php.ini` |
+| PostgreSQL | ติดตั้งแยก สร้างฐาน `rdu_dashboard` |
+| Composer 2, Node.js 20.19+, Git | |
 
 ```powershell
-composer install --optimize-autoloader --no-dev
-```
-
-> **หมายเหตุ:** ใช้ `--no-dev` สำหรับ production เพื่อประหยัดพื้นที่ (ไม่ติดตั้ง phpunit ฯลฯ)
-> ถ้าจะรัน test ให้ใช้ `composer install` เฉย ๆ
-
-### 4.3 Setup Node dependencies + Build assets
-
-```powershell
-npm ci
-npm run build
-```
-
-จะได้ไฟล์ `public/build/assets/*.css` และ `*.js` (Tailwind compiled)
-
-### 4.4 Configure `.env`
-
-```powershell
-copy .env.example .env
-notepad .env
-```
-
-**ค่าที่ต้องแก้:**
-```env
-APP_ENV=production                  # เปลี่ยนจาก local
-APP_DEBUG=false                     # เปลี่ยนจาก true
-APP_URL=http://192.168.1.XX         # IP ของเครื่องนี้ในวง VLAN
-
-DB_HOST=127.0.0.1                   # PostgreSQL local (rdu_dashboard)
-DB_DATABASE=rdu_dashboard
-DB_USERNAME=postgres
-DB_PASSWORD=your_local_postgres_password
-```
-
-### 4.5 Generate application key
-
-```powershell
-php artisan key:generate
-```
-
-### 4.6 สร้าง PostgreSQL Database
-
-```powershell
-# สร้าง database rdu_dashboard (สำหรับ users, sessions, audit_logs)
-& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -c "CREATE DATABASE rdu_dashboard;"
-```
-
-### 4.7 Run migrations + seed
-
-```powershell
-php artisan migrate --seed
-```
-
-จะสร้าง:
-- Users table + user `admin/admin` (สำหรับ login ครั้งแรก)
-- Sessions, Cache, Jobs tables
-- Audit logs
-- RDU Indicators (13 KPIs)
-
-### 4.8 Setup HOSxP Connection
-
-**วิธี A: ผ่าน UI (แนะนำ)**
-
-1. เปิด browser: `http://localhost/RDU/public/login`
-2. Login: `admin` / `admin`
-3. ไปที่ **ตั้งค่าฐานข้อมูล HOSxP** (sidebar)
-4. กรอก:
-   - Host: `192.168.1.119` (IP ของ HOSxP replica)
-   - Port: `5432`
-   - Database: `chk_hosxe`
-   - Schema: `rdu_kpi`
-   - Username: `rdu_readonly`
-   - Password: `xxx` (password ของ user rdu_readonly)
-5. **Test Connection** — ต้องขึ้น "เชื่อมต่อสำเร็จ และยืนยัน Read-Only"
-6. **บันทึก** — ระบบจะ encrypt password + เก็บใน `storage/app/private/config/rdu_database.json`
-
-**วิธี B: Copy JSON จากเครื่องอื่น (ถ้ามี)**
-
-```powershell
-# Copy จากเครื่องอื่นที่ตั้งค่าไว้แล้ว
-copy \\OTHER-PC\C$\xampp\htdocs\RDU\storage\app\private\config\rdu_database.json .\storage\app\private\config\
-```
-
-⚠️ **ห้าม** commit `rdu_database.json` ขึ้น git — password ถูก encrypt ด้วย `APP_KEY` ของเครื่องต้นทาง จะ decrypt ไม่ออกในเครื่องอื่น
-
-### 4.9 Set folder permissions
-
-```powershell
-# Windows: ให้ Apache/IIS user เขียน storage + bootstrap/cache ได้
-icacls storage /grant "Users:(OI)(CI)F" /T
-icacls bootstrap\cache /grant "Users:(OI)(CI)F" /T
-```
-
-### 4.10 ทดสอบ
-
-```powershell
-php artisan serve --host=0.0.0.0 --port=8000
-```
-
-เปิด browser จากเครื่องอื่นใน VLAN: `http://192.168.1.XX:8000` → ต้อง login ได้
-
----
-
-## 5. Target Machine — Update ปกติ
-
-**เมื่อมีการ push code ใหม่จาก dev machine:**
-
-```powershell
+git clone https://github.com/nuttapong39/RDU.git C:\xampp\htdocs\RDU
 cd C:\xampp\htdocs\RDU
-
-# วิธีเร็ว: ใช้สคริปต์อัตโนมัติ
-.\deploy.ps1
-
-# วิธี manual:
-git pull origin main
-composer install --optimize-autoloader --no-dev
+composer install
 npm ci && npm run build
-php artisan migrate --force            # --force = ไม่ถามใน production
-php artisan view:clear
-php artisan cache:clear
-php artisan config:clear
+copy .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan db:seed --class=RduIndicatorSeeder
 ```
 
-**หลัง update — ตรวจว่าใช้งานได้:**
-```powershell
-php artisan test --filter=DashboardTest
-```
+แล้วตั้งค่า HOSxP ผ่านหน้า **ตั้งค่าฐานข้อมูล HOSxP** (เข้าได้เฉพาะผู้ใช้ใน `SETTINGS_ADMIN_USERNAMES`, ค่าเริ่มต้น `nuttapong`)
+— host `192.168.1.119`, database `chk_hosxe`, user `rdu_readonly` → ทดสอบการเชื่อมต่อ → บันทึก
+
+> `php artisan db:seed` (ตัวเต็ม) สร้างผู้ใช้ `admin` รหัส `admin` — ใช้เฉพาะเครื่อง dev ห้ามรันบน production
 
 ---
 
-## 6. Configuration
+## 4. ไฟล์ที่ไม่อยู่ใน git (ตั้งแยกต่อเครื่อง)
 
-### 6.1 `.env` — ใช้เฉพาะเครื่องนั้น (ไม่ต้อง sync ผ่าน git)
+| ไฟล์ | หมายเหตุ |
+|---|---|
+| `.env` | production: `APP_ENV=production`, `APP_DEBUG=false`, `LOG_CHANNEL=daily`, `RDU_DB_PASSWORD=` (ว่าง) |
+| `storage/app/private/config/rdu_database.json` | รหัส HOSxP เข้ารหัสด้วย `APP_KEY` ของเครื่องนั้น — ใช้ข้ามเครื่องได้เฉพาะเมื่อ `APP_KEY` เหมือนกัน |
+| `vendor/`, `node_modules/`, `public/build/` | สร้างด้วย `composer install` / `npm ci && npm run build` |
 
-โดยพื้นฐานใช้จาก `.env.example` แล้วแก้ 4 ค่านี้ต่อเครื่อง:
-- `APP_KEY` (สร้างด้วย `php artisan key:generate`)
-- `APP_URL` (IP + port ของเครื่องนั้น)
-- `DB_PASSWORD` (password PostgreSQL local)
-- `APP_DEBUG=false` (production)
-
-### 6.2 `storage/app/private/config/rdu_database.json` — HOSxP config
-
-**อย่า commit** — เพราะ:
-1. Password ถูก encrypt ด้วย `APP_KEY` เฉพาะเครื่องนั้น (portable ไม่ได้)
-2. เก็บ credential ของ HOSxP (แม้ encrypt แล้วก็ไม่ควรอยู่ใน git)
-
-**Template:** ดู `storage/app/private/config/rdu_database.json.example`
-
-### 6.3 File permissions
-
-```
-storage/          → readable + writable โดย Apache/PHP user
-bootstrap/cache/  → readable + writable
-public/           → world-readable (Apache DocumentRoot)
-```
+**`APP_KEY` ห้ามเปลี่ยนบนเครื่องที่ใช้งานแล้ว** — เปลี่ยนแล้วจะถอดรหัส `rdu_database.json` ไม่ได้ ต้องกรอกรหัส HOSxP ใหม่
+สำรอง `.env` และ `rdu_database.json` ไว้ **คนละที่** กับ backup ฐานข้อมูล (สองไฟล์รวมกันถอดรหัส HOSxP ได้)
 
 ---
 
-## 7. Apache Setup
+## 5. ปัญหาที่เคยเจอ
 
-**แก้ไข `C:\xampp\apache\conf\extra\httpd-vhosts.conf`:**
-
-```apache
-<VirtualHost *:80>
-    ServerName rdu.local
-    DocumentRoot "C:/xampp/htdocs/RDU/public"
-
-    <Directory "C:/xampp/htdocs/RDU/public">
-        Options Indexes FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
-
-    ErrorLog "logs/rdu-error.log"
-    CustomLog "logs/rdu-access.log" common
-</VirtualHost>
-```
-
-**เพิ่มใน `C:\Windows\System32\drivers\etc\hosts`:**
-```
-127.0.0.1  rdu.local
-```
-
-**Restart Apache** ผ่าน XAMPP Control Panel
-
----
-
-## 8. Troubleshooting
-
-### 8.1 `php artisan` failed: `could not find driver`
-
-PHP ยังไม่เปิด `pdo_pgsql` — แก้ `C:\xampp\php\php.ini` เอา `;` หน้า `extension=pdo_pgsql` ออก แล้ว restart Apache
-
-### 8.2 `SQLSTATE[08006] password authentication failed for user "rdu_readonly"`
-
-- **สาเหตุ:** JSON config ไม่ถูกต้อง หรือ user `rdu_readonly` ใน HOSxP ไม่มี/password ผิด
-- **แก้:** ไปที่ **ตั้งค่าฐานข้อมูล HOSxP** ในระบบ กรอกใหม่ + Test Connection
-
-### 8.3 `database "chk_hosxe" does not exist`
-
-- **สาเหตุ:** ชื่อ database ใน JSON ผิด
-- **แก้:** ตรวจกับ HOSxP admin ว่า database ชื่ออะไร แล้วแก้ใน UI
-
-### 8.4 `relation "ovst" does not exist` (แต่ table มีจริง)
-
-- **สาเหตุ:** `rdu_readonly` ไม่มี `USAGE` บน schema หรือ views ยังไม่ได้สร้าง
-- **แก้:** SSH เข้า HOSxP server แล้วรัน:
-  ```sql
-  GRANT USAGE ON SCHEMA rdu_kpi TO rdu_readonly;
-  GRANT SELECT ON ALL TABLES IN SCHEMA rdu_kpi TO rdu_readonly;
-  ```
-
-### 8.5 Icons/fonts ไม่โหลด (empty box)
-
-- **สาเหตุ:** เครื่อง target ไม่ต่ออินเทอร์เน็ต (โหลด Google Fonts + Material Symbols ไม่ได้)
-- **แก้:** ดาวน์โหลด fonts มาเก็บ local — ดูหัวข้อ **Offline Fonts** ใน `docs/` (จะทำในอนาคต)
-
-### 8.6 `git pull` conflict
-
-```powershell
-# Reset local ให้ตรงกับ remote (ทิ้งการแก้ในเครื่อง)
-git fetch origin
-git reset --hard origin/main
-```
-
-⚠️ **ระวัง:** ทิ้งการแก้ใน `.env` / `rdu_database.json` ด้วยไหม? ไม่ทิ้ง — เพราะไฟล์เหล่านี้ gitignore แล้ว
-
----
-
-## 9. Security Checklist
-
-**ก่อน push ครั้งแรก — ตรวจให้ครบ:**
-
-- [ ] `.gitignore` มี `/storage/app/private/config/*.json`
-- [ ] `.gitignore` มี `.env`
-- [ ] `.gitignore` มี `/vendor` และ `/node_modules`
-- [ ] `.gitignore` มี `/public/build`
-- [ ] Repo บน GitHub เป็น **Private** ไม่ใช่ Public
-- [ ] ไม่มี password / API key / token ใน source code (grep หา `password.*=.*[^""]`)
-
-**บน target machine (production):**
-
-- [ ] `.env` มี `APP_DEBUG=false`
-- [ ] `.env` มี `APP_ENV=production`
-- [ ] File `.env` permission 600 (Windows: จำกัดสิทธิ์อ่าน)
-- [ ] `storage/app/private/config/rdu_database.json` permission 600
-- [ ] Default admin password (`admin/admin`) ถูกเปลี่ยนแล้ว
-- [ ] Apache DocumentRoot ชี้ไป `public/` เท่านั้น (ไม่ใช่ root ของโปรเจกต์)
-- [ ] HOSxP user `rdu_readonly` มีสิทธิ์ SELECT บน `rdu_kpi` schema เท่านั้น (ไม่ใช่ทั้งหมด)
-
----
-
-## Appendix: Files ที่สำคัญ
-
-| File | Commit ไหม? | หมายเหตุ |
+| อาการ | สาเหตุ | แก้ |
 |---|---|---|
-| `.env` | ❌ | ใช้ `.env.example` เป็น template |
-| `storage/app/private/config/rdu_database.json` | ❌ | encrypted per-machine |
-| `storage/app/private/config/rdu_database.json.example` | ✅ | template ให้ target ดู structure |
-| `vendor/` | ❌ | ติดตั้งด้วย `composer install` |
-| `node_modules/` | ❌ | ติดตั้งด้วย `npm ci` |
-| `public/build/` | ❌ | สร้างด้วย `npm run build` |
-| `database/migrations/` | ✅ | ต้องมี — target รัน `php artisan migrate` |
-| `database/seeders/` | ✅ | ต้องมี — target รัน `php artisan db:seed` (ครั้งแรก) |
-| `resources/views/*.bak-*` | ❌ | backup ชั่วคราว (gitignored) |
+| หน้าตั้งค่า HOSxP กด **บันทึก** แล้ว 500 (`file_put_contents ... Permission denied`) | `rdu_database.json` ไม่ใช่ของผู้ใช้ `nginx` | `sudo chown nginx:nginx` + `sudo chmod 600` ไฟล์นั้น |
+| `deploy.sh`: "Files tracked by git were edited on the server" แต่ไม่ได้แก้อะไร | ใช้ `chmod -R 775` → ไฟล์ได้สิทธิ์ execute | โฟลเดอร์ `775` / ไฟล์ `664` ด้วย `find` (ดู `docs/SERVER-SETUP-ALMALINUX.md` 6.5) |
+| เปิดชื่อเครื่องแล้วเจอระบบอื่น / `nginx: conflicting server name` | `server_name` ซ้ำกับระบบอื่นบน server | ระบบละ 1 ชื่อเครื่อง ห้ามใส่ IP ใน `server_name` ของ RDU |
+| เครื่องผู้ใช้เปิด `rdu.ckhospital.local` ไม่ได้ | ยังไม่มี A record ใน DNS ของ AD | เพิ่ม `rdu` → `192.168.1.244` ในโซน `ckhospital.local` |
+| `could not find driver` (เครื่อง dev) | ยังไม่เปิด `pdo_pgsql` ใน `php.ini` | เปิด extension แล้ว restart Apache |
+| `password authentication failed for user "rdu_readonly"` | รหัสใน `rdu_database.json` ผิด หรือ `APP_KEY` ไม่ตรงกับตอนบันทึก | กรอกใหม่ในหน้าตั้งค่า HOSxP |
+| `no pg_hba.conf entry for host "<IP>"` | HOSxP ยังไม่อนุญาต IP เครื่องนั้น | ผู้ดูแล HOSxP เพิ่มบรรทัดใน `pg_hba.conf` ของ HOSxP สำหรับ `rdu_readonly` |
+| ไอคอน/ฟอนต์ไม่ขึ้น | เครื่องผู้ใช้ออก internet ไม่ได้ (Google Fonts / Material Symbols) | เปิดให้เครื่องผู้ใช้เข้าถึง `fonts.googleapis.com` / `fonts.gstatic.com` |
+
+---
+
+## 6. Security checklist (production)
+
+- [ ] `APP_ENV=production`, `APP_DEBUG=false`
+- [ ] `.env` สิทธิ์ `640`, `rdu_database.json` เป็น `nginx:nginx 600`
+- [ ] `bootstrap/cache/config.php` ไม่มีรหัส HOSxP:
+      `php -r '$c=require "bootstrap/cache/config.php"; echo ($c["database"]["connections"]["rdu"]["password"] ?? "")==="" ? "clean\n" : "LEAK\n";'`
+- [ ] nginx `root` ชี้ `public/` และ `/.env` ตอบ `403`
+- [ ] ไม่มีผู้ใช้ `admin`/`admin` ในระบบ
+- [ ] `rdu_readonly` ไม่มีสิทธิ์เขียน (ตรวจด้วย query ใน `docs/SERVER-SETUP-ALMALINUX.md` Phase 7)
+- [ ] SSH: root และรหัสผ่านถูกปิด
+- [ ] backup ล่าสุดใน `/backup/rdu/` อายุไม่เกิน 1 วัน
 
 ---
 
 **Maintainer:** Nuttapong (ckhossystem@gmail.com)
-**Last updated:** 2026-09-09
+**Last updated:** 2026-10-07

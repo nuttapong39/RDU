@@ -2,7 +2,7 @@
 ## โรงพยาบาลเชียงกลาง จังหวัดน่าน
 
 ระบบ **RDU Dashboard** (Rational Drug Use) ติดตาม 13 ตัวชี้วัดการใช้ยาอย่างสมเหตุผล
-พัฒนาด้วย Laravel บน XAMPP เชื่อมต่อ HOSxP Database แบบ **อ่านอย่างเดียวเท่านั้น**
+พัฒนาด้วย Laravel บน XAMPP (dev) ใช้งานจริงบน server AlmaLinux (production) เชื่อมต่อ HOSxP Database แบบ **อ่านอย่างเดียวเท่านั้น**
 
 ---
 
@@ -10,8 +10,8 @@
 
 | Layer | Technology |
 |---|---|
-| Web Server | Apache (XAMPP) — ไม่ใช้ Docker |
-| Backend | Laravel (PHP 8.3+) |
+| Web Server | Dev: Apache (XAMPP, Windows) · Production: nginx + PHP-FPM (AlmaLinux 9, Proxmox LXC) — ไม่ใช้ Docker |
+| Backend | Laravel 12 (PHP 8.2+ — dev 8.2, production 8.3) |
 | Frontend | Blade + Chart.js |
 | Application DB | PostgreSQL (`rdu_dashboard`) |
 | Hospital DB | HOSxP / PostgreSQL — **SELECT ONLY** |
@@ -214,15 +214,19 @@ Read-Only Tests ที่ต้องผ่านก่อน Production:
 
 ---
 
-## XAMPP Setup (ย่อ)
+## Environments & Deploy
 
-```
-DocumentRoot: C:\xampp\htdocs\rdu-dashboard\public   ← ต้องเป็น /public
-PostgreSQL: ติดตั้งแยก — ไม่ได้รวมใน XAMPP
-php artisan migrate: รันบน rdu_dashboard เท่านั้น
-```
+| | Dev (เครื่องนี้) | Production |
+|---|---|---|
+| ที่อยู่ | `C:\xampp\htdocs\RDU` | `dashboard-srv` 192.168.1.244 · `/var/www/rdu` · `http://rdu.ckhospital.local` |
+| ใช้ทำ | แก้โค้ด + รัน test | รับโค้ดจาก GitHub ด้วย `./scripts/deploy.sh` เท่านั้น |
 
-PHP Extensions ที่ต้องการ: `OpenSSL, PDO, PDO_PGSQL, Mbstring, Tokenizer, XML, Ctype, JSON, Fileinfo, BCMath`
+- ทางเดียวที่โค้ดไปถึง production: commit → `git push origin main` → บน server `./scripts/deploy.sh` (แก้โค้ดที่เครื่อง dev เสมอ)
+- `php artisan test` รันบนเครื่อง dev เท่านั้น — production ติดตั้งแบบ `--no-dev`
+- **การเชื่อม HOSxP ถูกสร้างตอนใช้งานครั้งแรก** (`DB::extend('rdu', …)` ใน `AppServiceProvider`) — ข้อมูลจาก `rdu_database.json`
+  ต้องไม่ถูกใส่ลง `config()` ตอน boot เพราะ `config:cache` จะเขียนรหัส HOSxP ที่ถอดแล้วลง `bootstrap/cache/config.php`
+  และ artisan บน server (รันเป็น `nuttapong`) อ่านไฟล์นั้นไม่ได้ (เป็นของ `nginx`, สิทธิ์ 600)
+- ติดตั้ง server ใหม่: `docs/SERVER-SETUP-ALMALINUX.md` · ขั้นตอน dev/deploy/ปัญหาที่เคยเจอ: `DEPLOYMENT.md`
 
 ---
 
@@ -238,3 +242,5 @@ PHP Extensions ที่ต้องการ: `OpenSSL, PDO, PDO_PGSQL, Mbstrin
 | UI/UX Design | `docs/UI-UX-SPECIFICATION.md` |
 | Testing Strategy | `docs/TESTING-STRATEGY.md` |
 | Phase Roadmap | `docs/DEVELOPMENT-PHASES.md` |
+| Dev → Production deploy, ปัญหาที่เคยเจอ | `DEPLOYMENT.md` |
+| ติดตั้ง production server (AlmaLinux) | `docs/SERVER-SETUP-ALMALINUX.md` |
