@@ -108,6 +108,25 @@ class HdcComparisonTest extends TestCase
             ->assertJsonPath('ours.hosxp.den', 0);     // KPI02 has no HOSxP query yet
     }
 
+    public function test_kpi12_sums_the_twelve_monthly_columns_of_s_rdu10(): void
+    {
+        $months = ['10', '11', '12', '01', '02', '03', '04', '05', '06', '07', '08', '09'];
+        $counts = [];
+        foreach ($months as $i => $m) {
+            $counts["t$m"] = 100 + $i;          // visits given ≥ 1 RAS drug that month
+            $counts["r$m"] = $i === 4 ? 1 : 0;  // one dual-blockade visit in February
+        }
+        $this->fakeHdc([$this->row('11179', '55090111', $counts)]);
+
+        $this->actingAs($this->user())
+            ->getJson(route('dashboard.kpi.hdc', ['code' => 'KPI12', 'year' => 2569]))
+            ->assertOk()
+            ->assertJsonPath('linked', true)
+            ->assertJsonPath('ours.hdc.den', 1266)   // 100 + 101 + … + 111
+            ->assertJsonPath('ours.hdc.num', 1)
+            ->assertJsonPath('ours.hdc.status', 'fail'); // 0% target: one case already fails
+    }
+
     // ---- KPIs without a HOSxP query show their HDC whole-year figure ----
 
     public function test_kpi_without_hosxp_query_shows_the_hdc_figure_on_its_page_and_overview(): void

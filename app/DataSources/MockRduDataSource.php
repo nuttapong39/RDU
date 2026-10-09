@@ -18,7 +18,7 @@ class MockRduDataSource implements RduDataSourceInterface
         'KPI09' => ['numerator' => 41,  'denominator' => 500],  // Elderly NSAIDs
         'KPI10' => ['numerator' => 9,   'denominator' => 290],  // Vit B1 injection
         'KPI11' => ['numerator' => 14,  'denominator' => 300],  // Corticosteroid injection
-        'KPI12' => ['numerator' => 63,  'denominator' => 500],  // Elderly polypharmacy
+        'KPI12' => ['numerator' => 2,   'denominator' => 800],  // Dual RAS blockade (target 0%)
         'KPI13' => ['numerator' => 171, 'denominator' => 400],  // DM HbA1c controlled
     ];
 

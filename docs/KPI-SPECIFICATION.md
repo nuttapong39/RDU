@@ -248,18 +248,21 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-12: RAS Blockage 2 ชนิดร่วมกันในโรคความดันโลหิตสูง
+#### KPI-12: RAS Blockade 2 ชนิดร่วมกันในโรคความดันโลหิตสูง ✅ implement แล้ว (2026-10)
 ```
 ชื่อ:         ร้อยละจำนวนครั้งบริการโรคความดันโลหิตสูงทั่วไปที่ได้รับ
-              RAS Blockage 2 ชนิดร่วมกันในการรักษา
-Code:         elderly_polypharmacy
-Numerator:    จำนวนผู้สูงอายุที่ได้รับยา ≥ 5 รายการ
-Denominator:  จำนวนผู้สูงอายุที่มารับการรักษาทั้งหมด
-Target:       ≤ 10%
-Direction:    ต่ำดี (lower_better)
-Category:     patient_safety
-HOSxP Tables: [TBD]
-Query:        [TBD — Plan แยกต่างหาก]
+              RAS Blockade 2 ชนิดร่วมกันในการรักษา
+Numerator:    visit ในตัวส่วนที่ได้รับยากลุ่ม RAS blockade ตั้งแต่ 2 ตัวยาที่ต่างกัน (qty > 0)
+Denominator:  visit ผู้ป่วยนอกที่มีวินิจฉัย I10 (ตำแหน่งใดก็ได้) และได้รับยา RAS อย่างน้อย 1 ชนิด (qty > 0)
+Target:       ≤ 0% — ไม่มีระดับ "ใกล้เป้าหมาย" (มากกว่า 0 = ไม่ผ่าน)
+Direction:    ต่ำดี (lower)
+Category:     PatientSafety · กลุ่มยาของตัวชี้วัด: ยากลุ่ม RAS blockade (config rdu.drug_groups)
+ยา RAS:       Enalapril 5/20 mg, Captopril 25 mg (ACEI) · Losartan 50 mg + รหัสเก่า 2 ตัว (ARB)
+              นับตาม "ตัวยา" — Enalapril 5 mg + 20 mg = 1 ชนิด
+HOSxP Tables: ovst, ovstdiag, opitemrece, drugitems, patient, doctor, pttype, spclty, kskdepartment
+Query:        app/Queries/Kpi/PatientSafety/RasDualBlockadeQuery.php · docs/SQL_KPI/KPI12.sql
+HDC:          s_rdu10 (รวม t10..t09 = ตัวส่วน, r10..r09 = ตัวเศษ)
+ผลปีงบ 2569:  8 / 9,200 visit (0.09%) — 6 ใน 8 เป็น Enalapril + Captopril
 ```
 
 ---
@@ -298,7 +301,7 @@ Query:        [TBD — Plan แยกต่างหาก]
 | KPI-09 | elderly_nsaids_use | NSAIDs ในโรคเรื้อรังระดับ 3+ | ≤ 10% | ต่ำดี | patient_safety |
 | KPI-10 | vit_b1_injection_no_indication | Metformin คุมเบาหวานไม่มีข้อห้ามใช้ | ≤ 5% | ต่ำดี | patient_safety |
 | KPI-11 | corticosteroid_injection_no_indication | ยาน้ำ non-sedating ในเด็กติดเชื้อทางเดินหายใจ | ≤ 5% | ต่ำดี | patient_safety |
-| KPI-12 | elderly_polypharmacy | RAS Blockage 2 ชนิดร่วมกัน (HT) | ≤ 10% | ต่ำดี | patient_safety |
+| KPI-12 | ras_dual_blockade | RAS Blockade 2 ชนิดร่วมกัน (HT) | ≤ 0% | ต่ำดี | patient_safety |
 | KPI-13 | dm_hba1c_controlled | Long-acting Benzodiazepine ผู้สูงอายุ | ≥ 40% | สูงดี | chronic_disease |
 
 ---
@@ -326,7 +329,7 @@ app/
         │   ├── ElderlyNsaidsQuery.php          ← KPI-09
         │   ├── VitB1InjectionQuery.php         ← KPI-10
         │   ├── CorticosteroidInjectionQuery.php ← KPI-11
-        │   └── ElderlyPolypharmacyQuery.php    ← KPI-12
+        │   └── RasDualBlockadeQuery.php        ← KPI-12
         └── ChronicDisease/
             └── DmHba1cControlledQuery.php      ← KPI-13
 ```

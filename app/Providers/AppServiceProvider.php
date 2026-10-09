@@ -18,7 +18,7 @@ use App\Queries\Kpi\DrugQuality\GenericDrugValueQuery;
 use App\Queries\Kpi\DrugQuality\NationalDrugListValueQuery;
 use App\Queries\Kpi\PatientSafety\CorticosteroidInjectionQuery;
 use App\Queries\Kpi\PatientSafety\ElderlyNsaidsQuery;
-use App\Queries\Kpi\PatientSafety\ElderlyPolypharmacyQuery;
+use App\Queries\Kpi\PatientSafety\RasDualBlockadeQuery;
 use App\Queries\Kpi\PatientSafety\VitB1InjectionQuery;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -40,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
                 'KPI09' => $app->make(ElderlyNsaidsQuery::class),
                 'KPI10' => $app->make(VitB1InjectionQuery::class),
                 'KPI11' => $app->make(CorticosteroidInjectionQuery::class),
-                'KPI12' => $app->make(ElderlyPolypharmacyQuery::class),
+                'KPI12' => $app->make(RasDualBlockadeQuery::class),
                 'KPI13' => $app->make(DmHba1cControlledQuery::class),
             ]);
         });

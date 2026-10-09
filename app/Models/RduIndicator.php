@@ -46,6 +46,19 @@ class RduIndicator extends Model
         return in_array($this->code, config('rdu.hosxp_kpis', []), true);
     }
 
+    /**
+     * Wording for the drug this KPI judges (config rdu.drug_groups) — antibiotics unless the KPI is
+     * mapped to another group in rdu.kpi_drug_group.
+     *
+     * @return array{name: string, short: string, received: string, not_received: string, cost: string, doctor_rate: string, usage: string}
+     */
+    public function drugGroup(): array
+    {
+        $group = config('rdu.kpi_drug_group.'.$this->code, 'antibiotic');
+
+        return config('rdu.drug_groups.'.$group, config('rdu.drug_groups.antibiotic'));
+    }
+
     public function targetLabel(): string
     {
         $op = $this->target_direction === 'higher' ? '≥' : '≤';

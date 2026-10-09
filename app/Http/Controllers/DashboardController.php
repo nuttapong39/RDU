@@ -218,7 +218,7 @@ class DashboardController extends Controller
         $items = [];
         foreach ($groups as $key => $g) {
             $isUnknown = $key === '__unknown__';
-            $rate      = $g['total'] > 0 ? round($g['atb'] / $g['total'] * 100, 1) : 0.0;
+            $rate      = RduCalculationService::percentage($g['atb'], $g['total']) ?? 0.0;
             $graded    = ! $isUnknown && $g['total'] >= self::DOCTOR_RATE_MIN_VISITS;
 
             $items[] = [
@@ -249,8 +249,13 @@ class DashboardController extends Controller
      */
     private function isDoctorRateRed(float $rate, RduIndicator $indicator): bool
     {
-        return $indicator->target_direction === 'higher'
-            ? (100 - $rate) <= $indicator->target_value
+        if ($indicator->target_direction === 'higher') {
+            return (100 - $rate) <= $indicator->target_value;
+        }
+
+        // At a 0% target, 0% itself is the goal (green); any case at all is red.
+        return $indicator->target_value <= 0
+            ? $rate > 0
             : $rate >= $indicator->target_value;
     }
 
@@ -298,7 +303,7 @@ class DashboardController extends Controller
     {
         $totalVisits = $allDetails->count();
         $atbVisits   = $allDetails->filter(fn ($row) => trim((string) ($row['drugitems_name'] ?? '')) !== '')->count();
-        $pct         = $totalVisits > 0 ? round($atbVisits / $totalVisits * 100, 1) : null;
+        $pct         = RduCalculationService::percentage($atbVisits, $totalVisits);
         $gap         = $pct !== null ? round($pct - $indicator->target_value, 1) : null;
         $atbCost     = (float) $allDetails->sum(fn ($row) => $row['atb_cost'] ?? 0);
         $avgItems    = $totalVisits > 0 ? round($allDetails->sum(fn ($row) => $row['total_drug_items'] ?? 0) / $totalVisits, 1) : null;
@@ -349,7 +354,7 @@ class DashboardController extends Controller
                 'coverage' => $coverage,
                 'total'    => $g['total'],
                 'atb'      => $g['atb'],
-                'rate'     => $g['total'] > 0 ? round($g['atb'] / $g['total'] * 100, 1) : 0.0,
+                'rate'     => RduCalculationService::percentage($g['atb'], $g['total']) ?? 0.0,
             ];
         }
 

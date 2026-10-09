@@ -39,7 +39,7 @@ class RduCalculationService
 
         $num = $row['num'] ?? 0;
         $den = $row['den'] ?? 0;
-        $pct = $den > 0 ? round($num / $den * 100, 1) : null;
+        $pct = self::percentage($num, $den);
 
         return [
             'indicator'        => $indicator,
@@ -66,7 +66,7 @@ class RduCalculationService
     {
         $num    = $this->queryService->getNumerator($indicator->code, $year, $month);
         $den    = $this->queryService->getDenominator($indicator->code, $year, $month);
-        $pct    = $den > 0 ? round($num / $den * 100, 2) : null;
+        $pct    = self::percentage($num, $den, 2);
         $status = $this->getStatus($pct, $indicator->target_value, $indicator->target_direction);
 
         RduIndicatorResult::updateOrCreate(
@@ -133,7 +133,7 @@ class RduCalculationService
         // Live — query the data source (cached by RduQueryService for 1 hour)
         $num    = $this->queryService->getNumerator($indicator->code, $year, $month);
         $den    = $this->queryService->getDenominator($indicator->code, $year, $month);
-        $pct    = $den > 0 ? round($num / $den * 100, 1) : null;
+        $pct    = self::percentage($num, $den);
         $status = $this->getStatus($pct, $indicator->target_value, $indicator->target_direction);
 
         return [
@@ -169,7 +169,7 @@ class RduCalculationService
                         'indicator'   => $ind,
                         'numerator'   => $result->numerator,
                         'denominator' => $result->denominator,
-                        'percentage'  => $result->result !== null ? round((float) $result->result, 1) : null,
+                        'percentage'  => self::percentage($result->numerator, $result->denominator),
                         'status'      => $result->status ?? 'na',
                         'from_cache'  => true,
                     ];
@@ -206,7 +206,7 @@ class RduCalculationService
             $den += $this->queryService->getDenominator($indicator->code, $year, $m);
         }
 
-        $pct    = $den > 0 ? round($num / $den * 100, 1) : null;
+        $pct    = self::percentage($num, $den);
         $status = $this->getStatus($pct, $indicator->target_value, $indicator->target_direction);
 
         return [
@@ -261,7 +261,7 @@ class RduCalculationService
                     'year'   => $y,
                     'month'  => $m,
                     'label'  => $labels[$m],
-                    'pct'    => round((float) $result->result, 1),
+                    'pct'    => self::percentage($result->numerator, $result->denominator),
                     'num'    => $result->numerator,
                     'den'    => $result->denominator,
                     'status' => $result->status ?? 'na',
@@ -272,7 +272,7 @@ class RduCalculationService
             // Not yet calculate()'d — compute live instead of leaving a gap.
             $num    = $this->queryService->getNumerator($indicator->code, $y, $m);
             $den    = $this->queryService->getDenominator($indicator->code, $y, $m);
-            $pct    = $den > 0 ? round($num / $den * 100, 1) : null;
+            $pct    = self::percentage($num, $den);
             $trend[] = [
                 'year'   => $y,
                 'month'  => $m,
@@ -312,6 +312,23 @@ class RduCalculationService
     // Status logic
     // -------------------------------------------------------------------------
 
+    /**
+     * Result % used everywhere a rate is judged or shown: one decimal, except that a non-zero count never
+     * rounds down to 0 (1 / 9,200 → 0.01, not 0.0). At a 0% target that rounding would turn a real case
+     * into a 'pass'. null when there is no denominator.
+     */
+    public static function percentage(int|float $num, int|float $den, int $precision = 1): ?float
+    {
+        if ($den <= 0) {
+            return null;
+        }
+
+        $raw = $num / $den * 100;
+        $pct = round($raw, $precision);
+
+        return ($num > 0 && $pct <= 0.0) ? max(round($raw, 2), 0.01) : $pct;
+    }
+
     /** Returns 'pass' | 'warning' | 'fail' | 'na' */
     public function getStatus(?float $pct, float $target, string $direction): string
     {
@@ -327,6 +344,12 @@ class RduCalculationService
 
         if ($passed) {
             return 'pass';
+        }
+
+        // A 0% "lower" target means the event should never happen (e.g. KPI12 dual RAS blockade):
+        // every case is a failure, there is no "nearly there".
+        if ($direction === 'lower' && $target <= 0.0) {
+            return 'fail';
         }
 
         $near = match ($direction) {

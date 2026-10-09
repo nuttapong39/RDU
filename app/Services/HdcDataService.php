@@ -13,9 +13,10 @@ use Illuminate\Support\Facades\Http;
 class HdcDataService
 {
     /**
-     * KPI code => HDC table and the columns holding the denominator / numerator.
+     * KPI code => HDC table and the columns holding the denominator / numerator — one column, or a list
+     * of columns that are summed (tables published per month, e.g. s_rdu10's t10…t09 / r10…r09).
      * `inverted`: HDC counts cases that RECEIVED an antibiotic while our numerator counts cases that did not.
-     * Not linked yet (no matching HDC table found): KPI06, KPI07, KPI11, KPI12.
+     * Not linked yet (no matching HDC table found): KPI06, KPI07, KPI11.
      */
     private const MAPPING = [
         'KPI01' => ['table' => 's_rdu8',  'den' => 'target',  'num' => 'result'],
@@ -26,8 +27,13 @@ class HdcDataService
         'KPI08' => ['table' => 's_rdu15', 'den' => 'target',  'num' => 'result'], // asthma OPD given inhaled corticosteroid
         'KPI09' => ['table' => 's_rdu14', 'den' => 'target',  'num' => 'result'], // CKD stage ≥3 given NSAIDs
         'KPI10' => ['table' => 's_rdu12', 'den' => 'target',  'num' => 'result'], // type 2 DM (eGFR ≥30) on metformin
+        'KPI12' => ['table' => 's_rdu10', 'den' => self::FISCAL_MONTHS_T, 'num' => self::FISCAL_MONTHS_R], // essential HT visits: ≥ 1 / ≥ 2 RAS drugs
         'KPI13' => ['table' => 's_rdu16', 'den' => 'target',  'num' => 'result'], // elderly OPD visits given the drug
     ];
+
+    /** s_rdu10's per-month columns, October → September. */
+    private const FISCAL_MONTHS_T = ['t10', 't11', 't12', 't01', 't02', 't03', 't04', 't05', 't06', 't07', 't08', 't09'];
+    private const FISCAL_MONTHS_R = ['r10', 'r11', 'r12', 'r01', 'r02', 'r03', 'r04', 'r05', 'r06', 'r07', 'r08', 'r09'];
 
     private const THAI_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
@@ -61,8 +67,8 @@ class HdcDataService
         return collect($this->fetch($map['table'], $fyYear, $honourOutage))
             ->filter(fn ($r) => is_array($r) && isset($r['hospcode']))
             ->map(function (array $r) use ($map) {
-                $den = (int) ($r[$map['den']] ?? 0);
-                $num = (int) ($r[$map['num']] ?? 0);
+                $den = $this->sum($r, $map['den']);
+                $num = $this->sum($r, $map['num']);
                 if (! empty($map['inverted'])) {
                     $num = max(0, $den - $num);
                 }
@@ -89,6 +95,12 @@ class HdcDataService
         $hospcode = config('rdu.hdc.hospcode');
 
         return collect($this->rows($kpiCode, $fyYear))->firstWhere('hospcode', $hospcode);
+    }
+
+    /** @param  string|list<string>  $columns  one column, or several to add up */
+    private function sum(array $row, string|array $columns): int
+    {
+        return array_sum(array_map(fn (string $c) => (int) ($row[$c] ?? 0), (array) $columns));
     }
 
     /** "25 ก.ย. 2569 09:26" from HDC's YYYYMMDDhhmm processing timestamp. */

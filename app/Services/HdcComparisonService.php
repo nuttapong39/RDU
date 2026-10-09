@@ -65,7 +65,7 @@ class HdcComparisonService
                 'rows'      => $this->sortRows($rows->all(), $indicator->target_direction),
                 'total_num' => $totalNum,
                 'total_den' => $totalDen,
-                'avg_pct'   => $totalDen > 0 ? round($totalNum / $totalDen * 100, 1) : null,
+                'avg_pct'   => RduCalculationService::percentage($totalNum, $totalDen),
             ],
         ];
     }
@@ -87,7 +87,7 @@ class HdcComparisonService
 
     private function figure(int $num, int $den, RduIndicator $indicator): array
     {
-        $pct = $den > 0 ? round($num / $den * 100, 1) : null;
+        $pct = RduCalculationService::percentage($num, $den);
 
         return [
             'num'    => $num,

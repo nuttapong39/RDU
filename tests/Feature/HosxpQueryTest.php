@@ -100,7 +100,7 @@ class HosxpQueryTest extends TestCase
             'KPI09' => [\App\Queries\Kpi\PatientSafety\ElderlyNsaidsQuery::class],
             'KPI10' => [\App\Queries\Kpi\PatientSafety\VitB1InjectionQuery::class],
             'KPI11' => [\App\Queries\Kpi\PatientSafety\CorticosteroidInjectionQuery::class],
-            'KPI12' => [\App\Queries\Kpi\PatientSafety\ElderlyPolypharmacyQuery::class],
+            'KPI12' => [\App\Queries\Kpi\PatientSafety\RasDualBlockadeQuery::class],
             'KPI13' => [\App\Queries\Kpi\ChronicDisease\DmHba1cControlledQuery::class],
         ];
     }

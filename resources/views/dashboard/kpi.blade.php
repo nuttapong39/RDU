@@ -10,6 +10,8 @@
     $status = $item['status'];
     // KPIs without a HOSxP query yet show their HDC whole-year figure (see RduCalculationService::hdcFallback)
     $fromHdc = ($item['source'] ?? 'hosxp') === 'hdc';
+    // Wording for the drug this KPI judges (antibiotics for KPI01-05, RAS blockade for KPI12)
+    $drug = $ind->drugGroup();
 
     $catMeta = [
         'Antibiotic'     => ['label' => 'ยาปฏิชีวนะ',  'icon' => 'medication',        'catBadge' => 'cat-badge-antibiotic', 'trend' => '#dc2626'],
@@ -371,7 +373,7 @@
             {{-- Stacked (donut above legend): a 1/3 column is too narrow for the donut and legend side by side. --}}
             <div class="flex flex-col items-center gap-5">
                 <div class="relative mx-auto flex-shrink-0" style="height: 180px; width: 180px;">
-                    <canvas id="visitProportionDonut" aria-label="สัดส่วน visit ที่ได้และไม่ได้รับยาปฏิชีวนะ" role="img"></canvas>
+                    <canvas id="visitProportionDonut" aria-label="สัดส่วน visit: {{ $drug['received'] }} / {{ $drug['not_received'] }}" role="img"></canvas>
                     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span class="text-xl font-bold text-slate-800 tabular-nums">{{ number_format($item['denominator']) }}</span>
                         <span class="text-[.65rem] text-slate-400">visit ทั้งหมด</span>
@@ -410,7 +412,7 @@
         <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($visitStats['total_visits']) }}</div>
     </div>
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
-        <div class="text-xs text-slate-500 mb-1">VISIT ที่ได้ ATB</div>
+        <div class="text-xs text-slate-500 mb-1">VISIT ที่ได้ {{ $drug['short'] }}</div>
         <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($visitStats['atb_visits']) }}</div>
         @if($visitStats['pct'] !== null)
             <div class="text-[.7rem] text-slate-400">{{ $visitStats['pct'] }}% ของทั้งหมด</div>
@@ -422,7 +424,7 @@
         <div class="text-[.7rem] text-slate-400">ทุกชนิดรวมกัน</div>
     </div>
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
-        <div class="text-xs text-slate-500 mb-1">มูลค่า ATB (บาท)</div>
+        <div class="text-xs text-slate-500 mb-1">{{ $drug['cost'] }}</div>
         <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($visitStats['atb_cost'], 0) }}</div>
     </div>
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
@@ -452,12 +454,12 @@
     <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
         <div class="flex items-center gap-2 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">medical_services</span>
-            อัตราการสั่งยาปฏิชีวนะรายแพทย์ผู้ตรวจ
+            {{ $drug['doctor_rate'] }}
         </div>
         @if(count($doctorRate) > 0)
             <div class="flex items-center gap-3 text-[.7rem] text-slate-500 flex-wrap">
-                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#ef4444"></span>เกินเกณฑ์ {{ $doctorRateThreshold }}%</span>
-                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#10b981"></span>ต่ำกว่าเกณฑ์</span>
+                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#ef4444"></span>{{ $doctorRateThreshold > 0 ? 'เกินเกณฑ์ '.$doctorRateThreshold.'%' : 'มีเคส (มากกว่า 0%)' }}</span>
+                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#10b981"></span>{{ $doctorRateThreshold > 0 ? 'ต่ำกว่าเกณฑ์' : 'ไม่มีเคส (0%)' }}</span>
             </div>
         @endif
     </div>
@@ -484,7 +486,7 @@
                     <tr class="text-left text-xs text-slate-500 border-b border-slate-200">
                         <th class="py-2 pr-3 font-medium">แพทย์</th>
                         <th class="py-2 pr-3 font-medium text-right">VISIT</th>
-                        <th class="py-2 pr-3 font-medium text-right">ได้ ATB</th>
+                        <th class="py-2 pr-3 font-medium text-right">ได้ {{ $drug['short'] }}</th>
                         <th class="py-2 pr-3 font-medium text-right">อัตรา</th>
                         <th class="py-2 font-medium">เทียบเป้า {{ $doctorRateThreshold }}%</th>
                     </tr>
@@ -577,16 +579,16 @@
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">bar_chart</span>
-            สัดส่วนยาปฏิชีวนะที่สั่งจ่าย
+            {{ $drug['usage'] }}
         </div>
         @if(count($drugUsage) > 0)
             <div style="height: {{ max(220, count($drugUsage) * 32) }}px;">
-                <canvas id="drugUsageChart" aria-label="สัดส่วนยาปฏิชีวนะที่สั่งจ่าย" role="img"></canvas>
+                <canvas id="drugUsageChart" aria-label="{{ $drug['usage'] }}" role="img"></canvas>
             </div>
         @else
             <div class="status-empty py-8">
                 <span class="msi">bar_chart</span>
-                <p class="font-medium text-sm">ยังไม่มีข้อมูลยาปฏิชีวนะในช่วงเวลานี้</p>
+                <p class="font-medium text-sm">ยังไม่มีข้อมูล{{ $drug['name'] }}ในช่วงเวลานี้</p>
             </div>
         @endif
     </div>
@@ -605,8 +607,8 @@
                     <tr class="text-left text-xs text-slate-500 border-b border-slate-200">
                         <th class="py-2 pr-3 font-medium">สิทธิ์การรักษา</th>
                         <th class="py-2 pr-3 font-medium text-right">VISIT</th>
-                        <th class="py-2 pr-3 font-medium text-right">ได้ ATB</th>
-                        <th class="py-2 font-medium text-right">% ได้ ATB</th>
+                        <th class="py-2 pr-3 font-medium text-right">ได้ {{ $drug['short'] }}</th>
+                        <th class="py-2 font-medium text-right">% ได้ {{ $drug['short'] }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -634,7 +636,7 @@
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">local_hospital</span>
-            แผนก (เฉพาะ VISIT ที่ได้ ATB)
+            แผนก (เฉพาะ VISIT ที่ได้ {{ $drug['short'] }})
         </div>
         @if(count($departmentBreakdown) > 0)
             <div class="overflow-x-auto">
@@ -660,7 +662,7 @@
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">meeting_room</span>
-            {{ $ind->code === 'KPI03' ? 'หอผู้ป่วย (เฉพาะ VISIT ที่ได้ ATB)' : 'ห้องตรวจ (เฉพาะ VISIT ที่ได้ ATB)' }}
+            {{ $ind->code === 'KPI03' ? 'หอผู้ป่วย' : 'ห้องตรวจ' }} (เฉพาะ VISIT ที่ได้ {{ $drug['short'] }})
         </div>
         @if(count($roomBreakdown) > 0)
             <div class="overflow-x-auto">
@@ -696,11 +698,11 @@
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">calendar_view_month</span>
-            สัดส่วนเคส ATB แยกรายไตรมาส (Q1–Q4 ปีงบ {{ $year }})
+            สัดส่วนเคส {{ $drug['short'] }} แยกรายไตรมาส (Q1–Q4 ปีงบ {{ $year }})
         </div>
         @if($quarterlyBreakdown->sum('numerator') > 0)
             <div class="relative mx-auto" style="height: 200px; max-width: 200px;">
-                <canvas id="quarterPieChart" aria-label="สัดส่วนเคสที่ได้รับยาปฏิชีวนะรายไตรมาส" role="img"></canvas>
+                <canvas id="quarterPieChart" aria-label="สัดส่วนเคสที่{{ $drug['received'] }}รายไตรมาส" role="img"></canvas>
                 <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                     <span class="text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($quarterlyBreakdown->sum('numerator')) }}</span>
                     <span class="text-[.65rem] text-slate-400">เคสทั้งปี</span>
@@ -814,6 +816,7 @@
     $numeratorLabel = match ($ind->code) {
         'KPI01', 'KPI04', 'KPI05' => 'visit ที่ได้รับยาปฏิชีวนะ',
         'KPI03'                   => 'visit ที่ไม่ได้รับยาปฏิชีวนะ',
+        'KPI12'                   => 'visit ที่ได้รับ RAS blockade ≥ 2 ชนิด',
         default                   => 'ตัวตั้งของตัวชี้วัด',
     };
 @endphp
@@ -1093,7 +1096,7 @@
     const notReceived = {{ $donutNotReceived ?? 0 }};
     const total       = received + notReceived;
     const colors      = ['#4F46E5', '#e2e8f0'];
-    const labels      = ['ได้ยาปฏิชีวนะ', 'ไม่ได้ยาปฏิชีวนะ'];
+    const labels      = @json([$drug['received'], $drug['not_received']]);
     const values      = [received, notReceived];
 
     new Chart(canvas, {
