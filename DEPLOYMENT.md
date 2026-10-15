@@ -44,15 +44,16 @@ git commit -m "อธิบายการเปลี่ยนแปลง"
 git push origin main
 ```
 
-**Server:**
+**Server — คำสั่งเดียวจากเครื่อง dev** (PowerShell หรือ Git Bash):
 ```bash
-ssh nuttapong@192.168.1.244
-cd /var/www/rdu && ./scripts/deploy.sh
+ssh -t nuttapong@192.168.1.244 /var/www/rdu/scripts/deploy.sh
 ```
+หรือเข้า server ก่อนแล้วรัน `cd /var/www/rdu && ./scripts/deploy.sh` ก็ได้ผลเหมือนกัน
 
 `scripts/deploy.sh` ตรวจความปลอดภัย (`APP_ENV=production`, `DB_DATABASE=rdu_dashboard`, ไม่มีไฟล์ที่ git ติดตามถูกแก้บน server)
 → เปิดหน้าปิดปรับปรุง → ดึงโค้ด → `composer install --no-dev` → `npm ci && npm run build` → `migrate --force`
-→ cache → `reload php-fpm` → เปิดเว็บ
+→ `db:seed --class=RduIndicatorSeeder` (ชื่อ/เป้าของ 13 ตัวชี้วัด — อัปเดตทับ ไม่ลบอะไร) → cache + `cache:clear`
+→ `reload php-fpm` → เปิดเว็บ
 
 - ล้มเหลวก่อนเปลี่ยนโค้ด → เว็บกลับมาใช้โค้ดเดิมเอง
 - ล้มเหลวหลังเปลี่ยนโค้ด → เว็บค้างหน้าปิดปรับปรุง แก้สาเหตุแล้วรัน `./scripts/deploy.sh` ซ้ำ จะทำขั้นที่เหลือจนจบ

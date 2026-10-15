@@ -3,6 +3,9 @@
 #
 #   cd /var/www/rdu && ./scripts/deploy.sh
 #
+# Or in one command from the dev machine:
+#   ssh -t nuttapong@192.168.1.244 /var/www/rdu/scripts/deploy.sh
+#
 # Stops at the first failing step:
 #   - before the code changes → the site comes back up on the old code
 #   - after the code changes  → the site stays in maintenance mode; fix the cause and run the
@@ -70,10 +73,16 @@ npm run build
 step "Database migrations (rdu_dashboard only)"
 php artisan migrate --force
 
+# KPI names, numerator/denominator text and targets live in the seeder, not in a migration.
+# Only RduIndicatorSeeder — the full DatabaseSeeder creates an admin/admin user.
+step "KPI definitions (RduIndicatorSeeder — update in place, deletes nothing)"
+php artisan db:seed --class=RduIndicatorSeeder --force
+
 step "Caches"
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+php artisan cache:clear   # cached KPI results were graded against the old code and targets
 
 step "Reloading PHP-FPM (OPcache does not watch files)"
 sudo systemctl reload php-fpm
