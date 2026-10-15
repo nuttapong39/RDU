@@ -816,6 +816,7 @@
     $numeratorLabel = match ($ind->code) {
         'KPI01', 'KPI04', 'KPI05' => 'visit ที่ได้รับยาปฏิชีวนะ',
         'KPI03'                   => 'visit ที่ไม่ได้รับยาปฏิชีวนะ',
+        'KPI07'                   => 'visit ที่ได้รับ NSAIDs ≥ 2 รายการ',
         'KPI12'                   => 'visit ที่ได้รับ RAS blockade ≥ 2 ชนิด',
         default                   => 'ตัวตั้งของตัวชี้วัด',
     };

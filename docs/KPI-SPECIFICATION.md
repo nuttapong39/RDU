@@ -167,17 +167,21 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-07: การใช้ยา NSAIDs ซ้ำซ้อนในผู้ป่วยนอก
+#### KPI-07: การใช้ยา NSAIDs ซ้ำซ้อนในผู้ป่วยนอก ✅ implement แล้ว (2026-10)
 ```
 ชื่อ:         ร้อยละของผู้ป่วยนอกที่มีการใช้ยากลุ่ม NSAIDs ซ้ำซ้อน
-Code:         generic_drug_value
-Numerator:    มูลค่าการใช้ยาสามัญ
-Denominator:  มูลค่าการใช้ยาทั้งหมด
-Target:       ≥ 60%
-Direction:    สูงดี (higher_better)
-Category:     drug_quality
-HOSxP Tables: [TBD]
-Query:        [TBD — Plan แยกต่างหาก]
+Numerator:    visit ในตัวส่วนที่ได้รับยากลุ่ม NSAIDs ตั้งแต่ 2 รายการ (รหัสยา) ที่ต่างกัน (qty > 0)
+Denominator:  visit ผู้ป่วยนอก (ovst.an IS NULL) ที่ได้รับ NSAIDs อย่างน้อย 1 รายการ (qty > 0) ไม่จำกัดการวินิจฉัย
+Target:       ≤ 5%
+Direction:    ต่ำดี (lower)
+Category:     PatientSafety · กลุ่มยาของตัวชี้วัด: ยากลุ่ม NSAIDs (config rdu.drug_groups)
+ยา NSAIDs:    เภสัชกรกำหนด 6 รหัส — Ibuprofen 200/400 mg, Ibuprofen SUSP, Diclofenac INJ, Diclofenac TAB,
+              Mefenamic acid · ไม่นับ Norgesic (Orphenadrine+Paracetamol) และ Aspirin
+              นับตาม "รายการ" (รหัสยา) — Diclofenac INJ + Diclofenac TAB = ซ้ำซ้อน (ต่างจาก KPI12 ที่นับตามตัวยา)
+HOSxP Tables: ovst, ovstdiag, opitemrece, drugitems, patient, doctor, pttype, spclty, kskdepartment
+Query:        app/Queries/Kpi/PatientSafety/NsaidDuplicationQuery.php · docs/SQL_KPI/KPI7.sql
+HDC:          ไม่มีตารางที่นิยามตรงกัน
+ผลปีงบ 2569:  67 / 3,794 visit (1.8%) — 38 ใน 67 เป็น Diclofenac INJ + Diclofenac TAB, 27 เป็น Diclofenac INJ + Ibuprofen
 ```
 
 ---
@@ -296,7 +300,7 @@ Query:        [TBD — Plan แยกต่างหาก]
 | KPI-04 | ipd_antibiotic_use | ATB ใน URI/หลอดลมอักเสบเฉียบพลัน (OPD) | ≤ 30% | ต่ำดี | antibiotic_ipd |
 | KPI-05 | cap_appropriate_antibiotic | ATB ในอุจจาระร่วงเฉียบพลัน | ≥ 80% | สูงดี | antibiotic_ipd |
 | KPI-06 | national_drug_list_value | ATB ใน Pyelonephritis/UTI เฉียบพลัน | ≥ 80% | สูงดี | drug_quality |
-| KPI-07 | generic_drug_value | NSAIDs ซ้ำซ้อน (OPD) | ≥ 60% | สูงดี | drug_quality |
+| KPI-07 | nsaid_duplication | NSAIDs ซ้ำซ้อน (OPD) | ≤ 5% | ต่ำดี | patient_safety |
 | KPI-08 | antimicrobial_value_ratio | Inhaled Corticosteroid (โรคติดเชื้อ) | ≤ 25% | ต่ำดี | drug_quality |
 | KPI-09 | elderly_nsaids_use | NSAIDs ในโรคเรื้อรังระดับ 3+ | ≤ 10% | ต่ำดี | patient_safety |
 | KPI-10 | vit_b1_injection_no_indication | Metformin คุมเบาหวานไม่มีข้อห้ามใช้ | ≤ 5% | ต่ำดี | patient_safety |
@@ -323,9 +327,9 @@ app/
         │   └── AcuteDiarrheaAntibioticQuery.php ← KPI-05
         ├── DrugQuality/
         │   ├── NationalDrugListValueQuery.php  ← KPI-06
-        │   ├── GenericDrugValueQuery.php       ← KPI-07
         │   └── AntimicrobialValueQuery.php     ← KPI-08
         ├── PatientSafety/
+        │   ├── NsaidDuplicationQuery.php       ← KPI-07
         │   ├── ElderlyNsaidsQuery.php          ← KPI-09
         │   ├── VitB1InjectionQuery.php         ← KPI-10
         │   ├── CorticosteroidInjectionQuery.php ← KPI-11

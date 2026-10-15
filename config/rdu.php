@@ -9,7 +9,7 @@ return [
 
     // KPIs whose HOSxP query is implemented (not a stub). These always use HOSxP; every other KPI
     // falls back to its HDC whole-year figure when one is linked (see HdcDataService::MAPPING).
-    'hosxp_kpis' => ['KPI01', 'KPI03', 'KPI04', 'KPI05', 'KPI12'],
+    'hosxp_kpis' => ['KPI01', 'KPI03', 'KPI04', 'KPI05', 'KPI07', 'KPI12'],
 
     // The drug each KPI judges (CONTEXT.md: กลุ่มยาของตัวชี้วัด) and the wording the KPI page uses for it.
     // KPIs not listed in `kpi_drug_group` use `antibiotic`. Read through RduIndicator::drugGroup().
@@ -33,8 +33,19 @@ return [
             'doctor_rate'  => 'อัตราการสั่ง RAS blockade ≥ 2 ชนิดรายแพทย์ผู้ตรวจ',
             'usage'        => 'สัดส่วนยา RAS ที่สั่งจ่าย (visit ที่ได้ ≥ 2 ชนิด)',
         ],
+        // KPI07 counts drug items (icodes), so the wording says "รายการ", not "ชนิด" (CONTEXT.md: NSAIDs ซ้ำซ้อน).
+        'nsaid' => [
+            'name'         => 'ยากลุ่ม NSAIDs',
+            'short'        => 'NSAIDs ≥2 รายการ',
+            'received'     => 'ได้ NSAIDs ≥ 2 รายการ',
+            'not_received' => 'ได้ NSAIDs 1 รายการ',
+            'cost'         => 'มูลค่ายา NSAIDs (บาท)',
+            'doctor_rate'  => 'อัตราการสั่ง NSAIDs ซ้ำซ้อนรายแพทย์ผู้ตรวจ',
+            'usage'        => 'สัดส่วนยา NSAIDs ที่สั่งจ่าย (visit ที่ได้ ≥ 2 รายการ)',
+        ],
     ],
     'kpi_drug_group' => [
+        'KPI07' => 'nsaid',
         'KPI12' => 'ras',
     ],
 
