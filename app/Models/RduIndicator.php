@@ -59,6 +59,30 @@ class RduIndicator extends Model
         return config('rdu.drug_groups.'.$group, config('rdu.drug_groups.antibiotic'));
     }
 
+    /** Whether the numerator counts the cases that GOT this KPI's drug (false only for config rdu.numerator_without_drug). */
+    public function numeratorIsDrugReceived(): bool
+    {
+        return ! in_array($this->code, config('rdu.numerator_without_drug', []), true);
+    }
+
+    /** Whether getting this KPI's drug is the good outcome — e.g. ICS for asthma (KPI08), not antibiotics. */
+    public function receivingDrugIsGood(): bool
+    {
+        return $this->numeratorIsDrugReceived() === ($this->target_direction === 'higher');
+    }
+
+    /**
+     * What one denominator case is (config rdu.count_units) — a visit unless mapped in rdu.kpi_count_unit.
+     *
+     * @return array{name: string, title: string, counter: string, additive: bool}
+     */
+    public function countUnit(): array
+    {
+        $unit = config('rdu.kpi_count_unit.'.$this->code, 'visit');
+
+        return config('rdu.count_units.'.$unit, config('rdu.count_units.visit'));
+    }
+
     public function targetLabel(): string
     {
         $op = $this->target_direction === 'higher' ? '≥' : '≤';

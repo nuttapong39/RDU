@@ -186,17 +186,21 @@ HDC:          ไม่มีตารางที่นิยามตรงก
 
 ---
 
-#### KPI-08: การได้รับ Inhaled Corticosteroid ในผู้ป่วยนอกโรคติดเชื้อ
+#### KPI-08: การได้รับ Inhaled Corticosteroid ในผู้ป่วยนอกโรคหืด ✅ implement แล้ว (2026-10)
 ```
-ชื่อ:         ร้อยละของผู้ป่วยนอกโรคติดเชื้อได้รับ Inhaled Corticosteroid
-Code:         antimicrobial_value_ratio
-Numerator:    มูลค่าการใช้ยาต้านจุลชีพ
-Denominator:  มูลค่าการใช้ยาทั้งหมด
-Target:       ≤ 25%
-Direction:    ต่ำดี (lower_better)
-Category:     drug_quality
-HOSxP Tables: [TBD]
-Query:        [TBD — Plan แยกต่างหาก]
+ชื่อ:         ร้อยละของผู้ป่วยนอกโรคหืดที่ได้รับยา Inhaled Corticosteroid
+หน่วยนับ:     ผู้ป่วย (HN ไม่ซ้ำ) — ไม่ใช่ visit · ยอดไตรมาส/สะสมนับคนไม่ซ้ำตลอดช่วง ไม่รวมยอดรายเดือน
+Numerator:    ผู้ป่วยในตัวส่วนที่ได้ ICS (qty > 0) ใน visit ผู้ป่วยนอกครั้งใดก็ได้ในช่วงเวลาเดียวกัน
+Denominator:  ผู้ป่วยที่มี visit ผู้ป่วยนอก (ovst.an IS NULL) วินิจฉัย J45% / J46% ตำแหน่งใดก็ได้ ในช่วงเวลานั้น
+Target:       ≥ 80%
+Direction:    สูงดี (higher) — ตัวเศษคือคนที่ "ได้" ยา (ต่างจาก KPI03 ที่ตัวเศษคือคนที่ไม่ได้ยา)
+Category:     PatientSafety · กลุ่มยาของตัวชี้วัด: ยา ICS · หน่วยนับ: patient (config rdu.kpi_count_unit)
+ยา ICS:       เภสัชกรกำหนด 4 รหัส — Budesonide MDI, Seretide Evohaler, Seretide Accuhaler + รหัส Seretide เก่า
+ข้อมูลรายกรณี: 1 แถวต่อผู้ป่วย ใช้ visit โรคหืดครั้งล่าสุดในช่วงเวลานั้นเป็นตัวแทน (แพทย์ สิทธิ์ แผนก ห้อง)
+HOSxP Tables: ovst, ovstdiag, opitemrece, drugitems, patient, doctor, pttype, spclty, kskdepartment
+Query:        app/Queries/Kpi/PatientSafety/AsthmaInhaledCorticosteroidQuery.php · docs/SQL_KPI/KPI8.sql
+HDC:          s_rdu15 (target / result — นับเป็นคนเหมือนกัน) ใช้ในปุ่ม "เทียบ HDC"
+ผลปีงบ 2569:  71 / 87 คน (81.6%) — HDC 72 / 87 (82.8%) · ถ้านับเป็น visit จะได้ 178 / 255 (69.8%)
 ```
 
 ---
@@ -301,7 +305,7 @@ Query:        [TBD — Plan แยกต่างหาก]
 | KPI-05 | cap_appropriate_antibiotic | ATB ในอุจจาระร่วงเฉียบพลัน | ≥ 80% | สูงดี | antibiotic_ipd |
 | KPI-06 | national_drug_list_value | ATB ใน Pyelonephritis/UTI เฉียบพลัน | ≥ 80% | สูงดี | drug_quality |
 | KPI-07 | nsaid_duplication | NSAIDs ซ้ำซ้อน (OPD) | ≤ 5% | ต่ำดี | patient_safety |
-| KPI-08 | antimicrobial_value_ratio | Inhaled Corticosteroid (โรคติดเชื้อ) | ≤ 25% | ต่ำดี | drug_quality |
+| KPI-08 | asthma_ics | Inhaled Corticosteroid ในผู้ป่วยหืด (นับเป็นคน) | ≥ 80% | สูงดี | patient_safety |
 | KPI-09 | elderly_nsaids_use | NSAIDs ในโรคเรื้อรังระดับ 3+ | ≤ 10% | ต่ำดี | patient_safety |
 | KPI-10 | vit_b1_injection_no_indication | Metformin คุมเบาหวานไม่มีข้อห้ามใช้ | ≤ 5% | ต่ำดี | patient_safety |
 | KPI-11 | corticosteroid_injection_no_indication | ยาน้ำ non-sedating ในเด็กติดเชื้อทางเดินหายใจ | ≤ 5% | ต่ำดี | patient_safety |
@@ -326,10 +330,10 @@ app/
         │   ├── RespiratoryInfectionAntibioticQuery.php ← KPI-04
         │   └── AcuteDiarrheaAntibioticQuery.php ← KPI-05
         ├── DrugQuality/
-        │   ├── NationalDrugListValueQuery.php  ← KPI-06
-        │   └── AntimicrobialValueQuery.php     ← KPI-08
+        │   └── NationalDrugListValueQuery.php  ← KPI-06
         ├── PatientSafety/
         │   ├── NsaidDuplicationQuery.php       ← KPI-07
+        │   ├── AsthmaInhaledCorticosteroidQuery.php ← KPI-08
         │   ├── ElderlyNsaidsQuery.php          ← KPI-09
         │   ├── VitB1InjectionQuery.php         ← KPI-10
         │   ├── CorticosteroidInjectionQuery.php ← KPI-11

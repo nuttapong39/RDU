@@ -9,7 +9,7 @@ return [
 
     // KPIs whose HOSxP query is implemented (not a stub). These always use HOSxP; every other KPI
     // falls back to its HDC whole-year figure when one is linked (see HdcDataService::MAPPING).
-    'hosxp_kpis' => ['KPI01', 'KPI03', 'KPI04', 'KPI05', 'KPI07', 'KPI12'],
+    'hosxp_kpis' => ['KPI01', 'KPI03', 'KPI04', 'KPI05', 'KPI07', 'KPI08', 'KPI12'],
 
     // The drug each KPI judges (CONTEXT.md: กลุ่มยาของตัวชี้วัด) and the wording the KPI page uses for it.
     // KPIs not listed in `kpi_drug_group` use `antibiotic`. Read through RduIndicator::drugGroup().
@@ -33,6 +33,16 @@ return [
             'doctor_rate'  => 'อัตราการสั่ง RAS blockade ≥ 2 ชนิดรายแพทย์ผู้ตรวจ',
             'usage'        => 'สัดส่วนยา RAS ที่สั่งจ่าย (visit ที่ได้ ≥ 2 ชนิด)',
         ],
+        // KPI08 is "higher is better": getting the drug is the good outcome.
+        'ics' => [
+            'name'         => 'ยา Inhaled Corticosteroid (ICS)',
+            'short'        => 'ICS',
+            'received'     => 'ได้ ICS',
+            'not_received' => 'ไม่ได้ ICS',
+            'cost'         => 'มูลค่ายา ICS (บาท)',
+            'doctor_rate'  => 'อัตราการสั่ง ICS รายแพทย์ผู้ตรวจ',
+            'usage'        => 'สัดส่วนยา ICS ที่สั่งจ่าย',
+        ],
         // KPI07 counts drug items (icodes), so the wording says "รายการ", not "ชนิด" (CONTEXT.md: NSAIDs ซ้ำซ้อน).
         'nsaid' => [
             'name'         => 'ยากลุ่ม NSAIDs',
@@ -46,7 +56,25 @@ return [
     ],
     'kpi_drug_group' => [
         'KPI07' => 'nsaid',
+        'KPI08' => 'ics',
         'KPI12' => 'ras',
+    ],
+
+    // KPIs whose numerator is the cases that did NOT get the KPI's drug (KPI03: deliveries without an
+    // antibiotic). Every other KPI's numerator is the cases that got it. Read through
+    // RduIndicator::numeratorIsDrugReceived().
+    'numerator_without_drug' => ['KPI03'],
+
+    // What one denominator case is (CONTEXT.md: ผู้ป่วยโรคหืดที่ได้ ICS). `additive` = a period's count is
+    // the sum of its months' counts; false (patients seen in several months) means a quarter or a
+    // year-to-date figure must be counted over its whole date range. KPIs not listed in `kpi_count_unit`
+    // count visits. Read through RduIndicator::countUnit().
+    'count_units' => [
+        'visit'   => ['name' => 'visit',   'title' => 'VISIT',   'counter' => 'ครั้ง', 'additive' => true],
+        'patient' => ['name' => 'ผู้ป่วย', 'title' => 'ผู้ป่วย', 'counter' => 'ราย',  'additive' => false],
+    ],
+    'kpi_count_unit' => [
+        'KPI08' => 'patient',
     ],
 
     // MOPH Open Data (HDC) — comparison modal, and the stand-in result for KPIs listed above as not yet on HOSxP

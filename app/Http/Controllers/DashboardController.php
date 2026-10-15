@@ -233,11 +233,14 @@ class DashboardController extends Controller
             ];
         }
 
-        // Worst offenders first — sorted by the plain ATB-received rate regardless of KPI direction,
-        // since a high raw rate always means "this doctor prescribes antibiotics more" across all
-        // four KPIs (KPI03's inverted target only affects the red/green call, not what "worse" means
-        // here). The unknown-doctor bucket, if any, always sorts last regardless of its rate.
-        usort($items, fn ($a, $b) => $a['unknown'] <=> $b['unknown'] ?: $b['rate'] <=> $a['rate']);
+        // Worst offenders first, by the plain drug-received rate: highest first when the drug should be
+        // avoided (antibiotics, NSAIDs, RAS — KPI03's inverted numerator only affects the red/green call),
+        // lowest first when it should be given. The unknown-doctor bucket always sorts last.
+        // Where getting the drug is the good outcome (KPI08: ICS for asthma), the LOWEST rate is the worst.
+        $worstFirst = $indicator->receivingDrugIsGood()
+            ? fn ($a, $b) => $a['rate'] <=> $b['rate']
+            : fn ($a, $b) => $b['rate'] <=> $a['rate'];
+        usort($items, fn ($a, $b) => $a['unknown'] <=> $b['unknown'] ?: $worstFirst($a, $b));
 
         return $items;
     }
@@ -249,14 +252,18 @@ class DashboardController extends Controller
      */
     private function isDoctorRateRed(float $rate, RduIndicator $indicator): bool
     {
-        if ($indicator->target_direction === 'higher') {
-            return (100 - $rate) <= $indicator->target_value;
+        $threshold = $this->doctorRateThreshold($indicator);
+
+        // Getting the drug is good (KPI08): too FEW patients on it is red. Exactly at the floor is green,
+        // as getStatus() passes a 'higher' KPI at pct >= target.
+        if ($indicator->receivingDrugIsGood()) {
+            return $rate < $threshold;
         }
 
         // At a 0% target, 0% itself is the goal (green); any case at all is red.
-        return $indicator->target_value <= 0
+        return $threshold <= 0
             ? $rate > 0
-            : $rate >= $indicator->target_value;
+            : $rate >= $threshold;
     }
 
     /**
@@ -266,13 +273,15 @@ class DashboardController extends Controller
      * the rate threshold), but for 'higher' KPIs (KPI03) target_value is an avoidance-rate target
      * (e.g. 80%), while the flip point on the RECEIVED-rate scale this table plots is 100-target_value
      * (e.g. 20%) — using target_value directly there would draw the tick 60 points from where the
-     * color actually changes.
+     * color actually changes. The flip only applies when the numerator is the cases WITHOUT the drug
+     * (KPI03); where the numerator is the cases that got it (every other KPI, KPI08 included) the
+     * received rate IS the KPI rate, whatever the direction.
      */
     private function doctorRateThreshold(RduIndicator $indicator): float
     {
-        return $indicator->target_direction === 'higher'
-            ? round(100 - $indicator->target_value, 2)
-            : $indicator->target_value;
+        return $indicator->numeratorIsDrugReceived()
+            ? $indicator->target_value
+            : round(100 - $indicator->target_value, 2);
     }
 
     /**

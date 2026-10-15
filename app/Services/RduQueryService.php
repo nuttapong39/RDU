@@ -47,15 +47,50 @@ class RduQueryService
         );
     }
 
-    /**
-     * Case-level detail rows across all 3 months of a fiscal quarter, combined — not capped
-     * (each month is already fetched/cached individually via getDetails()).
-     */
+    // ---- Arbitrary date ranges — a quarter or a year-to-date span is counted over its whole range,
+    // never summed from months: a KPI counted in patients (KPI08) sees the same person in several months.
+
+    public function getNumeratorBetween(string $kpiCode, string $startDate, string $endDate): int
+    {
+        return Cache::remember(
+            $this->cacheKeyBetween($kpiCode, $startDate, $endDate, 'num'),
+            self::CACHE_TTL,
+            fn () => $this->dataSource->getNumeratorBetween($kpiCode, $startDate, $endDate)
+        );
+    }
+
+    public function getDenominatorBetween(string $kpiCode, string $startDate, string $endDate): int
+    {
+        return Cache::remember(
+            $this->cacheKeyBetween($kpiCode, $startDate, $endDate, 'den'),
+            self::CACHE_TTL,
+            fn () => $this->dataSource->getDenominatorBetween($kpiCode, $startDate, $endDate)
+        );
+    }
+
+    public function getDetailsBetween(string $kpiCode, string $startDate, string $endDate): Collection
+    {
+        return Cache::remember(
+            $this->cacheKeyBetween($kpiCode, $startDate, $endDate, 'detail'),
+            self::CACHE_TTL,
+            fn () => $this->dataSource->getDetailsBetween($kpiCode, $startDate, $endDate)
+        );
+    }
+
+    public function getNumeratorForQuarter(string $kpiCode, int $year, int $quarter): int
+    {
+        return $this->getNumeratorBetween($kpiCode, ...FiscalDateRange::quarterToGregorian($year, $quarter));
+    }
+
+    public function getDenominatorForQuarter(string $kpiCode, int $year, int $quarter): int
+    {
+        return $this->getDenominatorBetween($kpiCode, ...FiscalDateRange::quarterToGregorian($year, $quarter));
+    }
+
+    /** Case-level detail rows of a fiscal quarter, queried over the quarter's whole date range — not capped. */
     public function getDetailsForQuarter(string $kpiCode, int $year, int $quarter): Collection
     {
-        return collect(FiscalDateRange::quarterMonths($quarter))
-            ->flatMap(fn (int $m) => $this->getDetails($kpiCode, $year, $m))
-            ->values();
+        return $this->getDetailsBetween($kpiCode, ...FiscalDateRange::quarterToGregorian($year, $quarter));
     }
 
     /** Returns percentage (0–100), or null if denominator is 0. */

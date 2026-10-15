@@ -188,10 +188,9 @@ class RduCalculationService
     // -------------------------------------------------------------------------
 
     /**
-     * Sums numerator/denominator across the 3 months of a fiscal quarter (live only —
-     * a quarter total is never persisted to rdu_indicator_results, matching month=0).
-     * Each month's getNumerator/getDenominator call is still 1-hour cached by RduQueryService,
-     * and the 3 months never overlap in date range, so summing is safe (no double-counting).
+     * Numerator/denominator of a fiscal quarter, counted over the quarter's whole date range (live only —
+     * a quarter total is never persisted to rdu_indicator_results, matching month=0; 1-hour cached by
+     * RduQueryService). Not summed from months: a KPI counted in patients sees one person in several months.
      */
     public function getOrCalculateQuarter(RduIndicator $indicator, int $year, int $quarter): array
     {
@@ -199,12 +198,10 @@ class RduCalculationService
             return $fallback;
         }
 
-        $num = 0;
-        $den = 0;
-        foreach (FiscalDateRange::quarterMonths($quarter) as $m) {
-            $num += $this->queryService->getNumerator($indicator->code, $year, $m);
-            $den += $this->queryService->getDenominator($indicator->code, $year, $m);
-        }
+        // Counted over the quarter's whole date range, not summed from its months — the same patient
+        // seen in two months is one patient in the quarter (CONTEXT.md: ผู้ป่วยโรคหืดที่ได้ ICS).
+        $num = $this->queryService->getNumeratorForQuarter($indicator->code, $year, $quarter);
+        $den = $this->queryService->getDenominatorForQuarter($indicator->code, $year, $quarter);
 
         $pct    = self::percentage($num, $den);
         $status = $this->getStatus($pct, $indicator->target_value, $indicator->target_direction);
@@ -282,6 +279,36 @@ class RduCalculationService
                 'den'    => $den,
                 'status' => $this->getStatus($pct, $indicator->target_value, $indicator->target_direction),
             ];
+        }
+
+        return $this->withYearToDate($trend, $indicator, $fyYear);
+    }
+
+    /**
+     * Adds the year-to-date figure (start of the fiscal year through each month) to every trend point as
+     * `cum_num` / `cum_den` / `cum_pct`. Visits never repeat across months, so a visit KPI's figure is the
+     * running sum of its months; a KPI counted in patients is counted over the whole span instead.
+     */
+    private function withYearToDate(array $trend, RduIndicator $indicator, int $fyYear): array
+    {
+        $additive  = $indicator->countUnit()['additive'];
+        [$fyStart] = FiscalDateRange::toGregorian($fyYear, 10);
+        $cumNum    = 0;
+        $cumDen    = 0;
+
+        foreach ($trend as $i => $point) {
+            if ($additive) {
+                $cumNum += $point['num'];
+                $cumDen += $point['den'];
+            } else {
+                [, $monthEnd] = FiscalDateRange::toGregorian($point['year'], $point['month']);
+                $cumNum = $this->queryService->getNumeratorBetween($indicator->code, $fyStart, $monthEnd);
+                $cumDen = $this->queryService->getDenominatorBetween($indicator->code, $fyStart, $monthEnd);
+            }
+
+            $trend[$i]['cum_num'] = $cumNum;
+            $trend[$i]['cum_den'] = $cumDen;
+            $trend[$i]['cum_pct'] = self::percentage($cumNum, $cumDen);
         }
 
         return $trend;

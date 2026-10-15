@@ -12,6 +12,8 @@
     $fromHdc = ($item['source'] ?? 'hosxp') === 'hdc';
     // Wording for the drug this KPI judges (antibiotics for KPI01-05, RAS blockade for KPI12)
     $drug = $ind->drugGroup();
+    // What one case is — a visit, or a patient for KPI08 (config rdu.count_units)
+    $unit = $ind->countUnit();
 
     $catMeta = [
         'Antibiotic'     => ['label' => 'ยาปฏิชีวนะ',  'icon' => 'medication',        'catBadge' => 'cat-badge-antibiotic', 'trend' => '#dc2626'],
@@ -332,7 +334,7 @@
         <div class="p-4">
             <div style="height: 260px;">
                 <canvas id="trendChart"
-                        aria-label="กราฟแท่งจำนวน visit ทั้งหมดและจำนวนการใช้ยาของ {{ $ind->code }} รายเดือน พร้อมเส้นผลลัพธ์ร้อยละเทียบกับเส้นเป้าหมาย"
+                        aria-label="กราฟแท่งจำนวน {{ $unit['name'] }} ทั้งหมดและจำนวนการใช้ยาของ {{ $ind->code }} รายเดือน พร้อมเส้นผลลัพธ์ร้อยละเทียบกับเส้นเป้าหมาย"
                         role="img"></canvas>
             </div>
             <p class="mt-2 text-xs text-slate-500">
@@ -357,7 +359,7 @@
     // labels stay truthful instead of silently reusing the other KPIs' numerator-is-received assumption.
     // An HDC-backed figure is not a visit count, so it gets no visit donut.
     $donutReceived = !$fromHdc && $item['numerator'] !== null && $item['denominator'] !== null
-        ? ($ind->target_direction === 'higher' ? $item['denominator'] - $item['numerator'] : $item['numerator'])
+        ? ($ind->numeratorIsDrugReceived() ? $item['numerator'] : $item['denominator'] - $item['numerator'])
         : null;
     $donutNotReceived = $donutReceived !== null
         ? $item['denominator'] - $donutReceived
@@ -367,16 +369,16 @@
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">donut_small</span>
-            สัดส่วน VISIT
+            สัดส่วน {{ $unit['title'] }}
         </div>
         @if($donutReceived !== null && $item['denominator'] > 0)
             {{-- Stacked (donut above legend): a 1/3 column is too narrow for the donut and legend side by side. --}}
             <div class="flex flex-col items-center gap-5">
                 <div class="relative mx-auto flex-shrink-0" style="height: 180px; width: 180px;">
-                    <canvas id="visitProportionDonut" aria-label="สัดส่วน visit: {{ $drug['received'] }} / {{ $drug['not_received'] }}" role="img"></canvas>
+                    <canvas id="visitProportionDonut" aria-label="สัดส่วน {{ $unit['name'] }}: {{ $drug['received'] }} / {{ $drug['not_received'] }}" role="img"></canvas>
                     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span class="text-xl font-bold text-slate-800 tabular-nums">{{ number_format($item['denominator']) }}</span>
-                        <span class="text-[.65rem] text-slate-400">visit ทั้งหมด</span>
+                        <span class="text-[.65rem] text-slate-400">{{ $unit['name'] }} ทั้งหมด</span>
                     </div>
                 </div>
                 <div id="visitProportionLegend" class="w-full flex flex-col gap-2"></div>
@@ -408,17 +410,18 @@
 {{-- ============ VISIT STAT CARDS — shown for every KPI, stub or real ============ --}}
 <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
-        <div class="text-xs text-slate-500 mb-1">VISIT ทั้งหมด</div>
+        <div class="text-xs text-slate-500 mb-1">{{ $unit['title'] }} ทั้งหมด</div>
         <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($visitStats['total_visits']) }}</div>
     </div>
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
-        <div class="text-xs text-slate-500 mb-1">VISIT ที่ได้ {{ $drug['short'] }}</div>
+        <div class="text-xs text-slate-500 mb-1">{{ $unit['title'] }} ที่ได้ {{ $drug['short'] }}</div>
         <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($visitStats['atb_visits']) }}</div>
         @if($visitStats['pct'] !== null)
             <div class="text-[.7rem] text-slate-400">{{ $visitStats['pct'] }}% ของทั้งหมด</div>
         @endif
     </div>
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
+        {{-- Drugs dispensed in one visit — for a KPI counted in patients, that patient's representative visit --}}
         <div class="text-xs text-slate-500 mb-1">ยาเฉลี่ยต่อ VISIT</div>
         <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ $visitStats['avg_drug_items'] ?? 'N/A' }}</div>
         <div class="text-[.7rem] text-slate-400">ทุกชนิดรวมกัน</div>
@@ -457,9 +460,18 @@
             {{ $drug['doctor_rate'] }}
         </div>
         @if(count($doctorRate) > 0)
+            @php
+                // Must match DashboardController::isDoctorRateRed(): where getting the drug is good (KPI08)
+                // red is too FEW patients on it; otherwise red is too many cases (any case at a 0% target).
+                [$redLegend, $greenLegend] = match (true) {
+                    $ind->receivingDrugIsGood() => ['ต่ำกว่าเกณฑ์ '.$doctorRateThreshold.'%', 'ถึงเกณฑ์'],
+                    $doctorRateThreshold > 0    => ['เกินเกณฑ์ '.$doctorRateThreshold.'%', 'ต่ำกว่าเกณฑ์'],
+                    default                     => ['มีเคส (มากกว่า 0%)', 'ไม่มีเคส (0%)'],
+                };
+            @endphp
             <div class="flex items-center gap-3 text-[.7rem] text-slate-500 flex-wrap">
-                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#ef4444"></span>{{ $doctorRateThreshold > 0 ? 'เกินเกณฑ์ '.$doctorRateThreshold.'%' : 'มีเคส (มากกว่า 0%)' }}</span>
-                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#10b981"></span>{{ $doctorRateThreshold > 0 ? 'ต่ำกว่าเกณฑ์' : 'ไม่มีเคส (0%)' }}</span>
+                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#ef4444"></span>{{ $redLegend }}</span>
+                <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full" style="background:#10b981"></span>{{ $greenLegend }}</span>
             </div>
         @endif
     </div>
@@ -475,8 +487,8 @@
             <p class="text-sm text-indigo-900 leading-relaxed">
                 <strong>ชื่อแพทย์แสดงเป็นรหัสปกปิด</strong>
                 <span class="text-indigo-700">(กด/hover ที่รหัสเพื่อดูชื่อจริง)</span>
-                &nbsp;·&nbsp; เรียงจาก<strong>อัตราสูงสุด</strong>ไปต่ำสุด
-                &nbsp;·&nbsp; แพทย์ที่มี visit น้อยกว่า {{ $doctorRateMinVisits }} ครั้งจะไม่ตัดสินผ่าน/ไม่ผ่านเกณฑ์ (ข้อมูลไม่พอ)
+                &nbsp;·&nbsp; เรียงจาก{!! $ind->receivingDrugIsGood() ? '<strong>อัตราต่ำสุด</strong>ไปสูงสุด' : '<strong>อัตราสูงสุด</strong>ไปต่ำสุด' !!}
+                &nbsp;·&nbsp; แพทย์ที่มี {{ $unit['name'] }} น้อยกว่า {{ $doctorRateMinVisits }} {{ $unit['counter'] }}จะไม่ตัดสินผ่าน/ไม่ผ่านเกณฑ์ (ข้อมูลไม่พอ)
             </p>
         </div>
 
@@ -485,7 +497,7 @@
                 <thead>
                     <tr class="text-left text-xs text-slate-500 border-b border-slate-200">
                         <th class="py-2 pr-3 font-medium">แพทย์</th>
-                        <th class="py-2 pr-3 font-medium text-right">VISIT</th>
+                        <th class="py-2 pr-3 font-medium text-right">{{ $unit['title'] }}</th>
                         <th class="py-2 pr-3 font-medium text-right">ได้ {{ $drug['short'] }}</th>
                         <th class="py-2 pr-3 font-medium text-right">อัตรา</th>
                         <th class="py-2 font-medium">เทียบเป้า {{ $doctorRateThreshold }}%</th>
@@ -519,7 +531,7 @@
             <div class="mt-4 pt-3 border-t border-dashed border-slate-200">
                 <p class="text-xs text-slate-400 mb-2 flex items-center gap-1">
                     <span class="msi text-[.9rem]">info</span>
-                    ข้อมูลไม่เพียงพอสำหรับตัดสินผ่าน/ไม่ผ่านเกณฑ์ (visit น้อยกว่า {{ $doctorRateMinVisits }} ครั้ง หรือไม่ระบุแพทย์) — แสดงไว้เพื่อความครบถ้วน
+                    ข้อมูลไม่เพียงพอสำหรับตัดสินผ่าน/ไม่ผ่านเกณฑ์ ({{ $unit['name'] }} น้อยกว่า {{ $doctorRateMinVisits }} {{ $unit['counter'] }} หรือไม่ระบุแพทย์) — แสดงไว้เพื่อความครบถ้วน
                 </p>
                 <table class="w-full text-sm opacity-70">
                     <tbody>
@@ -606,7 +618,7 @@
                 <thead>
                     <tr class="text-left text-xs text-slate-500 border-b border-slate-200">
                         <th class="py-2 pr-3 font-medium">สิทธิ์การรักษา</th>
-                        <th class="py-2 pr-3 font-medium text-right">VISIT</th>
+                        <th class="py-2 pr-3 font-medium text-right">{{ $unit['title'] }}</th>
                         <th class="py-2 pr-3 font-medium text-right">ได้ {{ $drug['short'] }}</th>
                         <th class="py-2 font-medium text-right">% ได้ {{ $drug['short'] }}</th>
                     </tr>
@@ -636,7 +648,7 @@
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">local_hospital</span>
-            แผนก (เฉพาะ VISIT ที่ได้ {{ $drug['short'] }})
+            แผนก (เฉพาะ {{ $unit['title'] }} ที่ได้ {{ $drug['short'] }})
         </div>
         @if(count($departmentBreakdown) > 0)
             <div class="overflow-x-auto">
@@ -662,7 +674,7 @@
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">meeting_room</span>
-            {{ $ind->code === 'KPI03' ? 'หอผู้ป่วย' : 'ห้องตรวจ' }} (เฉพาะ VISIT ที่ได้ {{ $drug['short'] }})
+            {{ $ind->code === 'KPI03' ? 'หอผู้ป่วย' : 'ห้องตรวจ' }} (เฉพาะ {{ $unit['title'] }} ที่ได้ {{ $drug['short'] }})
         </div>
         @if(count($roomBreakdown) > 0)
             <div class="overflow-x-auto">
@@ -817,6 +829,7 @@
         'KPI01', 'KPI04', 'KPI05' => 'visit ที่ได้รับยาปฏิชีวนะ',
         'KPI03'                   => 'visit ที่ไม่ได้รับยาปฏิชีวนะ',
         'KPI07'                   => 'visit ที่ได้รับ NSAIDs ≥ 2 รายการ',
+        'KPI08'                   => 'ผู้ป่วยที่ได้รับ ICS',
         'KPI12'                   => 'visit ที่ได้รับ RAS blockade ≥ 2 ชนิด',
         default                   => 'ตัวตั้งของตัวชี้วัด',
     };
@@ -829,6 +842,7 @@
     const activeMonths = @json($activeMonths);
 
     const numLabel = @json($numeratorLabel);
+    const unitName = @json($unit['name']);
 
     const labels      = trend.map(d => d.label);
     const visitCounts = trend.map(d => d.den ?? 0);
@@ -856,7 +870,7 @@
                 {
                     type: 'bar',
                     key: 'visit',
-                    label: 'จำนวน visit ทั้งหมด',
+                    label: `จำนวน ${unitName} ทั้งหมด`,
                     data: visitCounts,
                     backgroundColor: 'rgba(148,163,184,0.45)',
                     borderRadius: 4,
@@ -920,7 +934,7 @@
                         label: (item) => {
                             const d = trend[item.dataIndex];
                             switch (item.dataset.key) {
-                                case 'visit':  return ` จำนวน visit ทั้งหมด: ${(d.den ?? 0).toLocaleString()}`;
+                                case 'visit':  return ` จำนวน ${unitName} ทั้งหมด: ${(d.den ?? 0).toLocaleString()}`;
                                 case 'use':    return ` ${numLabel}: ${(d.num ?? 0).toLocaleString()}`;
                                 case 'target': return ` เป้าหมาย: ${target}%`;
                                 default:
@@ -959,15 +973,10 @@
     const target = {{ $ind->target_value }};
     const labels = trend.map(d => d.label);
 
-    // Running cumulative rate from the start of the fiscal year through each month — sum(num)/sum(den)
-    // as of that month. A month with den=0 contributes nothing to either accumulator, so the cumulative
-    // value naturally holds flat at the prior month's level rather than needing special-case handling.
-    let cumNum = 0, cumDen = 0;
-    const cumPct = trend.map(d => {
-        cumNum += d.num ?? 0;
-        cumDen += d.den ?? 0;
-        return cumDen > 0 ? Math.round((cumNum / cumDen) * 1000) / 10 : null;
-    });
+    // Year-to-date rate from the start of the fiscal year through each month, computed server-side
+    // (RduCalculationService::getTrend → cum_pct): a KPI counted in patients cannot sum its months,
+    // since the same patient appears in several of them.
+    const cumPct = trend.map(d => d.cum_pct ?? null);
 
     new Chart(canvas, {
         type: 'line',
@@ -1099,6 +1108,7 @@
     const colors      = ['#4F46E5', '#e2e8f0'];
     const labels      = @json([$drug['received'], $drug['not_received']]);
     const values      = [received, notReceived];
+    const unitName    = @json($unit['name']);
 
     new Chart(canvas, {
         type: 'doughnut',
@@ -1126,7 +1136,7 @@
                     callbacks: {
                         label: (item) => {
                             const pct = total > 0 ? (item.parsed / total * 100).toFixed(1) : '0.0';
-                            return ` ${item.label}: ${item.parsed.toLocaleString()} visit (${pct}%)`;
+                            return ` ${item.label}: ${item.parsed.toLocaleString()} ${unitName} (${pct}%)`;
                         },
                     },
                 },
@@ -1145,7 +1155,7 @@
                         ${label}
                     </span>
                     <span class="flex items-center gap-2 tabular-nums">
-                        <span class="text-slate-400">${values[i].toLocaleString()} visit</span>
+                        <span class="text-slate-400">${values[i].toLocaleString()} ${unitName}</span>
                         <span class="font-semibold text-slate-700 w-12 text-right">${pct}%</span>
                     </span>
                 </div>`;
@@ -1250,6 +1260,7 @@
     const body   = document.getElementById('hdcModalBody');
     const url    = @json(route('dashboard.kpi.hdc', ['code' => $ind->code, 'year' => $year]));
     const numLabel  = @json($numeratorLabel);
+    const unitName  = @json($unit['name']);
     const targetTxt = @json($ind->targetLabel());
     let loaded = false;
 
@@ -1272,7 +1283,7 @@
         return `<div class="rounded-xl border border-slate-200 p-4">
             <div class="flex items-center justify-between gap-2 mb-2"><span class="text-xs font-semibold text-slate-500">${title}</span>${chip(f.status)}</div>
             <div class="text-3xl font-bold text-slate-800 tabular-nums">${pct(f.pct)}</div>
-            <div class="text-xs text-slate-500 mt-1 tabular-nums">${esc(numLabel)} ${fmt(f.num)} / visit ทั้งหมด ${fmt(f.den)}</div>
+            <div class="text-xs text-slate-500 mt-1 tabular-nums">${esc(numLabel)} ${fmt(f.num)} / ${esc(unitName)} ทั้งหมด ${fmt(f.den)}</div>
             ${note ? `<div class="text-xs text-slate-400 mt-2">${esc(note)}</div>` : ''}
         </div>`;
     }
@@ -1321,7 +1332,7 @@
                 <table class="w-full text-sm">
                     <thead><tr class="text-left text-xs text-slate-500 border-b border-slate-200">
                         <th class="py-2 pr-3 font-medium">#</th><th class="py-2 pr-3 font-medium">หน่วยบริการ</th>
-                        <th class="py-2 pr-3 font-medium text-right">visit ทั้งหมด</th><th class="py-2 pr-3 font-medium text-right">${esc(numLabel)}</th>
+                        <th class="py-2 pr-3 font-medium text-right">${esc(unitName)} ทั้งหมด</th><th class="py-2 pr-3 font-medium text-right">${esc(numLabel)}</th>
                         <th class="py-2 pr-3 font-medium text-right">ผลลัพธ์</th><th class="py-2 font-medium text-right">สถานะ</th>
                     </tr></thead>
                     <tbody>${rows}</tbody>
@@ -1413,7 +1424,7 @@
                                 if (item.datasetIndex === 1) return ` เป้าหมาย: ${targetTxt}`;
                                 const b = bars[item.dataIndex];
                                 if (b.pct === null) return ' ไม่มีข้อมูล';
-                                return [` ผลลัพธ์: ${b.pct}% (${STATUS[b.status]?.[0] ?? ''})`, ` ${numLabel} ${fmt(b.num)} / visit ทั้งหมด ${fmt(b.den)}`];
+                                return [` ผลลัพธ์: ${b.pct}% (${STATUS[b.status]?.[0] ?? ''})`, ` ${numLabel} ${fmt(b.num)} / ${unitName} ทั้งหมด ${fmt(b.den)}`];
                             },
                         },
                     },

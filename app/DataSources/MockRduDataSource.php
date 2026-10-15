@@ -14,7 +14,7 @@ class MockRduDataSource implements RduDataSourceInterface
         'KPI05' => ['numerator' => 61,  'denominator' => 80],   // CAP appropriate antibiotic
         'KPI06' => ['numerator' => 881, 'denominator' => 1000], // National drug list value
         'KPI07' => ['numerator' => 18,  'denominator' => 1000], // Duplicate NSAIDs
-        'KPI08' => ['numerator' => 287, 'denominator' => 1000], // Antimicrobial value
+        'KPI08' => ['numerator' => 71,  'denominator' => 87],   // Asthma patients on ICS
         'KPI09' => ['numerator' => 41,  'denominator' => 500],  // Elderly NSAIDs
         'KPI10' => ['numerator' => 9,   'denominator' => 290],  // Vit B1 injection
         'KPI11' => ['numerator' => 14,  'denominator' => 300],  // Corticosteroid injection

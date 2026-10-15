@@ -13,8 +13,8 @@ use App\Queries\Kpi\Antibiotic\DiarrheaNoAntibioticQuery;
 use App\Queries\Kpi\Antibiotic\NormalDeliveryAntibioticQuery;
 use App\Queries\Kpi\Antibiotic\RespiratoryInfectionAntibioticQuery;
 use App\Queries\Kpi\ChronicDisease\DmHba1cControlledQuery;
-use App\Queries\Kpi\DrugQuality\AntimicrobialValueQuery;
 use App\Queries\Kpi\DrugQuality\NationalDrugListValueQuery;
+use App\Queries\Kpi\PatientSafety\AsthmaInhaledCorticosteroidQuery;
 use App\Queries\Kpi\PatientSafety\CorticosteroidInjectionQuery;
 use App\Queries\Kpi\PatientSafety\ElderlyNsaidsQuery;
 use App\Queries\Kpi\PatientSafety\NsaidDuplicationQuery;
@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
                 'KPI05' => $app->make(AcuteDiarrheaAntibioticQuery::class),
                 'KPI06' => $app->make(NationalDrugListValueQuery::class),
                 'KPI07' => $app->make(NsaidDuplicationQuery::class),
-                'KPI08' => $app->make(AntimicrobialValueQuery::class),
+                'KPI08' => $app->make(AsthmaInhaledCorticosteroidQuery::class),
                 'KPI09' => $app->make(ElderlyNsaidsQuery::class),
                 'KPI10' => $app->make(VitB1InjectionQuery::class),
                 'KPI11' => $app->make(CorticosteroidInjectionQuery::class),
