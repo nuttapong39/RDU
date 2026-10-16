@@ -19,8 +19,11 @@ use Illuminate\Support\Facades\DB;
  */
 class NsaidDuplicationQuery implements KpiQueryInterface
 {
-    /** `drugitems.icode` of every NSAID the hospital dispenses — the list set by the pharmacist. */
-    private const NSAID_ICODES = [
+    /**
+     * `drugitems.icode` of every NSAID the hospital dispenses — the list set by the pharmacist.
+     * Public: KPI09 (CkdNsaidQuery) counts the same list, so a change here changes both KPIs.
+     */
+    public const NSAID_ICODES = [
         '1610036',  // Ibuprofen 200 mg
         '1483891',  // Ibuprofen 400 mg
         '1483892',  // Ibuprofen suspension 100 mg/5 ml

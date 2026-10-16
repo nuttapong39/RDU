@@ -209,17 +209,25 @@ HDC:          s_rdu15 (target / result — นับเป็นคนเหม�
 
 ---
 
-#### KPI-09: การใช้ NSAIDs ในผู้ป่วยโรคเรื้อรังระดับ 3 ขึ้นไป
+#### KPI-09: การใช้ NSAIDs ในผู้ป่วยนอกโรคไตเรื้อรังระดับ 3 ขึ้นไป ✅ implement แล้ว (2026-10)
 ```
-ชื่อ:         ร้อยละของผู้ป่วยนอกโรคเรื้อรังระดับ 3 ขึ้นไปที่ได้รับ NSAIDs
-Code:         elderly_nsaids_use
-Numerator:    จำนวนผู้สูงอายุที่ได้รับยา NSAIDs
-Denominator:  จำนวนผู้ป่วยอายุ ≥ 60 ปีทั้งหมด
+ชื่อ:         ร้อยละของผู้ป่วยนอกโรคไตเรื้อรังระดับ 3 ขึ้นไปที่ได้รับ NSAIDs
+Code:         ckd_nsaids
+หน่วยนับ:     ผู้ป่วย (HN ไม่ซ้ำ) — ไม่ใช่ visit · ยอดไตรมาส/สะสมนับคนไม่ซ้ำตลอดช่วง ไม่รวมยอดรายเดือน
+Numerator:    ผู้ป่วยในตัวส่วนที่ได้ NSAIDs (qty > 0) ใน visit ผู้ป่วยนอกครั้งใดก็ได้ในช่วงเวลาเดียวกัน
+              (รวม visit ที่ไม่ได้ลงรหัสโรคไต เช่น ห้องฉุกเฉิน — query ต้นฉบับดูเฉพาะ visit ที่วินิจฉัยโรคไต)
+Denominator:  ผู้ป่วยที่มี visit ผู้ป่วยนอก (ovst.an IS NULL) วินิจฉัย N183 / N184 / N185 ตำแหน่งใดก็ได้ ในช่วงเวลานั้น
+              ไม่นับ N182 / N189 และไม่มีเงื่อนไขว่าต้องได้ยาอย่างน้อย 1 ชนิด
 Target:       ≤ 10%
-Direction:    ต่ำดี (lower_better)
-Category:     patient_safety
-HOSxP Tables: [TBD]
-Query:        [TBD — Plan แยกต่างหาก]
+Direction:    ต่ำดี (lower)
+Category:     PatientSafety · กลุ่มยาของตัวชี้วัด: nsaid_ckd · หน่วยนับ: patient (config rdu.kpi_count_unit)
+ยา NSAIDs:    6 รหัส ชุดเดียวกับ KPI-07 (NsaidDuplicationQuery::NSAID_ICODES — แก้ที่เดียวเปลี่ยนทั้งสองตัวชี้วัด)
+ข้อมูลรายกรณี: 1 แถวต่อผู้ป่วย visit ตัวแทน = visit ล่าสุดที่ได้ NSAIDs (ถ้าอยู่ในตัวเศษ) มิฉะนั้น visit โรคไตครั้งล่าสุด
+              dx = รหัสระดับโรคไตของผู้ป่วยในช่วงเวลานั้น
+HOSxP Tables: ovst, ovstdiag, opitemrece, drugitems, patient, doctor, pttype, spclty, kskdepartment
+Query:        app/Queries/Kpi/PatientSafety/CkdNsaidQuery.php · docs/SQL_KPI/KPI9.sql
+HDC:          s_rdu14 (target / result) ใช้ในปุ่ม "เทียบ HDC"
+ผลปีงบ 2569:  23 / 892 คน (2.6%) — ถ้านับเฉพาะ visit ที่วินิจฉัยโรคไตแบบต้นฉบับ 7 คน · HDC 7 / 714 (1.0%)
 ```
 
 ---
@@ -306,7 +314,7 @@ Query:        [TBD — Plan แยกต่างหาก]
 | KPI-06 | national_drug_list_value | ATB ใน Pyelonephritis/UTI เฉียบพลัน | ≥ 80% | สูงดี | drug_quality |
 | KPI-07 | nsaid_duplication | NSAIDs ซ้ำซ้อน (OPD) | ≤ 5% | ต่ำดี | patient_safety |
 | KPI-08 | asthma_ics | Inhaled Corticosteroid ในผู้ป่วยหืด (นับเป็นคน) | ≥ 80% | สูงดี | patient_safety |
-| KPI-09 | elderly_nsaids_use | NSAIDs ในโรคเรื้อรังระดับ 3+ | ≤ 10% | ต่ำดี | patient_safety |
+| KPI-09 | ckd_nsaids | NSAIDs ในโรคไตเรื้อรังระดับ 3+ (นับเป็นคน) | ≤ 10% | ต่ำดี | patient_safety |
 | KPI-10 | vit_b1_injection_no_indication | Metformin คุมเบาหวานไม่มีข้อห้ามใช้ | ≤ 5% | ต่ำดี | patient_safety |
 | KPI-11 | corticosteroid_injection_no_indication | ยาน้ำ non-sedating ในเด็กติดเชื้อทางเดินหายใจ | ≤ 5% | ต่ำดี | patient_safety |
 | KPI-12 | ras_dual_blockade | RAS Blockade 2 ชนิดร่วมกัน (HT) | ≤ 0% | ต่ำดี | patient_safety |
@@ -334,7 +342,7 @@ app/
         ├── PatientSafety/
         │   ├── NsaidDuplicationQuery.php       ← KPI-07
         │   ├── AsthmaInhaledCorticosteroidQuery.php ← KPI-08
-        │   ├── ElderlyNsaidsQuery.php          ← KPI-09
+        │   ├── CkdNsaidQuery.php               ← KPI-09
         │   ├── VitB1InjectionQuery.php         ← KPI-10
         │   ├── CorticosteroidInjectionQuery.php ← KPI-11
         │   └── RasDualBlockadeQuery.php        ← KPI-12

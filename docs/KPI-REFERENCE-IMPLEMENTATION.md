@@ -20,7 +20,7 @@ KPI01, KPI03, KPI04 และ KPI05 คือตัวชี้วัดที�
 | **KPI03** | `Antibiotic/NormalDeliveryAntibioticQuery` | `docs/SQL_KPI/KPI3.sql` | IPD (`ipt` + `an_stat`, AN) | admission ที่**ไม่ได้รับ**ยาปฏิชีวนะ | ≥ 80% (`higher`) | ผู้ป่วยใน และตัวชี้วัดกลับทิศ (ยิ่งสูงยิ่งดี) |
 
 **เริ่มจาก KPI04 เสมอ** แล้วนำส่วนที่ต่างจาก KPI01 (เงื่อนไขหลายกลุ่ม) หรือ KPI03 (IPD / กลับทิศ) มาใช้เฉพาะเมื่อจำเป็น
-ตัวชี้วัดที่ยังไม่ implement (KPI02, KPI06, KPI09-KPI11, KPI13) ตอนนี้เป็น stub ที่คืน 0 / collection ว่างทุก method
+ตัวชี้วัดที่ยังไม่ implement (KPI02, KPI06, KPI10, KPI11, KPI13) ตอนนี้เป็น stub ที่คืน 0 / collection ว่างทุก method
 
 **KPI ที่ไม่ใช่ยาปฏิชีวนะ — ดู KPI12** (`PatientSafety/RasDualBlockadeQuery`, `docs/SQL_KPI/KPI12.sql`): โครงเดียวกับ KPI04
 แต่กลุ่มยาต่างไป, นับ "ตัวยา" แทนรหัสยา และเป้า 0% — ดูหัวข้อ 4.1 และ 4.2
@@ -177,6 +177,10 @@ KPI01, KPI03, KPI04 และ KPI05 คือตัวชี้วัดที�
 - **หน่วยนับ** ตั้งที่ `config('rdu.kpi_count_unit')` (`patient`) อ่านผ่าน `RduIndicator::countUnit()` — หน้า KPI เปลี่ยนคำ
   "VISIT" เป็น "ผู้ป่วย" เอง ห้ามเขียนเงื่อนไขรหัส KPI ใน view
 - query คืน **1 แถวต่อผู้ป่วย** (ใช้ visit ตัวแทน เช่น visit โรคหืดครั้งล่าสุด) และนับ `COUNT(DISTINCT hn)`
+  ถ้าตัวเศษนับยาจาก visit ใดก็ได้ แพทย์ที่ควรเห็นคือผู้จ่ายยานั้น — KPI09 ใช้ visit ล่าสุดที่ได้ NSAIDs เป็นตัวแทนของคนในตัวเศษ
+  (คนนอกตัวเศษใช้ visit โรคไตครั้งล่าสุด) และ `dx` เป็นรหัสโรคของผู้ป่วยทั้งช่วง เพราะ visit ตัวแทนอาจไม่มีรหัสโรคนั้น
+- รายการรหัสยาที่ตัวชี้วัดหลายตัวใช้ร่วมกัน (NSAIDs ของ KPI07/KPI09) เป็น `public const` ใน class แรก แล้ว class อื่นอ้างถึง
+  ห้ามคัดลอก
 - ยอดไตรมาสนับตรงตามช่วงวันที่ของไตรมาส (`getNumeratorBetween` / `getDenominatorBetween`) **ทุก KPI** ไม่รวมยอดรายเดือน
   (`RduCalculationService::getOrCalculateQuarter()`) — KPI ที่นับ visit ได้ค่าเท่าเดิม ส่วน KPI ที่นับคนจะไม่นับคนเดียวกันซ้ำ
 - ยอดสะสมตั้งแต่ต้นปีงบ (`getTrend()` → `cum_num` / `cum_den` / `cum_pct`): KPI ที่นับ visit (`additive`) รวมยอดรายเดือน
