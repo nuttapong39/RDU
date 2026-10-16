@@ -70,12 +70,19 @@
                 <p class="text-slate-500 text-sm mt-2">{{ $ind->description }}</p>
             @endif
         </div>
-        {{-- Logo only: the button's name comes from aria-label/title. --}}
+        {{-- Secondary action: smaller and quieter than the HDC button beside it. --}}
+        <button type="button" id="countingMethodBtn"
+                class="ml-auto self-center inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-white border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50 hover:text-indigo-700 active:bg-slate-100 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                aria-haspopup="dialog" aria-controls="countingMethodModal">
+            <span class="msi text-[1rem]" aria-hidden="true">menu_book</span>
+            วิธีนับ
+        </button>
+        {{-- Primary action. Logo only: the button's name comes from aria-label/title. --}}
         <button type="button" id="hdcCompareBtn"
-                class="ml-auto inline-flex items-center justify-center h-10 px-3.5 rounded-xl bg-white border border-hdc hover:bg-hdc/10 active:bg-hdc/20 shadow-sm hover:shadow-md transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-hdc focus-visible:ring-offset-2"
+                class="inline-flex items-center justify-center h-12 px-4 rounded-xl bg-white border border-hdc hover:bg-hdc/10 active:bg-hdc/20 shadow-sm hover:shadow-md transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-hdc focus-visible:ring-offset-2"
                 aria-label="เทียบข้อมูลกับ HDC" title="เทียบข้อมูลกับ HDC"
                 aria-haspopup="dialog" aria-controls="hdcModal">
-            <img src="{{ asset('images/hdc-logo.png') }}" alt="" class="h-6 w-auto" width="59" height="24">
+            <img src="{{ asset('images/hdc-logo.png') }}" alt="" class="h-8 w-auto" width="79" height="32">
         </button>
     </div>
 </div>
@@ -98,6 +105,40 @@
     </div>
     <div id="hdcModalBody" class="px-6 py-5" aria-live="polite"></div>
 </dialog>
+
+{{-- ============ COUNTING METHOD MODAL (CONTEXT.md: วิธีนับ) — rendered server-side ============ --}}
+<dialog id="countingMethodModal" aria-labelledby="countingMethodTitle"
+        class="m-auto w-[calc(100%-2rem)] max-w-3xl max-h-[calc(100vh-2rem)] rounded-2xl p-0 shadow-2xl backdrop:bg-slate-900/40">
+    <div class="flex items-start justify-between gap-3 px-6 py-4 border-b border-slate-100 sticky top-0 z-10 bg-white">
+        <div>
+            <h2 id="countingMethodTitle" class="font-bold text-slate-800">วิธีนับ — {{ $ind->code }}</h2>
+            <a href="{{ route('dashboard.counting-methods') }}#method-{{ $ind->code }}"
+               class="text-xs text-indigo-600 hover:text-indigo-800 underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded">
+                ดูวิธีนับทุกตัวชี้วัด
+            </a>
+        </div>
+        <button type="button" id="countingMethodClose" aria-label="ปิด"
+                class="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+            <span class="msi" aria-hidden="true">close</span>
+        </button>
+    </div>
+    <div class="px-6 py-5">
+        @include('dashboard.partials.counting-method', ['ind' => $ind, 'cm' => $countingMethod])
+    </div>
+</dialog>
+@push('scripts')
+<script>
+(() => {
+    const modal = document.getElementById('countingMethodModal');
+    const btn   = document.getElementById('countingMethodBtn');
+    btn.addEventListener('click', () => modal.showModal());
+    document.getElementById('countingMethodClose').addEventListener('click', () => modal.close());
+    // Click on the backdrop (outside the dialog box) closes it; Escape is handled natively by <dialog>.
+    modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
+    modal.addEventListener('close', () => btn.focus());
+})();
+</script>
+@endpush
 
 @if($fromHdc)
     <div class="mb-5 p-4 rounded-xl border border-hdc/30 bg-hdc/5 text-sm text-slate-700 flex items-start gap-3" role="note">

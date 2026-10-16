@@ -2,6 +2,8 @@
 
 namespace App\Queries\Kpi\Antibiotic;
 
+use App\Queries\Kpi\CountingMethod;
+use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
@@ -13,7 +15,7 @@ use Illuminate\Support\Facades\DB;
  * HOSxP schema. Note the numerator here is the INVERSE of KPI01's: it counts admissions that did
  * NOT receive an antibiotic (target_direction='higher' — more non-antibiotic deliveries is better).
  */
-class NormalDeliveryAntibioticQuery implements KpiQueryInterface
+class NormalDeliveryAntibioticQuery implements KpiQueryInterface, DescribesCountingMethod
 {
     /** Principal diagnosis for a normal, spontaneous, full-term delivery ("การคลอดปกติ"). */
     private const PRINCIPAL_DX = 'O800';
@@ -31,6 +33,25 @@ class NormalDeliveryAntibioticQuery implements KpiQueryInterface
         '1530015', '1550002',
     ];
 
+    /** How this KPI is counted, built from the same constants as its SQL (CONTEXT.md: วิธีนับ). */
+    public function countingMethod(): CountingMethod
+    {
+        return new CountingMethod(
+            unit: 'การรับไว้รักษาในโรงพยาบาล (AN) — นับตามวันจำหน่าย',
+            denominator: ['ผู้ป่วยในที่จำหน่ายในช่วงเวลานั้น และมีโรคหลักเป็นการคลอดปกติครบกำหนด (รหัสในข้อ 7)'],
+            numerator: ['การรับไว้รักษาในตัวหารที่ "ไม่ได้รับ" ยาปฏิชีวนะตามรายการรหัสยาเลยตลอดการนอนโรงพยาบาล (ยิ่งสูงยิ่งดี)'],
+            conditions: ['ผู้ป่วยในเท่านั้น', 'รหัสการคลอดต้องเป็นโรคหลัก ไม่นับเมื่อเป็นโรคร่วม', CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS],
+            drugLabel: 'ยาปฏิชีวนะ',
+            drugs: array_fill_keys(self::ANTIBIOTIC_ICODES, null),
+            diagnoses: [
+                ['label' => 'โรคหลัก', 'codes' => [self::PRINCIPAL_DX], 'match' => 'exact'],
+            ],
+            excludedDiagnoses: [],
+            doctor: 'แพทย์ผู้รับไว้รักษาของการนอนโรงพยาบาลครั้งนั้น',
+            source: 'docs/SQL_KPI/KPI3.sql — query อ้างอิงจากทีม IT/รายงานของโรงพยาบาล',
+            agreedOn: null,
+        );
+    }
     // ---- Fiscal month/quarter/year entry points — resolve to a date range, then delegate ----
 
     public function getDenominator(int $year, int $month): int

@@ -2,6 +2,8 @@
 
 namespace App\Queries\Kpi\PatientSafety;
 
+use App\Queries\Kpi\CountingMethod;
+use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
@@ -17,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  * Denominator = OPD visits (not admitted) given ≥ 1 NSAID item; numerator = those given ≥ 2 different
  * NSAID items. Target ≤ 5% (lower is better).
  */
-class NsaidDuplicationQuery implements KpiQueryInterface
+class NsaidDuplicationQuery implements KpiQueryInterface, DescribesCountingMethod
 {
     /**
      * `drugitems.icode` of every NSAID the hospital dispenses — the list set by the pharmacist.
@@ -32,6 +34,23 @@ class NsaidDuplicationQuery implements KpiQueryInterface
         '1000182',  // Mefenamic acid 250 mg
     ];
 
+    /** How this KPI is counted, built from the same constants as its SQL (CONTEXT.md: วิธีนับ). */
+    public function countingMethod(): CountingMethod
+    {
+        return new CountingMethod(
+            unit: 'วิสิตผู้ป่วยนอก (VN) — 1 วิสิตนับ 1 ครั้ง',
+            denominator: ['วิสิตผู้ป่วยนอกที่ได้รับ NSAIDs ตามรายการรหัสยาอย่างน้อย 1 รายการ (ไม่จำกัดการวินิจฉัย)'],
+            numerator: ['วิสิตในตัวหารที่ได้ NSAIDs ตั้งแต่ 2 รายการ (รหัสยา) ขึ้นไปในวิสิตเดียวกัน — Diclofenac ฉีด + Diclofenac กิน นับเป็นซ้ำซ้อน'],
+            conditions: [CountingMethod::OPD_ONLY, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS, 'ไม่นับยาที่ผสมยาแก้ปวดกลุ่มอื่น (เช่น Orphenadrine + Paracetamol) และไม่นับ Aspirin'],
+            drugLabel: 'NSAIDs',
+            drugs: array_fill_keys(self::NSAID_ICODES, null),
+            diagnoses: [],
+            excludedDiagnoses: [],
+            doctor: 'แพทย์ผู้ตรวจของวิสิตนั้น',
+            source: 'docs/SQL_KPI/KPI7.sql — query จากเภสัชกร',
+            agreedOn: '2026-10-15',
+        );
+    }
     // ---- Fiscal month/quarter/year entry points — resolve to a date range, then delegate ----
 
     public function getDenominator(int $year, int $month): int

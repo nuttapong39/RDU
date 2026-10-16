@@ -24,4 +24,6 @@ class UnconfiguredRduDataSource implements RduDataSourceInterface
     public function getDetailsBetween(string $kpiCode, string $startDate, string $endDate): Collection { return collect(); }
 
     public function getIcd10Descriptions(array $codes): array { return []; }
+
+    public function getDrugDescriptions(array $icodes): array { return []; }
 }

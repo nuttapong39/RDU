@@ -64,6 +64,14 @@
                 <span>ภาพรวม 13 ตัวชี้วัด</span>
             </a>
 
+            <a href="{{ route('dashboard.counting-methods') }}"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
+                      {{ request()->routeIs('dashboard.counting-methods') ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
+               aria-current="{{ request()->routeIs('dashboard.counting-methods') ? 'page' : 'false' }}">
+                <span class="msi text-[1.1rem]" aria-hidden="true">menu_book</span>
+                <span>วิธีนับทุกตัวชี้วัด</span>
+            </a>
+
             {{-- KPI Groups --}}
             @if(isset($kpiByCategory))
                 @foreach($categories as $catKey => $catLabel)

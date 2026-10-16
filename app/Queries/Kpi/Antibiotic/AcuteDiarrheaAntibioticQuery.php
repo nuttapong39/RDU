@@ -2,6 +2,8 @@
 
 namespace App\Queries\Kpi\Antibiotic;
 
+use App\Queries\Kpi\CountingMethod;
+use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
@@ -13,7 +15,7 @@ use Illuminate\Support\Facades\DB;
  * HOSxP schema. Same shape as KPI04 (single flat ICD-10 whitelist, no injury+external-cause
  * pairing) — a visit qualifies if ANY of its diagnoses matches DIAGNOSIS_CODES.
  */
-class AcuteDiarrheaAntibioticQuery implements KpiQueryInterface
+class AcuteDiarrheaAntibioticQuery implements KpiQueryInterface, DescribesCountingMethod
 {
     /** ICD-10 codes for acute infectious diarrhea / noninfective gastroenteritis and colitis. */
     private const DIAGNOSIS_CODES = [
@@ -38,6 +40,25 @@ class AcuteDiarrheaAntibioticQuery implements KpiQueryInterface
         '1530015', '1550002',
     ];
 
+    /** How this KPI is counted, built from the same constants as its SQL (CONTEXT.md: วิธีนับ). */
+    public function countingMethod(): CountingMethod
+    {
+        return new CountingMethod(
+            unit: 'วิสิต (VN) — 1 วิสิตนับ 1 ครั้ง',
+            denominator: ['วิสิตที่มีรหัสวินิจฉัยโรคอุจจาระร่วงเฉียบพลันตามตาราง อย่างน้อย 1 รหัส'],
+            numerator: ['วิสิตในตัวหารที่ได้รับยาปฏิชีวนะตามรายการรหัสยาอย่างน้อย 1 รายการ'],
+            conditions: [CountingMethod::ANY_DIAGNOSIS_POSITION, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS, CountingMethod::ALL_VISITS],
+            drugLabel: 'ยาปฏิชีวนะ',
+            drugs: array_fill_keys(self::ANTIBIOTIC_ICODES, null),
+            diagnoses: [
+                ['label' => 'โรคอุจจาระร่วงเฉียบพลัน', 'codes' => self::DIAGNOSIS_CODES, 'match' => 'exact'],
+            ],
+            excludedDiagnoses: [],
+            doctor: 'แพทย์ผู้ตรวจของวิสิตนั้น',
+            source: 'docs/SQL_KPI/KPI5.sql — query อ้างอิงจากทีม IT/รายงานของโรงพยาบาล',
+            agreedOn: null,
+        );
+    }
     // ---- Fiscal month/quarter/year entry points — resolve to a date range, then delegate ----
 
     public function getDenominator(int $year, int $month): int

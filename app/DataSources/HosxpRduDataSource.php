@@ -2,6 +2,8 @@
 
 namespace App\DataSources;
 
+use App\Queries\Kpi\CountingMethod;
+use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -62,6 +64,35 @@ class HosxpRduDataSource implements RduDataSourceInterface
         return collect($rows)->mapWithKeys(fn ($row) => [
             $row->code => ['name' => $row->name, 'tname' => $row->tname],
         ])->all();
+    }
+
+    /** Not per-KPI — a plain reference lookup against HOSxP's drugitems table (SELECT only). */
+    public function getDrugDescriptions(array $icodes): array
+    {
+        if (empty($icodes)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($icodes), '?'));
+        $rows = DB::connection('rdu')->select(
+            "SELECT icode, name, strength, units FROM drugitems WHERE icode IN ({$placeholders})",
+            array_values($icodes)
+        );
+
+        return collect($rows)->mapWithKeys(fn ($row) => [
+            $row->icode => ['name' => trim((string) $row->name), 'strength' => trim((string) $row->strength), 'units' => trim((string) $row->units)],
+        ])->all();
+    }
+
+    /**
+     * How a KPI is counted (CONTEXT.md: วิธีนับ), straight from its query class — null while the query
+     * is a stub. Runs no SQL: the rules are code, so this works whatever data source is active.
+     */
+    public function countingMethodFor(string $kpiCode): ?CountingMethod
+    {
+        $query = $this->queries[$kpiCode] ?? null;
+
+        return $query instanceof DescribesCountingMethod ? $query->countingMethod() : null;
     }
 
     private function resolve(string $kpiCode): KpiQueryInterface

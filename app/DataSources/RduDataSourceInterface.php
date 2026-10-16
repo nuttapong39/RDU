@@ -23,4 +23,10 @@ interface RduDataSourceInterface
      * [code => ['name' => english, 'tname' => thai]] for whichever of the requested codes exist.
      */
     public function getIcd10Descriptions(array $codes): array;
+
+    /**
+     * Drug names — not tied to any specific KPI. Returns
+     * [icode => ['name' => …, 'strength' => …, 'units' => …]] for whichever of the requested icodes exist.
+     */
+    public function getDrugDescriptions(array $icodes): array;
 }

@@ -2,6 +2,8 @@
 
 namespace App\Queries\Kpi\PatientSafety;
 
+use App\Queries\Kpi\CountingMethod;
+use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
@@ -18,7 +20,7 @@ use Illuminate\Support\Facades\DB;
  *  - test patients are excluded. Target ≥ 80% (higher is better).
  * Each patient's detail row describes their latest asthma visit in the period (the representative visit).
  */
-class AsthmaInhaledCorticosteroidQuery implements KpiQueryInterface
+class AsthmaInhaledCorticosteroidQuery implements KpiQueryInterface, DescribesCountingMethod
 {
     /** `drugitems.icode` of every inhaled corticosteroid the hospital dispenses — the list set by the pharmacist. */
     private const ICS_ICODES = [
@@ -28,6 +30,28 @@ class AsthmaInhaledCorticosteroidQuery implements KpiQueryInterface
         '1530002',  // Seretide Accuhaler (retired code)
     ];
 
+    /** ICD-10 prefixes for asthma — every code starting with one counts (J45, J450, J459, J46…). */
+    private const DIAGNOSIS_PREFIXES = ['J45', 'J46'];
+
+    /** How this KPI is counted, built from the same constants as its SQL (CONTEXT.md: วิธีนับ). */
+    public function countingMethod(): CountingMethod
+    {
+        return new CountingMethod(
+            unit: 'ผู้ป่วย (คน) — คนเดียวมาหลายครั้งนับ 1 คน',
+            denominator: ['ผู้ป่วยที่มีวิสิตผู้ป่วยนอกวินิจฉัยโรคหืด (รหัสในข้อ 7) ในช่วงเวลาที่ดู'],
+            numerator: ['ผู้ป่วยในตัวหารที่ได้รับยา ICS ตามรายการรหัสยา ในวิสิตผู้ป่วยนอกครั้งใดก็ได้ในช่วงเวลาเดียวกัน (ไม่จำเป็นต้องเป็นวิสิตที่วินิจฉัยโรคหืด)'],
+            conditions: [CountingMethod::OPD_ONLY, CountingMethod::ANY_DIAGNOSIS_POSITION, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS],
+            drugLabel: 'ยา Inhaled Corticosteroid (ICS)',
+            drugs: array_fill_keys(self::ICS_ICODES, null),
+            diagnoses: [
+                ['label' => 'โรคหืด', 'codes' => self::DIAGNOSIS_PREFIXES, 'match' => 'prefix'],
+            ],
+            excludedDiagnoses: [],
+            doctor: 'แพทย์ผู้ตรวจของวิสิตตัวแทน = วิสิตโรคหืดครั้งล่าสุดของผู้ป่วยในช่วงเวลานั้น',
+            source: 'docs/SQL_KPI/KPI8.sql — query จากเภสัชกร',
+            agreedOn: '2026-10-15',
+        );
+    }
     // ---- Fiscal month/quarter/year entry points — resolve to a date range, then delegate ----
 
     public function getDenominator(int $year, int $month): int
@@ -182,10 +206,10 @@ class AsthmaInhaledCorticosteroidQuery implements KpiQueryInterface
             )';
     }
 
-    /** Asthma (J45) or status asthmaticus / acute severe asthma (J46). */
+    /** Asthma (DIAGNOSIS_PREFIXES: J45, or J46 status asthmaticus / acute severe asthma), any sub-code. */
     private function diagnosisCondition(string $column): string
     {
-        return "($column LIKE 'J45%' OR $column LIKE 'J46%')";
+        return '('.implode(' OR ', array_map(fn (string $p) => "$column LIKE '$p%'", self::DIAGNOSIS_PREFIXES)).')';
     }
 
     /**

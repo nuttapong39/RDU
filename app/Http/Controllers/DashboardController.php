@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\SanitizesDateParams;
 use App\Models\AuditLog;
 use App\Models\RduIndicator;
+use App\Services\CountingMethodService;
 use App\Services\DoctorAliasService;
 use App\Services\RduCalculationService;
 use App\Services\RduQueryService;
@@ -20,6 +21,7 @@ class DashboardController extends Controller
         private RduCalculationService $calcService,
         private RduQueryService $queryService,
         private DoctorAliasService $aliasService,
+        private CountingMethodService $countingMethods,
     ) {}
 
     public function index(Request $request): View
@@ -167,6 +169,7 @@ class DashboardController extends Controller
             'doctorRateThreshold'   => $this->doctorRateThreshold($indicator),
             'visitStats'        => $visitStats,
             'hasDeepDive'       => $hasDeepDive,
+            'countingMethod'    => $this->countingMethods->describe($indicator),
         ]);
     }
 

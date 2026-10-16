@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Cache;
 class RduQueryService
 {
     private const CACHE_TTL = 3600; // 1 hour
-    private const ICD10_CACHE_TTL = 86400; // 24 hours — static reference data, safe to cache much longer
+    private const REFERENCE_CACHE_TTL = 86400; // 24 hours — static reference data, safe to cache much longer
 
     public function __construct(
         private RduDataSourceInterface $dataSource
@@ -111,6 +111,26 @@ class RduQueryService
      */
     public function getIcd10Descriptions(array $codes): array
     {
+        return $this->cachedReference('icd10', $codes, fn (array $missing) => $this->dataSource->getIcd10Descriptions($missing));
+    }
+
+    /**
+     * Drug names for the given `drugitems.icode`s — [icode => ['name' => …, 'strength' => …, 'units' => …]].
+     * Cached per-code like getIcd10Descriptions (CONTEXT.md: วิธีนับ shows these beside each icode).
+     */
+    public function getDrugDescriptions(array $icodes): array
+    {
+        return $this->cachedReference('drug', $icodes, fn (array $missing) => $this->dataSource->getDrugDescriptions($missing));
+    }
+
+    /**
+     * Per-code cache for static HOSxP reference data. Only names found are cached: a code with no
+     * name (or a data source with none yet, e.g. before HOSxP is configured) is looked up again next time.
+     *
+     * @param  callable(list<string>): array<string, mixed>  $fetch
+     */
+    private function cachedReference(string $kind, array $codes, callable $fetch): array
+    {
         $codes = array_values(array_unique(array_filter($codes, fn ($c) => $c !== null && $c !== '')));
         if (empty($codes)) {
             return [];
@@ -120,7 +140,7 @@ class RduQueryService
         $missing = [];
 
         foreach ($codes as $code) {
-            $cached = Cache::get($this->icd10CacheKey($code), '__miss__');
+            $cached = Cache::get($this->referenceCacheKey($kind, $code), '__miss__');
             if ($cached === '__miss__') {
                 $missing[] = $code;
             } else {
@@ -129,10 +149,12 @@ class RduQueryService
         }
 
         if (!empty($missing)) {
-            $fetched = $this->dataSource->getIcd10Descriptions($missing);
+            $fetched = $fetch($missing);
             foreach ($missing as $code) {
                 $value = $fetched[$code] ?? null;
-                Cache::put($this->icd10CacheKey($code), $value, self::ICD10_CACHE_TTL);
+                if ($value !== null) {
+                    Cache::put($this->referenceCacheKey($kind, $code), $value, self::REFERENCE_CACHE_TTL);
+                }
                 $result[$code] = $value;
             }
         }
@@ -162,8 +184,8 @@ class RduQueryService
         return "rdu.kpi.{$kpiCode}.between.{$startDate}.{$endDate}.{$type}";
     }
 
-    private function icd10CacheKey(string $code): string
+    private function referenceCacheKey(string $kind, string $code): string
     {
-        return "rdu.icd10.{$code}";
+        return "rdu.{$kind}.{$code}";
     }
 }

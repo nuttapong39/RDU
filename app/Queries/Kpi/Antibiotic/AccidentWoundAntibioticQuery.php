@@ -2,6 +2,8 @@
 
 namespace App\Queries\Kpi\Antibiotic;
 
+use App\Queries\Kpi\CountingMethod;
+use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
@@ -11,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  * KPI-01: ร้อยละการใช้ยาปฏิชีวนะในบาดแผลจากอุบัติเหตุ ครอบคลุมแผลทุกชนิด
  * Adapted from docs/SQL_KPI/KPI1.sql (hospital-provided, verified against live HOSxP schema).
  */
-class AccidentWoundAntibioticQuery implements KpiQueryInterface
+class AccidentWoundAntibioticQuery implements KpiQueryInterface, DescribesCountingMethod
 {
     /**
      * ICD-10 (dotless) 3-char prefixes for the injury-nature ("what happened to the body") group.
@@ -32,6 +34,12 @@ class AccidentWoundAntibioticQuery implements KpiQueryInterface
         'T090', 'T091', 'T095', 'T110', 'T111', 'T115', 'T130', 'T131', 'T135', 'T140', 'T141', 'T146', 'T149',
     ];
 
+    /** External-cause group: every code starting with one of these letters… */
+    private const EXTERNAL_CAUSE_LETTERS = ['V', 'W'];
+
+    /** …plus the 3-character categories in this range (inclusive). */
+    private const EXTERNAL_CAUSE_RANGE = ['X00', 'X59'];
+
     /**
      * `drugitems.icode` whitelist for antibiotics — hospital-provided list (docs/SQL_KPI/KPI1.sql),
      * used directly instead of the antibiotic='Y'+dosageform-flag approach this class used before:
@@ -51,6 +59,28 @@ class AccidentWoundAntibioticQuery implements KpiQueryInterface
         '1530015', '1550002',
     ];
 
+    /** How this KPI is counted, built from the same constants as its SQL (CONTEXT.md: วิธีนับ). */
+    public function countingMethod(): CountingMethod
+    {
+        return new CountingMethod(
+            unit: 'วิสิต (VN) — 1 วิสิตนับ 1 ครั้ง',
+            denominator: ['วิสิตที่มีรหัส "ลักษณะการบาดเจ็บ" และรหัส "สาเหตุภายนอก" (ดูข้อ 7) ในวิสิตเดียวกัน ต้องมีครบทั้งสองกลุ่ม'],
+            numerator: ['วิสิตในตัวหารที่ได้รับยาปฏิชีวนะตามรายการรหัสยาอย่างน้อย 1 รายการ'],
+            conditions: [CountingMethod::ANY_DIAGNOSIS_POSITION, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS, CountingMethod::ALL_VISITS],
+            drugLabel: 'ยาปฏิชีวนะ',
+            drugs: array_fill_keys(self::ANTIBIOTIC_ICODES, null),
+            diagnoses: [
+                ['label' => 'ลักษณะการบาดเจ็บ (รหัสขึ้นต้นด้วย)', 'codes' => self::ICD10_PREFIX3, 'match' => 'prefix'],
+                ['label' => 'ลักษณะการบาดเจ็บ (รหัสขึ้นต้นด้วย 4 ตัว)', 'codes' => self::ICD10_PREFIX4, 'match' => 'prefix'],
+                ['label' => 'สาเหตุภายนอก', 'codes' => [], 'match' => 'prefix',
+                 'note' => 'ทุกรหัสที่ขึ้นต้นด้วย '.implode(' หรือ ', self::EXTERNAL_CAUSE_LETTERS).' และรหัส '.implode('–', self::EXTERNAL_CAUSE_RANGE)],
+            ],
+            excludedDiagnoses: [],
+            doctor: 'แพทย์ผู้ตรวจของวิสิตนั้น (ข้อมูลรายกรณีแสดงแพทย์ผู้สั่งยาปฏิชีวนะแยกไว้อีกช่อง)',
+            source: 'docs/SQL_KPI/KPI1.sql — query อ้างอิงจากทีม IT/รายงานของโรงพยาบาล (docs/adr/0001)',
+            agreedOn: null,
+        );
+    }
     // ---- Fiscal month/quarter/year entry points — resolve to a date range, then delegate ----
 
     public function getDenominator(int $year, int $month): int
@@ -215,7 +245,9 @@ class AccidentWoundAntibioticQuery implements KpiQueryInterface
     /** Row-level check: does this ICD-10 code describe the EXTERNAL CAUSE of an injury (V/W/X-type code)? */
     private function externalCauseCondition(string $column): string
     {
-        return "UPPER(LEFT($column,1)) IN ('V','W') OR UPPER(LEFT($column,3)) BETWEEN 'X00' AND 'X59'";
+        [$from, $to] = self::EXTERNAL_CAUSE_RANGE;
+
+        return "UPPER(LEFT($column,1)) IN (".$this->quotedList(self::EXTERNAL_CAUSE_LETTERS).") OR UPPER(LEFT($column,3)) BETWEEN '$from' AND '$to'";
     }
 
     /**

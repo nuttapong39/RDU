@@ -2,6 +2,8 @@
 
 namespace App\Queries\Kpi\PatientSafety;
 
+use App\Queries\Kpi\CountingMethod;
+use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
@@ -17,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  * Denominator = OPD visits with an I10 diagnosis (any position) given ≥ 1 RAS drug;
  * numerator = those given ≥ 2 different RAS drugs. Target 0% (lower is better).
  */
-class RasDualBlockadeQuery implements KpiQueryInterface
+class RasDualBlockadeQuery implements KpiQueryInterface, DescribesCountingMethod
 {
     /** `drugitems.icode` → active ingredient, for every ACEI / ARB in this hospital's formulary (incl. retired codes). */
     private const RAS_DRUGS = [
@@ -29,6 +31,28 @@ class RasDualBlockadeQuery implements KpiQueryInterface
         '1570019' => 'losartan',   // Losartan(a) 50 mg (retired code)
     ];
 
+    /** ICD-10 prefix for essential hypertension — every code starting with it counts. */
+    private const DIAGNOSIS_PREFIXES = ['I10'];
+
+    /** How this KPI is counted, built from the same constants as its SQL (CONTEXT.md: วิธีนับ). */
+    public function countingMethod(): CountingMethod
+    {
+        return new CountingMethod(
+            unit: 'วิสิต (VN) — 1 วิสิตนับ 1 ครั้ง',
+            denominator: ['วิสิตที่วินิจฉัยโรคความดันโลหิตสูงทั่วไป (รหัสในข้อ 7) และได้ยากลุ่ม RAS blockade อย่างน้อย 1 ชนิด'],
+            numerator: ['วิสิตในตัวหารที่ได้ RAS blockade ตั้งแต่ 2 ตัวยาที่ต่างกัน — นับตามตัวยา (ช่อง "ตัวยา" ในตารางข้อ 6) ยาตัวเดียวกันต่างขนาดนับเป็น 1 ชนิด'],
+            conditions: [CountingMethod::ANY_DIAGNOSIS_POSITION, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS, CountingMethod::ALL_VISITS],
+            drugLabel: 'ยากลุ่ม RAS blockade',
+            drugs: self::RAS_DRUGS,
+            diagnoses: [
+                ['label' => 'โรคความดันโลหิตสูงทั่วไป', 'codes' => self::DIAGNOSIS_PREFIXES, 'match' => 'prefix'],
+            ],
+            excludedDiagnoses: [],
+            doctor: 'แพทย์ผู้ตรวจของวิสิตนั้น',
+            source: 'docs/SQL_KPI/KPI12.sql — query อ้างอิงของโรงพยาบาล',
+            agreedOn: '2026-10-09',
+        );
+    }
     // ---- Fiscal month/quarter/year entry points — resolve to a date range, then delegate ----
 
     public function getDenominator(int $year, int $month): int
@@ -183,7 +207,7 @@ class RasDualBlockadeQuery implements KpiQueryInterface
     /** Row-level check: essential (primary) hypertension — ICD-10 I10. */
     private function diagnosisCondition(string $column): string
     {
-        return "$column LIKE 'I10%'";
+        return '('.implode(' OR ', array_map(fn (string $p) => "$column LIKE '$p%'", self::DIAGNOSIS_PREFIXES)).')';
     }
 
     /** Visit-level gate: any of the visit's diagnosis rows (any position) is I10. */

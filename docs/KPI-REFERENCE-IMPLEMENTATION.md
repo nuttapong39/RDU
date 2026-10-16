@@ -57,6 +57,11 @@ KPI01, KPI03, KPI04 และ KPI05 คือตัวชี้วัดที�
 - [ ] `app/Providers/AppServiceProvider.php` — map รหัส KPI กับ class ใน `HosxpRduDataSource`
 - [ ] `tests/Feature/HosxpQueryTest.php` — แก้ data provider ของ `test_query_class_can_be_instantiated`
 - [ ] `database/seeders/RduIndicatorSeeder.php` — ข้อความตัวเศษ/ตัวส่วน, `target_value`, `target_direction` ที่ยืนยันแล้ว
+- [ ] **วิธีนับ** — query class `implements DescribesCountingMethod` แล้วเขียน `countingMethod()` คืน `CountingMethod`
+      (หน่วยนับ, ตัวหาร, ตัวตั้ง, เงื่อนไขร่วม, รหัสยา, รหัสโรค, รหัสที่ตั้งใจไม่นับ, แพทย์ในตารางรายแพทย์, ที่มา, วันที่ตกลง)
+      รหัสยา/รหัสโรค**ต้องอ้างค่าคงที่ตัวเดียวกับที่ SQL ใช้** ห้ามพิมพ์ซ้ำ — ปุ่ม "วิธีนับ" บนหน้า KPI และหน้า
+      "วิธีนับทุกตัวชี้วัด" อ่านจากที่นี่ (ชื่อยา/ชื่อโรคดึงจาก HOSxP เอง) `CountingMethodTest` จะ fail ถ้า KPI ใน
+      `hosxp_kpis` ยังไม่มี `countingMethod()`
 - [ ] `config/rdu.php` — เพิ่มรหัสใน `hosxp_kpis` เมื่อ query HOSxP ใช้งานได้จริง ผลที่ได้: ตัวเลขทุกจุดเปลี่ยนจาก
       HDC (ยอดทั้งปี) มาเป็น HOSxP, การ์ดไตรมาส/โดนัท/สัดส่วนรายไตรมาสแสดงผล และเปิดโซน "การวิเคราะห์เชิงลึก"
 - [ ] `resources/views/dashboard/kpi.blade.php` — เพิ่มรหัสใน `$numeratorLabel` (ข้อความ legend ของแท่งจำนวนการใช้ยา)

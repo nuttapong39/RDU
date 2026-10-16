@@ -2,6 +2,8 @@
 
 namespace App\Queries\Kpi\PatientSafety;
 
+use App\Queries\Kpi\CountingMethod;
+use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
@@ -20,11 +22,36 @@ use Illuminate\Support\Facades\DB;
  * Each patient's detail row describes a representative visit: their latest NSAID visit if they are in the
  * numerator (so the doctor and room shown are the ones who gave the NSAID), else their latest CKD visit.
  */
-class CkdNsaidQuery implements KpiQueryInterface
+class CkdNsaidQuery implements KpiQueryInterface, DescribesCountingMethod
 {
     /** Chronic kidney disease stage 3, 4 and 5 — not N182 (stage 2) or N189 (stage unspecified). */
     private const DIAGNOSIS_CODES = ['N183', 'N184', 'N185'];
 
+    /** Kidney codes deliberately left out of DIAGNOSIS_CODES, and why (shown in the counting method). */
+    private const EXCLUDED_DIAGNOSES = [
+        'N182' => 'ระดับ 2 ยังไม่ถึงเกณฑ์ของตัวชี้วัด',
+        'N189' => 'ไม่ระบุระดับ จึงไม่รู้ว่าถึงระดับ 3 หรือไม่',
+    ];
+
+    /** How this KPI is counted, built from the same constants as its SQL (CONTEXT.md: วิธีนับ). */
+    public function countingMethod(): CountingMethod
+    {
+        return new CountingMethod(
+            unit: 'ผู้ป่วย (คน) — คนเดียวมาหลายครั้งนับ 1 คน',
+            denominator: ['ผู้ป่วยที่มีวิสิตผู้ป่วยนอกวินิจฉัยโรคไตเรื้อรังระดับ 3–5 (รหัสในข้อ 7) ในช่วงเวลาที่ดู'],
+            numerator: ['ผู้ป่วยในตัวหารที่ได้รับ NSAIDs ตามรายการรหัสยา ในวิสิตผู้ป่วยนอกครั้งใดก็ได้ในช่วงเวลาเดียวกัน รวมวิสิตที่ไม่ได้ลงรหัสโรคไต เช่น ห้องฉุกเฉิน'],
+            conditions: [CountingMethod::OPD_ONLY, CountingMethod::ANY_DIAGNOSIS_POSITION, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS, 'รายการ NSAIDs ชุดเดียวกับ KPI07 (แก้ที่เดียว เปลี่ยนทั้งสองตัวชี้วัด)'],
+            drugLabel: 'NSAIDs',
+            drugs: array_fill_keys(NsaidDuplicationQuery::NSAID_ICODES, null),
+            diagnoses: [
+                ['label' => 'โรคไตเรื้อรังระดับ 3 ขึ้นไป', 'codes' => self::DIAGNOSIS_CODES, 'match' => 'exact'],
+            ],
+            excludedDiagnoses: self::EXCLUDED_DIAGNOSES,
+            doctor: 'แพทย์ผู้ตรวจของวิสิตตัวแทน = วิสิตล่าสุดที่ได้ NSAIDs ถ้าได้ มิฉะนั้นวิสิตโรคไตครั้งล่าสุด',
+            source: 'docs/SQL_KPI/KPI9.sql — query จากเภสัชกร',
+            agreedOn: '2026-10-16',
+        );
+    }
     // ---- Fiscal month/quarter/year entry points — resolve to a date range, then delegate ----
 
     public function getDenominator(int $year, int $month): int

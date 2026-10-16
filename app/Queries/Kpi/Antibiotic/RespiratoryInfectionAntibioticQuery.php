@@ -2,6 +2,8 @@
 
 namespace App\Queries\Kpi\Antibiotic;
 
+use App\Queries\Kpi\CountingMethod;
+use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
@@ -13,7 +15,7 @@ use Illuminate\Support\Facades\DB;
  * HOSxP schema. Unlike KPI01 this uses a single flat ICD-10 whitelist (no injury+external-cause
  * pairing needed) — a visit qualifies if ANY of its diagnoses matches DIAGNOSIS_CODES.
  */
-class RespiratoryInfectionAntibioticQuery implements KpiQueryInterface
+class RespiratoryInfectionAntibioticQuery implements KpiQueryInterface, DescribesCountingMethod
 {
     /** ICD-10 codes for upper-respiratory-tract infection / acute bronchitis (+ related otitis). */
     private const DIAGNOSIS_CODES = [
@@ -39,6 +41,25 @@ class RespiratoryInfectionAntibioticQuery implements KpiQueryInterface
         '1530015', '1550002',
     ];
 
+    /** How this KPI is counted, built from the same constants as its SQL (CONTEXT.md: วิธีนับ). */
+    public function countingMethod(): CountingMethod
+    {
+        return new CountingMethod(
+            unit: 'วิสิต (VN) — 1 วิสิตนับ 1 ครั้ง',
+            denominator: ['วิสิตที่มีรหัสวินิจฉัยโรคติดเชื้อทางเดินหายใจช่วงบน / หลอดลมอักเสบเฉียบพลัน (รวมหูอักเสบที่เกี่ยวข้อง) ตามตาราง อย่างน้อย 1 รหัส'],
+            numerator: ['วิสิตในตัวหารที่ได้รับยาปฏิชีวนะตามรายการรหัสยาอย่างน้อย 1 รายการ'],
+            conditions: [CountingMethod::ANY_DIAGNOSIS_POSITION, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS, CountingMethod::ALL_VISITS],
+            drugLabel: 'ยาปฏิชีวนะ',
+            drugs: array_fill_keys(self::ANTIBIOTIC_ICODES, null),
+            diagnoses: [
+                ['label' => 'โรคติดเชื้อทางเดินหายใจช่วงบน / หลอดลมอักเสบเฉียบพลัน', 'codes' => self::DIAGNOSIS_CODES, 'match' => 'exact'],
+            ],
+            excludedDiagnoses: [],
+            doctor: 'แพทย์ผู้ตรวจของวิสิตนั้น',
+            source: 'docs/SQL_KPI/KPI4.sql — query อ้างอิงจากทีม IT/รายงานของโรงพยาบาล',
+            agreedOn: null,
+        );
+    }
     // ---- Fiscal month/quarter/year entry points — resolve to a date range, then delegate ----
 
     public function getDenominator(int $year, int $month): int
