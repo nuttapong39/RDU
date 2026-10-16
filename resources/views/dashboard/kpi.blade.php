@@ -70,11 +70,11 @@
                 <p class="text-slate-500 text-sm mt-2">{{ $ind->description }}</p>
             @endif
         </div>
-        {{-- Secondary action: smaller and quieter than the HDC button beside it. --}}
+        {{-- Secondary action: purple, but smaller than the HDC button beside it (h-10 vs h-12). --}}
         <button type="button" id="countingMethodBtn"
-                class="ml-auto self-center inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-white border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50 hover:text-indigo-700 active:bg-slate-100 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                class="ml-auto self-center inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 active:bg-violet-800 shadow-sm hover:shadow-md transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
                 aria-haspopup="dialog" aria-controls="countingMethodModal">
-            <span class="msi text-[1rem]" aria-hidden="true">menu_book</span>
+            <span class="msi text-[1.1rem]" aria-hidden="true">menu_book</span>
             วิธีนับ
         </button>
         {{-- Primary action. Logo only: the button's name comes from aria-label/title. --}}
