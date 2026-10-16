@@ -17,7 +17,7 @@ class MockRduDataSource implements RduDataSourceInterface
         'KPI08' => ['numerator' => 71,  'denominator' => 87],   // Asthma patients on ICS
         'KPI09' => ['numerator' => 23,  'denominator' => 892],  // CKD stage 3+ patients on NSAIDs
         'KPI10' => ['numerator' => 1400, 'denominator' => 1478], // Type 2 DM patients on metformin
-        'KPI11' => ['numerator' => 14,  'denominator' => 300],  // Corticosteroid injection
+        'KPI11' => ['numerator' => 58,  'denominator' => 476],  // Child respiratory infection given non-sedating antihistamine
         'KPI12' => ['numerator' => 2,   'denominator' => 800],  // Dual RAS blockade (target 0%)
         'KPI13' => ['numerator' => 171, 'denominator' => 400],  // DM HbA1c controlled
     ];

@@ -9,7 +9,7 @@ return [
 
     // KPIs whose HOSxP query is implemented (not a stub). These always use HOSxP; every other KPI
     // falls back to its HDC whole-year figure when one is linked (see HdcDataService::MAPPING).
-    'hosxp_kpis' => ['KPI01', 'KPI03', 'KPI04', 'KPI05', 'KPI07', 'KPI08', 'KPI09', 'KPI10', 'KPI12'],
+    'hosxp_kpis' => ['KPI01', 'KPI03', 'KPI04', 'KPI05', 'KPI07', 'KPI08', 'KPI09', 'KPI10', 'KPI11', 'KPI12'],
 
     // The drug each KPI judges (CONTEXT.md: กลุ่มยาของตัวชี้วัด) and the wording the KPI page uses for it.
     // KPIs not listed in `kpi_drug_group` use `antibiotic`. Read through RduIndicator::drugGroup().
@@ -75,12 +75,23 @@ return [
             'doctor_rate'  => 'อัตราการสั่ง Metformin ในผู้ป่วยเบาหวานชนิดที่ 2 รายแพทย์ผู้ตรวจ',
             'usage'        => 'สัดส่วนยา Metformin ที่สั่งจ่าย',
         ],
+        // KPI11: Cetirizine syrup and tablet (CONTEXT.md: เด็กติดเชื้อทางเดินหายใจที่ได้ยาแก้แพ้ชนิด non-sedating).
+        'antihistamine' => [
+            'name'         => 'ยาแก้แพ้ชนิด non-sedating',
+            'short'        => 'non-sedating',
+            'received'     => 'ได้ยาแก้แพ้ non-sedating',
+            'not_received' => 'ไม่ได้ยาแก้แพ้ non-sedating',
+            'cost'         => 'มูลค่ายาแก้แพ้ non-sedating (บาท)',
+            'doctor_rate'  => 'อัตราการสั่งยาแก้แพ้ชนิด non-sedating ในเด็กติดเชื้อทางเดินหายใจรายแพทย์ผู้ตรวจ',
+            'usage'        => 'สัดส่วนยาแก้แพ้ชนิด non-sedating ที่สั่งจ่าย',
+        ],
     ],
     'kpi_drug_group' => [
         'KPI07' => 'nsaid',
         'KPI08' => 'ics',
         'KPI09' => 'nsaid_ckd',
         'KPI10' => 'metformin',
+        'KPI11' => 'antihistamine',
         'KPI12' => 'ras',
     ],
 

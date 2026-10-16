@@ -20,7 +20,7 @@ KPI01, KPI03, KPI04 และ KPI05 คือตัวชี้วัดที�
 | **KPI03** | `Antibiotic/NormalDeliveryAntibioticQuery` | `docs/SQL_KPI/KPI3.sql` | IPD (`ipt` + `an_stat`, AN) | admission ที่**ไม่ได้รับ**ยาปฏิชีวนะ | ≥ 80% (`higher`) | ผู้ป่วยใน และตัวชี้วัดกลับทิศ (ยิ่งสูงยิ่งดี) |
 
 **เริ่มจาก KPI04 เสมอ** แล้วนำส่วนที่ต่างจาก KPI01 (เงื่อนไขหลายกลุ่ม) หรือ KPI03 (IPD / กลับทิศ) มาใช้เฉพาะเมื่อจำเป็น
-ตัวชี้วัดที่ยังไม่ implement (KPI02, KPI06, KPI11, KPI13) ตอนนี้เป็น stub ที่คืน 0 / collection ว่างทุก method
+ตัวชี้วัดที่ยังไม่ implement (KPI02, KPI06, KPI13) ตอนนี้เป็น stub ที่คืน 0 / collection ว่างทุก method
 
 **KPI ที่ไม่ใช่ยาปฏิชีวนะ — ดู KPI12** (`PatientSafety/RasDualBlockadeQuery`, `docs/SQL_KPI/KPI12.sql`): โครงเดียวกับ KPI04
 แต่กลุ่มยาต่างไป, นับ "ตัวยา" แทนรหัสยา และเป้า 0% — ดูหัวข้อ 4.1 และ 4.2

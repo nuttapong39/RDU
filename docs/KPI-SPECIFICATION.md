@@ -262,18 +262,25 @@ HDC:          s_rdu12 (target / result) ใช้ในปุ่ม "เที�
 
 ---
 
-#### KPI-11: ยาน้ำ non-sedating ในเด็กที่ติดเชื้อทางเดินหายใจ
+#### KPI-11: ยาน้ำ non-sedating ในเด็กที่ติดเชื้อทางเดินหายใจ ✅ implement แล้ว (2026-10)
 ```
 ชื่อ:         ร้อยละผู้รับบริการผู้ป่วยเด็กที่ได้รับการวินิจฉัยเป็น
               โรคติดเชื้อของทางเดินหายใจและได้รับยาน้ำชนิด non-sedating
-Code:         corticosteroid_injection_no_indication
-Numerator:    จำนวนผู้ป่วยที่ได้รับ Corticosteroid ฉีดโดยไม่มีข้อบ่งชี้
-Denominator:  จำนวนผู้ป่วยที่ได้รับ Corticosteroid ฉีดทั้งหมด
-Target:       ≤ 5%
-Direction:    ต่ำดี (lower_better)
-Category:     patient_safety
-HOSxP Tables: [TBD]
-Query:        [TBD — Plan แยกต่างหาก]
+Numerator:    visit ในตัวส่วนที่ได้รับยาแก้แพ้ชนิด non-sedating (qty > 0)
+Denominator:  visit ผู้ป่วยนอก (ovst.an IS NULL) ของเด็กอายุต่ำกว่า 15 ปีเต็ม ณ วันที่มารับบริการ (จาก patient.birthday)
+              ที่มีวินิจฉัย J0x / J20 / J21 / J22 (ตำแหน่งใดก็ได้) ไม่ว่าจะได้ยาอะไร
+Target:       ≤ 20% — ตามเกณฑ์ผ่านของ HDC: ตารางสรุป s_rdu21 ตัวชี้วัดที่ 12 (ตัวส่วน b12 = ยอดรวมของ s_rdu18)
+              ผ่านสูงสุด 19.78%, ไม่ผ่านต่ำสุด 20.27% จาก 347 โรงพยาบาล
+Direction:    ต่ำดี (lower)
+Category:     PatientSafety · กลุ่มยาของตัวชี้วัด: antihistamine (config rdu.drug_groups) · หน่วยนับ: visit
+ยา:           1510009 CETIRIZINE SYR. 5 mg/5ml (ยาน้ำ), 1560013 Cetirizine 10 mg (ยาเม็ด) — นับยาเม็ดด้วยตามที่เภสัชกรกำหนด
+              ไม่นับ CPM (ยาแก้แพ้ชนิดง่วง) · ไม่ตัด visit ที่มีโรคภูมิแพ้ร่วม
+HOSxP Tables: ovst, ovstdiag, opitemrece, drugitems, patient, doctor, pttype, spclty, kskdepartment
+              (ไม่ใช้ vn_stat ของ query ต้นฉบับ — rdu_readonly ไม่มีสิทธิ์อ่าน)
+Query:        app/Queries/Kpi/PatientSafety/ChildRespiratoryNonSedatingQuery.php · docs/SQL_KPI/KPI11.sql
+HDC:          ยังไม่ผูก — s_rdu18 ตัวส่วนใกล้เคียง (542 visit) แต่ตัวเศษของโรงพยาบาลเป็น 0 ทั้งปี
+              (น่าจะเพราะ HDC ไม่รู้จักรหัสยามาตรฐานของ Cetirizine ที่ส่ง) จึงยังไม่แสดงเทียบ
+ผลปีงบ 2569:  58 / 476 visit (12.2%) — ยาน้ำ 22 · ยาเม็ด 36 · ปีงบ 2568: 66 / 406 (16.3%)
 ```
 
 ---
@@ -330,7 +337,7 @@ Query:        [TBD — Plan แยกต่างหาก]
 | KPI-08 | asthma_ics | Inhaled Corticosteroid ในผู้ป่วยหืด (นับเป็นคน) | ≥ 80% | สูงดี | patient_safety |
 | KPI-09 | ckd_nsaids | NSAIDs ในโรคไตเรื้อรังระดับ 3+ (นับเป็นคน) | ≤ 10% | ต่ำดี | patient_safety |
 | KPI-10 | dm_metformin | Metformin ในเบาหวานชนิดที่ 2 ไม่มีข้อห้ามใช้ (นับเป็นคน) | ≥ 80% | สูงดี | chronic_disease |
-| KPI-11 | corticosteroid_injection_no_indication | ยาน้ำ non-sedating ในเด็กติดเชื้อทางเดินหายใจ | ≤ 5% | ต่ำดี | patient_safety |
+| KPI-11 | child_respiratory_non_sedating | ยาน้ำ non-sedating ในเด็กติดเชื้อทางเดินหายใจ | ≤ 20% | ต่ำดี | patient_safety |
 | KPI-12 | ras_dual_blockade | RAS Blockade 2 ชนิดร่วมกัน (HT) | ≤ 0% | ต่ำดี | patient_safety |
 | KPI-13 | dm_hba1c_controlled | Long-acting Benzodiazepine ผู้สูงอายุ | ≥ 40% | สูงดี | chronic_disease |
 
@@ -357,7 +364,7 @@ app/
         │   ├── NsaidDuplicationQuery.php       ← KPI-07
         │   ├── AsthmaInhaledCorticosteroidQuery.php ← KPI-08
         │   ├── CkdNsaidQuery.php               ← KPI-09
-        │   ├── CorticosteroidInjectionQuery.php ← KPI-11
+        │   ├── ChildRespiratoryNonSedatingQuery.php ← KPI-11
         │   └── RasDualBlockadeQuery.php        ← KPI-12
         └── ChronicDisease/
             ├── MetforminDiabetesQuery.php      ← KPI-10
