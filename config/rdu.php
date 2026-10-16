@@ -9,7 +9,7 @@ return [
 
     // KPIs whose HOSxP query is implemented (not a stub). These always use HOSxP; every other KPI
     // falls back to its HDC whole-year figure when one is linked (see HdcDataService::MAPPING).
-    'hosxp_kpis' => ['KPI01', 'KPI03', 'KPI04', 'KPI05', 'KPI07', 'KPI08', 'KPI09', 'KPI12'],
+    'hosxp_kpis' => ['KPI01', 'KPI03', 'KPI04', 'KPI05', 'KPI07', 'KPI08', 'KPI09', 'KPI10', 'KPI12'],
 
     // The drug each KPI judges (CONTEXT.md: กลุ่มยาของตัวชี้วัด) and the wording the KPI page uses for it.
     // KPIs not listed in `kpi_drug_group` use `antibiotic`. Read through RduIndicator::drugGroup().
@@ -64,11 +64,23 @@ return [
             'doctor_rate'  => 'อัตราการสั่ง NSAIDs ในผู้ป่วยโรคไตเรื้อรังรายแพทย์ผู้ตรวจ',
             'usage'        => 'สัดส่วนยา NSAIDs ที่สั่งจ่าย',
         ],
+        // KPI10 is "higher is better": getting metformin is the good outcome (CONTEXT.md: ผู้ป่วยเบาหวานชนิดที่ 2
+        // ที่ใช้ Metformin โดยไม่มีข้อห้ามใช้).
+        'metformin' => [
+            'name'         => 'ยา Metformin',
+            'short'        => 'Metformin',
+            'received'     => 'ได้ Metformin',
+            'not_received' => 'ไม่ได้ Metformin',
+            'cost'         => 'มูลค่ายา Metformin (บาท)',
+            'doctor_rate'  => 'อัตราการสั่ง Metformin ในผู้ป่วยเบาหวานชนิดที่ 2 รายแพทย์ผู้ตรวจ',
+            'usage'        => 'สัดส่วนยา Metformin ที่สั่งจ่าย',
+        ],
     ],
     'kpi_drug_group' => [
         'KPI07' => 'nsaid',
         'KPI08' => 'ics',
         'KPI09' => 'nsaid_ckd',
+        'KPI10' => 'metformin',
         'KPI12' => 'ras',
     ],
 
@@ -88,6 +100,7 @@ return [
     'kpi_count_unit' => [
         'KPI08' => 'patient',
         'KPI09' => 'patient',
+        'KPI10' => 'patient',
     ],
 
     // MOPH Open Data (HDC) — comparison modal, and the stand-in result for KPIs listed above as not yet on HOSxP

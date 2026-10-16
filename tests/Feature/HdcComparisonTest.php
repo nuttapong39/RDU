@@ -131,14 +131,14 @@ class HdcComparisonTest extends TestCase
 
     public function test_kpi_without_hosxp_query_shows_the_hdc_figure_on_its_page_and_overview(): void
     {
-        $this->fakeHdc([$this->row('11179', '55090111', ['target' => 1478, 'result' => 1422])]); // s_rdu12, metformin
+        $this->fakeHdc([$this->row('11179', '55090111', ['target' => 2000, 'result' => 46])]); // s_rdu16, elderly long-acting BZD
         $user = $this->user();
 
-        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI10', 'year' => 2569]))
+        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI13', 'year' => 2569]))
             ->assertOk()
             ->assertSee('แสดงผลจาก HDC (ข้อมูลส่วนกลาง) แทนชั่วคราว', false)
-            ->assertSee('96.2')                  // 1422 / 1478
-            ->assertSee('ผ่านเกณฑ์');           // ≥ 80%, higher is better
+            ->assertSee('2.3')                   // 46 / 2000
+            ->assertSee('ผ่านเกณฑ์');           // ≤ 5%, lower is better
 
         $this->actingAs($user)->get(route('dashboard', ['year' => 2569]))
             ->assertOk()->assertSee('HDC · ทั้งปี', false)
@@ -150,14 +150,14 @@ class HdcComparisonTest extends TestCase
 
     public function test_hdc_whole_year_figure_is_not_spread_over_quarter_cards_or_the_visit_donut(): void
     {
-        $this->fakeHdc([$this->row('11179', '55090111', ['target' => 1478, 'result' => 1422])]);
+        $this->fakeHdc([$this->row('11179', '55090111', ['target' => 2000, 'result' => 46])]);
 
-        $this->actingAs($this->user())->get(route('dashboard.kpi', ['code' => 'KPI10', 'year' => 2569, 'quarter' => 2]))
+        $this->actingAs($this->user())->get(route('dashboard.kpi', ['code' => 'KPI13', 'year' => 2569, 'quarter' => 2]))
             ->assertOk()
             ->assertSee('ตัวเลขนี้จึงไม่เปลี่ยนตามช่วงเวลาที่เลือก', false)
             ->assertDontSee('id="visitProportionDonut"', false)
             ->assertDontSee('id="quarterPieChart"', false)
-            ->assertDontSee('1,422 / 1,478');     // quarter cards would print "num / den ราย"
+            ->assertDontSee('46 / 2,000');        // quarter cards would print "num / den ราย"
     }
 
     public function test_kpi_with_hosxp_query_ignores_hdc(): void
@@ -182,12 +182,12 @@ class HdcComparisonTest extends TestCase
         Http::fake(['opendata.moph.go.th/*' => Http::response('down', 500)]);
         $user = $this->user();
 
-        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI10', 'year' => 2569]))
+        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI13', 'year' => 2569]))
             ->assertOk()
             ->assertSee('ดึงข้อมูลจาก HDC ไม่ได้ในขณะนี้', false);
         $sent = count(Http::recorded());
 
-        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI10', 'year' => 2569]))->assertOk();
+        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI13', 'year' => 2569]))->assertOk();
         $this->actingAs($user)->get(route('dashboard', ['year' => 2569]))
             ->assertOk()->assertSee('HDC ไม่ตอบสนอง', false);
         $this->assertSame($sent, count(Http::recorded()), 'HDC was called again although it just failed');

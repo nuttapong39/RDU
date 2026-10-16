@@ -13,13 +13,13 @@ use App\Queries\Kpi\Antibiotic\DiarrheaNoAntibioticQuery;
 use App\Queries\Kpi\Antibiotic\NormalDeliveryAntibioticQuery;
 use App\Queries\Kpi\Antibiotic\RespiratoryInfectionAntibioticQuery;
 use App\Queries\Kpi\ChronicDisease\DmHba1cControlledQuery;
+use App\Queries\Kpi\ChronicDisease\MetforminDiabetesQuery;
 use App\Queries\Kpi\DrugQuality\NationalDrugListValueQuery;
 use App\Queries\Kpi\PatientSafety\AsthmaInhaledCorticosteroidQuery;
 use App\Queries\Kpi\PatientSafety\CkdNsaidQuery;
 use App\Queries\Kpi\PatientSafety\CorticosteroidInjectionQuery;
 use App\Queries\Kpi\PatientSafety\NsaidDuplicationQuery;
 use App\Queries\Kpi\PatientSafety\RasDualBlockadeQuery;
-use App\Queries\Kpi\PatientSafety\VitB1InjectionQuery;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -38,7 +38,7 @@ class AppServiceProvider extends ServiceProvider
                 'KPI07' => $app->make(NsaidDuplicationQuery::class),
                 'KPI08' => $app->make(AsthmaInhaledCorticosteroidQuery::class),
                 'KPI09' => $app->make(CkdNsaidQuery::class),
-                'KPI10' => $app->make(VitB1InjectionQuery::class),
+                'KPI10' => $app->make(MetforminDiabetesQuery::class),
                 'KPI11' => $app->make(CorticosteroidInjectionQuery::class),
                 'KPI12' => $app->make(RasDualBlockadeQuery::class),
                 'KPI13' => $app->make(DmHba1cControlledQuery::class),

@@ -6,7 +6,10 @@ use App\Exceptions\HdcUnavailableException;
 use App\Models\RduIndicator;
 use App\Models\RduIndicatorResult;
 use App\Support\FiscalDateRange;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use PDOException;
 
 class RduCalculationService
 {
@@ -131,8 +134,29 @@ class RduCalculationService
         }
 
         // Live — query the data source (cached by RduQueryService for 1 hour)
-        $num    = $this->queryService->getNumerator($indicator->code, $year, $month);
-        $den    = $this->queryService->getDenominator($indicator->code, $year, $month);
+        return $this->liveResult($indicator, fn () => [
+            $this->queryService->getNumerator($indicator->code, $year, $month),
+            $this->queryService->getDenominator($indicator->code, $year, $month),
+        ]);
+    }
+
+    /**
+     * A result computed live from `$counts` (returns [numerator, denominator]). A failing query — e.g. a
+     * HOSxP table the read-only role cannot SELECT yet — makes this one KPI "no data" (0 / 0 → na), so the
+     * overview and the quarter sidebar keep working instead of returning a 500.
+     *
+     * @param  callable(): array{int, int}  $counts
+     */
+    private function liveResult(RduIndicator $indicator, callable $counts): array
+    {
+        try {
+            [$num, $den] = $counts();
+        } catch (QueryException|PDOException $e) {
+            // The class and SQLSTATE only: the message carries the HOSxP host and the full SQL.
+            Log::error('KPI query failed', ['kpi' => $indicator->code, 'error' => get_class($e), 'sqlstate' => $e->getCode()]);
+            [$num, $den] = [0, 0];
+        }
+
         $pct    = self::percentage($num, $den);
         $status = $this->getStatus($pct, $indicator->target_value, $indicator->target_direction);
 
@@ -200,20 +224,10 @@ class RduCalculationService
 
         // Counted over the quarter's whole date range, not summed from its months — the same patient
         // seen in two months is one patient in the quarter (CONTEXT.md: ผู้ป่วยโรคหืดที่ได้ ICS).
-        $num = $this->queryService->getNumeratorForQuarter($indicator->code, $year, $quarter);
-        $den = $this->queryService->getDenominatorForQuarter($indicator->code, $year, $quarter);
-
-        $pct    = self::percentage($num, $den);
-        $status = $this->getStatus($pct, $indicator->target_value, $indicator->target_direction);
-
-        return [
-            'indicator'   => $indicator,
-            'numerator'   => $num,
-            'denominator' => $den,
-            'percentage'  => $pct,
-            'status'      => $status,
-            'from_cache'  => false,
-        ];
+        return $this->liveResult($indicator, fn () => [
+            $this->queryService->getNumeratorForQuarter($indicator->code, $year, $quarter),
+            $this->queryService->getDenominatorForQuarter($indicator->code, $year, $quarter),
+        ]);
     }
 
     /** Batch version of getOrCalculateQuarter() for the sidebar (no batch-query optimization yet — see plan). */

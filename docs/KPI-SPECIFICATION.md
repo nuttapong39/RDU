@@ -232,18 +232,32 @@ HDC:          s_rdu14 (target / result) ใช้ในปุ่ม "เที�
 
 ---
 
-#### KPI-10: การใช้ Metformin ควบคุมเบาหวานโดยไม่มีข้อห้ามใช้
+#### KPI-10: การใช้ Metformin ควบคุมเบาหวานโดยไม่มีข้อห้ามใช้ ✅ implement แล้ว (2026-10)
 ```
 ชื่อ:         ร้อยละของผู้ป่วยเบาหวานที่ใช้ยา Metformin เป็นยาชนิดเดียว
               หรือร่วมกับยาอื่นเพื่อควบคุมระดับน้ำตาลโดยไม่มีข้อห้ามใช้
-Code:         vit_b1_injection_no_indication
-Numerator:    จำนวนผู้ป่วยที่ได้รับวิตามิน B1 ฉีดโดยไม่มีข้อบ่งชี้
-Denominator:  จำนวนผู้ป่วยที่ได้รับวิตามิน B1 ฉีดทั้งหมด
-Target:       ≤ 5%
-Direction:    ต่ำดี (lower_better)
-Category:     patient_safety
-HOSxP Tables: [TBD]
-Query:        [TBD — Plan แยกต่างหาก]
+Code:         dm_metformin
+หน่วยนับ:     ผู้ป่วย (HN ไม่ซ้ำ) — ไม่ใช่ visit · ยอดไตรมาส/สะสมนับคนไม่ซ้ำตลอดช่วง ไม่รวมยอดรายเดือน
+Numerator:    ผู้ป่วยในตัวส่วนที่ได้ Metformin (1000184, qty > 0) ใน visit ผู้ป่วยนอกครั้งใดก็ได้ในช่วงเวลาเดียวกัน
+              (query ต้นฉบับดูเฉพาะ visit ที่วินิจฉัยเบาหวาน)
+Denominator:  ผู้ป่วยที่ผ่านครบ 3 ข้อ
+              1. มี visit ผู้ป่วยนอก (ovst.an IS NULL) วินิจฉัย E11* ตำแหน่งใดก็ได้ ในช่วงเวลานั้น
+                 (ไม่นับ E10 / E13 / E14 ซึ่ง query ต้นฉบับนับ)
+              2. ได้ยาลดระดับน้ำตาล 7 รหัสอย่างน้อย 1 ชนิด ใน visit ผู้ป่วยนอกครั้งใดก็ได้ในช่วงเวลาเดียวกัน
+              3. ผล eGFR (lab 200) ล่าสุดในช่วง 12 เดือนที่สิ้นสุดวันสุดท้ายของช่วงเวลา ≥ 30
+                 (ไม่มีผล = ไม่อยู่ในตัวส่วน · นับแล็บทั้ง OPD และ IPD · อ่านตัวเลขหน้าผล)
+Target:       ≥ 80%
+Direction:    สูงดี (higher)
+Category:     ChronicDisease · กลุ่มยาของตัวชี้วัด: metformin · หน่วยนับ: patient (config rdu.kpi_count_unit)
+ยาลดระดับน้ำตาล: 1000184 metformin, 1019001 glipizide, 1680038 pioglitazone, 1510002 Penfill Mixtard,
+              1481213 / 1483896 regular insulin, 1590023 NPH (MetforminDiabetesQuery::GLUCOSE_LOWERING_ICODES)
+ข้อมูลรายกรณี: 1 แถวต่อผู้ป่วย visit ตัวแทน = visit ล่าสุดที่ได้ Metformin (ถ้าอยู่ในตัวเศษ) มิฉะนั้น visit เบาหวานครั้งล่าสุด
+              dx = รหัส E11* ของผู้ป่วยในช่วงเวลานั้น · egfr / egfr_date = ผล eGFR ล่าสุดที่ใช้ตัดสิน
+HOSxP Tables: ovst, ovstdiag, opitemrece, drugitems, lab_head, lab_order (ต้อง GRANT SELECT), patient, doctor,
+              pttype, spclty, kskdepartment
+Query:        app/Queries/Kpi/ChronicDisease/MetforminDiabetesQuery.php · docs/SQL_KPI/KPI10.sql
+HDC:          s_rdu12 (target / result) ใช้ในปุ่ม "เทียบ HDC"
+ผลปีงบ 2569:  1,400 / 1,478 คน (94.7%) — HDC 1,425 / 1,482 (96.2%) · ถ้าไม่มีเงื่อนไขยาลดระดับน้ำตาล 1,400 / 1,665 (84.1%)
 ```
 
 ---
@@ -315,7 +329,7 @@ Query:        [TBD — Plan แยกต่างหาก]
 | KPI-07 | nsaid_duplication | NSAIDs ซ้ำซ้อน (OPD) | ≤ 5% | ต่ำดี | patient_safety |
 | KPI-08 | asthma_ics | Inhaled Corticosteroid ในผู้ป่วยหืด (นับเป็นคน) | ≥ 80% | สูงดี | patient_safety |
 | KPI-09 | ckd_nsaids | NSAIDs ในโรคไตเรื้อรังระดับ 3+ (นับเป็นคน) | ≤ 10% | ต่ำดี | patient_safety |
-| KPI-10 | vit_b1_injection_no_indication | Metformin คุมเบาหวานไม่มีข้อห้ามใช้ | ≤ 5% | ต่ำดี | patient_safety |
+| KPI-10 | dm_metformin | Metformin ในเบาหวานชนิดที่ 2 ไม่มีข้อห้ามใช้ (นับเป็นคน) | ≥ 80% | สูงดี | chronic_disease |
 | KPI-11 | corticosteroid_injection_no_indication | ยาน้ำ non-sedating ในเด็กติดเชื้อทางเดินหายใจ | ≤ 5% | ต่ำดี | patient_safety |
 | KPI-12 | ras_dual_blockade | RAS Blockade 2 ชนิดร่วมกัน (HT) | ≤ 0% | ต่ำดี | patient_safety |
 | KPI-13 | dm_hba1c_controlled | Long-acting Benzodiazepine ผู้สูงอายุ | ≥ 40% | สูงดี | chronic_disease |
@@ -343,10 +357,10 @@ app/
         │   ├── NsaidDuplicationQuery.php       ← KPI-07
         │   ├── AsthmaInhaledCorticosteroidQuery.php ← KPI-08
         │   ├── CkdNsaidQuery.php               ← KPI-09
-        │   ├── VitB1InjectionQuery.php         ← KPI-10
         │   ├── CorticosteroidInjectionQuery.php ← KPI-11
         │   └── RasDualBlockadeQuery.php        ← KPI-12
         └── ChronicDisease/
+            ├── MetforminDiabetesQuery.php      ← KPI-10
             └── DmHba1cControlledQuery.php      ← KPI-13
 ```
 

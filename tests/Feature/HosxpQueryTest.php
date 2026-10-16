@@ -98,7 +98,7 @@ class HosxpQueryTest extends TestCase
             'KPI07' => [\App\Queries\Kpi\PatientSafety\NsaidDuplicationQuery::class],
             'KPI08' => [\App\Queries\Kpi\PatientSafety\AsthmaInhaledCorticosteroidQuery::class],
             'KPI09' => [\App\Queries\Kpi\PatientSafety\CkdNsaidQuery::class],
-            'KPI10' => [\App\Queries\Kpi\PatientSafety\VitB1InjectionQuery::class],
+            'KPI10' => [\App\Queries\Kpi\ChronicDisease\MetforminDiabetesQuery::class],
             'KPI11' => [\App\Queries\Kpi\PatientSafety\CorticosteroidInjectionQuery::class],
             'KPI12' => [\App\Queries\Kpi\PatientSafety\RasDualBlockadeQuery::class],
             'KPI13' => [\App\Queries\Kpi\ChronicDisease\DmHba1cControlledQuery::class],
