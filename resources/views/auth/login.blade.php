@@ -14,12 +14,13 @@
   --ink:#0f172a;--muted:#64748b;--line:#e2e8f0;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'IBM Plex Sans Thai','Inter',system-ui,sans-serif;color:var(--ink);background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased}
+body{font-family:'IBM Plex Sans Thai','Inter',system-ui,sans-serif;color:var(--ink);background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased;
+  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
 a{text-decoration:none;color:inherit}
 
 /* HEADER */
 .header{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.header-inner{max-width:1440px;margin:0 auto;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.header-inner{max-width:1640px;margin:0 auto;padding:10px 48px;display:flex;align-items:center;justify-content:space-between;gap:24px}
 .brand{display:flex;align-items:center;gap:14px}
 .logo-moph{width:46px;height:46px;padding:3px;border-radius:50%;flex:none;display:grid;place-items:center;background:#fff;border:2.5px solid var(--green);box-shadow:0 4px 12px rgba(22,163,74,.15);overflow:hidden}
 .logo-moph img{width:100%;height:100%;object-fit:contain;border-radius:50%}
@@ -32,7 +33,8 @@ a{text-decoration:none;color:inherit}
 .nav-item small{display:block;font-size:11px;color:var(--muted);font-weight:400}
 
 /* HERO */
-.hero{position:relative;overflow:hidden;padding:34px 28px 38px;
+/* Fills the space between the header and the footer, content centred vertically */
+.hero{position:relative;overflow:hidden;padding:28px 48px;flex:1;display:flex;align-items:center;
   background:radial-gradient(900px 520px at 8% 12%,rgba(209,250,229,.65) 0%,transparent 62%),
     radial-gradient(800px 500px at 92% 20%,rgba(219,234,254,.6) 0%,transparent 64%),
     radial-gradient(700px 500px at 55% 105%,rgba(204,251,241,.55) 0%,transparent 62%),
@@ -57,14 +59,20 @@ a{text-decoration:none;color:inherit}
 .f4{bottom:10%;right:12%;animation-delay:1.8s;width:58px;height:58px}
 .f5{top:44%;left:46%;animation-delay:2.4s;width:52px;height:52px;opacity:.6}
 @keyframes floaty{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-16px) rotate(3deg)}}
-.hero-inner{position:relative;z-index:3;max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+/* Text at the left edge, card at the right edge, and a middle column kept free for the 3D scene:
+   on narrower screens the text column gives way, not the scene */
+.hero-inner{position:relative;z-index:3;width:100%;max-width:1640px;margin:0 auto;display:grid;grid-template-columns:minmax(0,620px) minmax(360px,1fr) minmax(0,430px);gap:24px;align-items:center}
+.hero-text{container-type:inline-size}
 
 /* HERO TEXT */
 .pill{display:inline-flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 18px 9px 12px;font-size:13.5px;font-weight:600;box-shadow:0 4px 14px rgba(15,23,42,.06)}
 .pill .dot{width:24px;height:24px;border-radius:7px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center}
-.hero h2{font-size:clamp(30px,4.2vw,52px);font-weight:700;line-height:1.15;margin:14px 0 4px}
+.hero h2{font-size:clamp(30px,4.2vw,52px);font-size:clamp(28px,8.4cqi,52px);font-weight:700;line-height:1.15;margin:14px 0 4px}
 .hero h3{font-size:clamp(24px,3.6vw,44px);font-weight:700;line-height:1.15;background:linear-gradient(90deg,var(--green),#0891b2);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero p{max-width:560px;color:#475569;font-size:14.5px;margin:14px 0 20px}
+/* Sized to the text column, so "RDU – การใช้ยาอย่างสมเหตุผล" stays on one line */
+.hero h3{font-size:clamp(22px,7.2cqi,44px)}
+.hero h3 .nowrap{white-space:nowrap}
+.hero p{max-width:600px;color:#475569;font-size:14.5px;margin:14px 0 20px}
 .hero p b{color:var(--green-dark);font-weight:600}
 .chips{display:flex;flex-wrap:wrap;gap:12px}
 .chip{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.85);border:1px solid var(--line);border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:500;transition:.2s;backdrop-filter:blur(4px)}
@@ -79,6 +87,15 @@ a{text-decoration:none;color:inherit}
 .st-fail i{background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.18)} .st-fail b{color:#b91c1c}
 .st-na i{background:#94a3b8;box-shadow:0 0 0 4px rgba(148,163,184,.2)} .st-na b{color:#475569}
 .stats-note{margin-top:10px;font-size:12px;color:var(--muted)}
+/* Narrow text column (laptop screens): smaller chips so each row stays on one line */
+@container (max-width:540px){
+  .chips{gap:7px}
+  .chip{padding:6px 12px;font-size:12.5px}
+  .stats{display:grid;grid-template-columns:repeat(2,max-content);gap:7px}
+  .stats-title{grid-column:1/-1}
+  .st{padding:6px 10px;gap:6px;font-size:12.5px}
+  .st b{font-size:16px}
+}
 
 /* 3D SCENE (resources/js/login-scene.js) — replaces the decorative background when WebGL is available */
 .rdu-scene{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity 1.2s ease}
@@ -93,7 +110,7 @@ a{text-decoration:none;color:inherit}
 .scene-tip{position:absolute;z-index:5;pointer-events:none;max-width:320px;background:rgba(15,23,42,.88);color:#fff;font-size:12.5px;line-height:1.45;padding:7px 11px;border-radius:10px;box-shadow:0 8px 20px rgba(15,23,42,.25)}
 
 /* LOGIN CARD */
-.login-wrap{display:flex;justify-content:center}
+.login-wrap{display:flex;justify-content:flex-end}
 .card{width:100%;max-width:430px;background:rgba(255,255,255,.98);border:1px solid #eef2f7;border-radius:24px;box-shadow:0 20px 50px rgba(15,23,42,.10);padding:26px 32px 22px;backdrop-filter:blur(14px)}
 .card-head{text-align:center;margin-bottom:18px}
 .card-icon{width:68px;height:68px;padding:4px;margin:0 auto 10px;border-radius:50%;background:#fff;border:3px solid var(--green);display:grid;place-items:center;box-shadow:0 10px 24px rgba(22,163,74,.22);overflow:hidden}
@@ -128,17 +145,18 @@ a{text-decoration:none;color:inherit}
 .field-error{font-size:12px;color:#dc2626;margin-top:5px}
 
 /* FOOTER */
-.footer{border-top:1px solid var(--line);padding:16px 28px;text-align:center;background:#fff}
-.footer .copy{font-size:12.5px;color:var(--muted)}
-.footer .dev{margin-top:8px;display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;font-size:12.5px;color:#475569;background:#f8fafc;border:1px solid var(--line);border-radius:999px;padding:8px 18px}
+.footer{border-top:1px solid var(--line);padding:7px 48px;background:#fff;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 14px;font-size:11.5px;line-height:1.5;color:var(--muted)}
+.footer .dev{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center}
 .footer .dev b{color:var(--green-dark);font-weight:600}
-.footer .dev span{color:var(--muted)}
 
 /* RESPONSIVE */
 @media(max-width:900px){
   .nav{display:none}
   .hero-inner{grid-template-columns:1fr;gap:44px}
+  .scene-stage{display:none}
   .hero{padding:44px 20px 60px}
+  .login-wrap{justify-content:center}
+  .footer{padding:8px 20px}
   .hero-text{text-align:center}
   .hero p{margin-inline:auto}
   .chips,.stats{justify-content:center}
@@ -147,22 +165,27 @@ a{text-decoration:none;color:inherit}
 @media(max-width:560px){
   .header-inner{padding:12px 16px}
   .card{padding:28px 20px 24px;border-radius:20px}
-  .footer .dev{border-radius:14px;line-height:1.8}
 }
 @media(prefers-reduced-motion:reduce){
   .float-ico,.btn-primary,.chip{animation:none;transition:none}
 }
 /* Compact further on short viewports (typical 1366x768 laptop) so the footer never needs a scroll */
 @media(max-height:820px){
-  .hero{padding:20px 28px 24px}
+  .hero{padding:20px 48px}
   .hero h2{margin:6px 0 2px}
   .hero p{margin:10px 0 14px}
   .stats{margin-top:14px}
   .card{padding:20px 32px 16px}
   .card-head{margin-bottom:12px}
   .card-icon{width:52px;height:52px;margin-bottom:8px}
-  .footer{padding:10px 28px}
-  .footer .dev{margin-top:6px;padding:6px 16px}
+}
+@media(max-height:740px){
+  .hero{padding:12px 48px}
+  .card-icon{width:42px;height:42px;margin-bottom:6px}
+  .input-box input{padding-top:10px;padding-bottom:10px}
+  .btn{padding:11px}
+  .divider{margin:8px 0}
+  .card-foot{margin-top:8px}
 }
 </style>
 @if(app(\App\Services\FontService::class)->isCustomized())
@@ -274,7 +297,7 @@ a{text-decoration:none;color:inherit}
         Rational Drug Use Dashboard
       </div>
       <h2>ระบบรายงาน</h2>
-      <h3>RDU – การใช้ยาอย่างสมเหตุผล</h3>
+      <h3>RDU – <span class="nowrap">การใช้ยาอย่างสมเหตุผล</span></h3>
       <p>
         ระบบติดตามและประเมินตัวชี้วัด <b>RDU Service Plan</b> อย่างต่อเนื่อง
         ครอบคลุมการสั่งใช้ยาปฏิชีวนะใน 4 กลุ่มโรคเป้าหมาย การใช้ยาในผู้ป่วยเบาหวาน
@@ -309,6 +332,9 @@ a{text-decoration:none;color:inherit}
         · อัปเดตเมื่อมีผู้เปิดหน้าภาพรวม (ผลคำนวณเก่าสุดไม่เกิน 1 ชั่วโมง) · ข้อมูลจาก HOSxP XE + HDC
       </p>
     </div>
+
+    {{-- Kept empty: the 3D scene's core and orbits show here --}}
+    <div class="scene-stage" aria-hidden="true"></div>
 
     {{-- Login card --}}
     <div class="login-wrap">
@@ -420,15 +446,15 @@ a{text-decoration:none;color:inherit}
 
 <!-- FOOTER -->
 <footer class="footer">
-  <div class="copy">&copy; 2569 โรงพยาบาลเชียงกลาง จังหวัดน่าน | RDU Dashboard v1.0</div>
-  <div class="dev">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+  <span>&copy; 2569 โรงพยาบาลเชียงกลาง จังหวัดน่าน | RDU Dashboard v1.0</span>
+  <span class="dev">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
       <rect x="2" y="3" width="20" height="14" rx="2"/>
       <path d="M8 21h8M12 17v4"/>
     </svg>
     พัฒนาโดย : <b>นายณัฐพงษ์ นิลคง</b>
-    <span>นักวิชาการคอมพิวเตอร์ งานเทคโนโลยีสารสนเทศ รพ.เชียงกลาง</span>
-  </div>
+    นักวิชาการคอมพิวเตอร์ งานเทคโนโลยีสารสนเทศ รพ.เชียงกลาง
+  </span>
 </footer>
 
 @vite('resources/js/login-scene.js')

@@ -24,6 +24,7 @@ const STATUS = {
 };
 const CORE_COLOR = 0x0d9488;
 const INNER_RING_COUNT = 6;   // KPIs on the inner orbit; the rest go on the outer one
+const SCENE_WIDTH = 8.4;      // outer orbit's diameter (2 × 3.7) plus a capsule either side, in scene units
 
 function webglAvailable() {
     try {
@@ -204,26 +205,27 @@ function start(container, kpis) {
         camera.updateProjectionMatrix();
 
         const visibleWidth = 2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
-        const anchor = small() ? 0.5 : gapAnchor();
+        const gap = small() ? null : textCardGap();
+        const anchor = gap ? (gap.centre - container.getBoundingClientRect().left) / width : 0.5;
         const offset = (anchor - 0.5) * visibleWidth;
         system.position.x = offset;
         label.position.x = offset;
-        const scale = small() ? 0.75 : 1;
+        // Fit the outer orbit (plus its capsules) into the gap, so the whole scene shows between the text and the card.
+        const scale = gap ? THREE.MathUtils.clamp((gap.width * visibleWidth / width) / SCENE_WIDTH, 0.6, 1.1) : 0.75;
         system.scale.setScalar(scale);
         label.scale.set(2.2 * scale, 0.55 * scale, 1);
 
         // setSize() clears the canvas: the reduced-motion still frame must be drawn again.
         if (reducedMotion) renderer.render(scene, camera);
     }
-    /** Horizontal centre of the gap between the hero text and the login card, as a fraction of the container. */
-    function gapAnchor() {
+    /** The horizontal gap between the hero text and the login card, in viewport pixels (null if either is missing). */
+    function textCardGap() {
         const text = document.querySelector('.hero-text');
         const card = document.querySelector('.login-wrap .card');
-        if (!text || !card) return 0.5;
-        const box = container.getBoundingClientRect();
-        const gap = (text.getBoundingClientRect().right + card.getBoundingClientRect().left) / 2;
-        // Slightly towards the text, so the core and its label clear the card's shadow.
-        return (gap - 24 - box.left) / box.width;
+        if (!text || !card) return null;
+        const left = text.getBoundingClientRect().right;
+        const right = card.getBoundingClientRect().left;
+        return { centre: (left + right) / 2, width: Math.max(0, right - left) };
     }
 
     new ResizeObserver(resize).observe(container);
