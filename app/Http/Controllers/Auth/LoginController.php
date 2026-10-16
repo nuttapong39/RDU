@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\HisAuthService;
+use App\Services\StatusSnapshotService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,9 +17,10 @@ class LoginController extends Controller
 {
     public function __construct(private HisAuthService $hisAuthService) {}
 
-    public function showLoginForm(): View
+    /** The login page, with the last overview's KPI statuses for its 3D scene (CONTEXT.md: ภาพสถานะล่าสุด). */
+    public function showLoginForm(StatusSnapshotService $statusSnapshot): View
     {
-        return view('auth.login');
+        return view('auth.login', ['snapshot' => $statusSnapshot->forLogin()]);
     }
 
     public function login(Request $request): RedirectResponse

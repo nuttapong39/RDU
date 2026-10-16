@@ -69,9 +69,28 @@ a{text-decoration:none;color:inherit}
 .chips{display:flex;flex-wrap:wrap;gap:12px}
 .chip{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.85);border:1px solid var(--line);border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:500;transition:.2s;backdrop-filter:blur(4px)}
 .chip:hover{border-color:var(--green);color:var(--green-dark);transform:translateY(-2px);box-shadow:0 6px 16px rgba(22,163,74,.13)}
-.stats{display:flex;gap:34px;margin-top:22px;flex-wrap:wrap}
-.stat b{display:block;font-size:24px;font-weight:700;color:var(--green)}
-.stat span{font-size:12.5px;color:var(--muted)}
+.stats{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.stats-title{width:100%;font-size:12.5px;font-weight:600;color:#475569}
+.st{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:12px;padding:8px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 12px rgba(15,23,42,.05)}
+.st b{font-size:20px;font-weight:700}
+.st i{width:10px;height:10px;border-radius:50%;flex:none}
+.st-pass i{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18)} .st-pass b{color:#15803d}
+.st-warning i{background:#f59e0b;box-shadow:0 0 0 4px rgba(245,158,11,.18)} .st-warning b{color:#b45309}
+.st-fail i{background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.18)} .st-fail b{color:#b91c1c}
+.st-na i{background:#94a3b8;box-shadow:0 0 0 4px rgba(148,163,184,.2)} .st-na b{color:#475569}
+.stats-note{margin-top:10px;font-size:12px;color:var(--muted)}
+
+/* 3D SCENE (resources/js/login-scene.js) — replaces the decorative background when WebGL is available */
+.rdu-scene{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity 1.2s ease}
+.rdu-scene.is-ready{opacity:1}
+.rdu-scene canvas{display:block;width:100%;height:100%}
+.hero.has-scene .blob,.hero.has-scene .grid-dots,.hero.has-scene .float-ico{display:none}
+/* Keep the text readable where capsules pass behind it: a soft white wash, not a text-shadow
+   (the h3 is gradient-clipped transparent text — a shadow would show through and wash it out) */
+.hero.has-scene .hero-text{position:relative}
+.hero.has-scene .hero-text::before{content:"";position:absolute;inset:-16px -60px -16px -24px;z-index:-1;border-radius:40px;
+  background:radial-gradient(ellipse at 35% 50%,rgba(255,255,255,.85) 0%,rgba(255,255,255,.7) 48%,rgba(255,255,255,0) 70%)}
+.scene-tip{position:absolute;z-index:5;pointer-events:none;max-width:320px;background:rgba(15,23,42,.88);color:#fff;font-size:12.5px;line-height:1.45;padding:7px 11px;border-radius:10px;box-shadow:0 8px 20px rgba(15,23,42,.25)}
 
 /* LOGIN CARD */
 .login-wrap{display:flex;justify-content:center}
@@ -196,6 +215,12 @@ a{text-decoration:none;color:inherit}
   <div class="blob b3"></div>
   <div class="grid-dots"></div>
 
+  {{-- 3D scene: 13 KPI capsules orbiting HOSxP XE, ring colour = last overview's status (CONTEXT.md: ภาพสถานะล่าสุด) --}}
+  <div id="rduScene" class="rdu-scene" aria-hidden="true"></div>
+  {{-- Above the text and the card (the scene layer sits below them) --}}
+  <div id="rduSceneTooltip" class="scene-tip" aria-hidden="true" hidden></div>
+  <script type="application/json" id="rduSceneData">@json(['kpis' => $snapshot['kpis']])</script>
+
   {{-- Floating icons --}}
   <div class="float-ico f1" aria-hidden="true">
     <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round">
@@ -251,7 +276,7 @@ a{text-decoration:none;color:inherit}
       <h2>ระบบรายงาน</h2>
       <h3>RDU – การใช้ยาอย่างสมเหตุผล</h3>
       <p>
-        ระบบติดตามและประเมินตัวชี้วัด <b>RDU Service Plan</b> แบบเรียลไทม์
+        ระบบติดตามและประเมินตัวชี้วัด <b>RDU Service Plan</b> อย่างต่อเนื่อง
         ครอบคลุมการสั่งใช้ยาปฏิชีวนะใน 4 กลุ่มโรคเป้าหมาย การใช้ยาในผู้ป่วยเบาหวาน
         ความดันโลหิตสูง และผู้สูงอายุ พร้อมเชื่อมโยงข้อมูลจาก HOSxP XE
         เพื่อสนับสนุนการตัดสินใจเชิงนโยบายของโรงพยาบาลอย่างครบวงจร
@@ -266,11 +291,23 @@ a{text-decoration:none;color:inherit}
         <span class="chip">ผู้สูงอายุ</span>
       </div>
 
+      {{-- Status summary — also the text equivalent of the (aria-hidden) 3D scene --}}
+      @php $counts = $snapshot['counts']; @endphp
       <div class="stats">
-        <div class="stat"><b>13</b><span>ตัวชี้วัด RDU</span></div>
-        <div class="stat"><b>Real-time</b><span>อัปเดตอัตโนมัติ</span></div>
-        <div class="stat"><b>HOSxP XE</b><span>เชื่อมต่อฐานข้อมูล</span></div>
+        <div class="stats-title">สถานะ {{ count($snapshot['kpis']) }} ตัวชี้วัด RDU ปีงบประมาณปัจจุบัน</div>
+        <span class="st st-pass"><i aria-hidden="true"></i>ผ่านเกณฑ์ <b>{{ $counts['pass'] }}</b></span>
+        <span class="st st-warning"><i aria-hidden="true"></i>ใกล้เป้าหมาย <b>{{ $counts['warning'] }}</b></span>
+        <span class="st st-fail"><i aria-hidden="true"></i>ไม่ผ่านเกณฑ์ <b>{{ $counts['fail'] }}</b></span>
+        <span class="st st-na"><i aria-hidden="true"></i>ไม่มีข้อมูล <b>{{ $counts['na'] }}</b></span>
       </div>
+      <p class="stats-note">
+        @if($snapshot['takenAtText'])
+          สถานะ ณ {{ $snapshot['takenAtText'] }}
+        @else
+          ยังไม่มีข้อมูลสถานะ — จะแสดงหลังมีผู้เปิดหน้าภาพรวมครั้งแรก
+        @endif
+        · อัปเดตเมื่อมีผู้เปิดหน้าภาพรวม (ผลคำนวณเก่าสุดไม่เกิน 1 ชั่วโมง) · ข้อมูลจาก HOSxP XE + HDC
+      </p>
     </div>
 
     {{-- Login card --}}
@@ -394,6 +431,7 @@ a{text-decoration:none;color:inherit}
   </div>
 </footer>
 
+@vite('resources/js/login-scene.js')
 <script>
 (function () {
     const btn     = document.getElementById('togglePassword');

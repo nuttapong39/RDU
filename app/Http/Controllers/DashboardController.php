@@ -9,6 +9,7 @@ use App\Services\CountingMethodService;
 use App\Services\DoctorAliasService;
 use App\Services\RduCalculationService;
 use App\Services\RduQueryService;
+use App\Services\StatusSnapshotService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -22,6 +23,7 @@ class DashboardController extends Controller
         private RduQueryService $queryService,
         private DoctorAliasService $aliasService,
         private CountingMethodService $countingMethods,
+        private StatusSnapshotService $statusSnapshot,
     ) {}
 
     public function index(Request $request): View
@@ -31,6 +33,11 @@ class DashboardController extends Controller
 
         $indicators = RduIndicator::active()->ordered()->get();
         $kpiData    = $this->calcService->getOrCalculateMany($indicators, $year, $month);
+
+        // The login page shows the current fiscal year's whole-year statuses (CONTEXT.md: ภาพสถานะล่าสุด).
+        if ($year === $this->calcService->currentFiscalYear() && $month === 0) {
+            $this->statusSnapshot->record($year, $kpiData);
+        }
 
         $summary       = $this->calcService->summarize($kpiData->pluck('status')->all());
         $kpiByCategory = $kpiData->groupBy(fn ($i) => $i['indicator']->category);
