@@ -12,7 +12,6 @@ class MockRduDataSource implements RduDataSourceInterface
         'KPI03' => ['numerator' => 182, 'denominator' => 200],  // Wound no antibiotic
         'KPI04' => ['numerator' => 97,  'denominator' => 400],  // IPD antibiotic use
         'KPI05' => ['numerator' => 61,  'denominator' => 80],   // CAP appropriate antibiotic
-        'KPI06' => ['numerator' => 881, 'denominator' => 1000], // National drug list value
         'KPI07' => ['numerator' => 18,  'denominator' => 1000], // Duplicate NSAIDs
         'KPI08' => ['numerator' => 71,  'denominator' => 87],   // Asthma patients on ICS
         'KPI09' => ['numerator' => 23,  'denominator' => 892],  // CKD stage 3+ patients on NSAIDs

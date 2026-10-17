@@ -211,7 +211,7 @@ class HdcComparisonTest extends TestCase
         Http::fake();
 
         $this->actingAs($this->user())
-            ->getJson(route('dashboard.kpi.hdc', ['code' => 'KPI06', 'year' => 2569]))
+            ->getJson(route('dashboard.kpi.hdc', ['code' => 'KPI07', 'year' => 2569]))
             ->assertOk()
             ->assertJsonPath('linked', false);
 
@@ -247,8 +247,8 @@ class HdcComparisonTest extends TestCase
     public function test_every_kpi_page_has_the_compare_button(): void
     {
         $user = $this->user();
-        foreach (range(1, 13) as $n) {
-            $this->actingAs($user)->get(route('dashboard.kpi', sprintf('KPI%02d', $n)))
+        foreach (self::ACTIVE_KPI_CODES as $code) {
+            $this->actingAs($user)->get(route('dashboard.kpi', $code))
                 ->assertOk()->assertSee('id="hdcCompareBtn"', false);
         }
     }

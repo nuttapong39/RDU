@@ -61,7 +61,7 @@
                       {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
                aria-current="{{ request()->routeIs('dashboard') ? 'page' : 'false' }}">
                 <span class="msi text-[1.1rem]">dashboard</span>
-                <span>ภาพรวม 13 ตัวชี้วัด</span>
+                <span>ภาพรวม {{ $activeKpiCount }} ตัวชี้วัด</span>
             </a>
 
             <a href="{{ route('dashboard.counting-methods') }}"

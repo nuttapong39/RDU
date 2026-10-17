@@ -1,5 +1,5 @@
 /**
- * Login page 3D scene: a glowing "HOSxP XE" core with the 13 KPIs orbiting it as glass capsules.
+ * Login page 3D scene: a glowing "HOSxP XE" core with every active KPI orbiting it as a glass capsule.
  * Capsule colour = KPI category (same colours as the dashboard); the ring around it = the KPI's status
  * from the last overview (CONTEXT.md: ภาพสถานะล่าสุด). Light particles stream from the core to every
  * capsule: data flowing from HOSxP into the indicators.

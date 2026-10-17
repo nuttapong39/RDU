@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'ภาพรวม 13 ตัวชี้วัด RDU')
+@section('title', 'ภาพรวม '.$kpiData->count().' ตัวชี้วัด RDU')
 
 @section('content')
 
@@ -270,7 +270,7 @@
     </div>
     <div class="p-4">
         <div style="height: 340px;">
-            <canvas id="overviewChart" aria-label="กราฟเปรียบเทียบผลลัพธ์ 13 ตัวชี้วัด" role="img"></canvas>
+            <canvas id="overviewChart" aria-label="กราฟเปรียบเทียบผลลัพธ์ {{ $kpiData->count() }} ตัวชี้วัด" role="img"></canvas>
         </div>
     </div>
 </div>

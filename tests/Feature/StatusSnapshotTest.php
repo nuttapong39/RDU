@@ -72,8 +72,8 @@ class StatusSnapshotTest extends TestCase
         $snapshot = $this->snapshot();
 
         $this->assertNull($snapshot['takenAt']);
-        $this->assertCount(13, $snapshot['kpis']);
-        $this->assertSame(13, $snapshot['counts']['na']);
+        $this->assertCount(count(self::ACTIVE_KPI_CODES), $snapshot['kpis']);
+        $this->assertSame(count(self::ACTIVE_KPI_CODES), $snapshot['counts']['na']);
     }
 
     public function test_the_overview_of_the_current_fiscal_year_records_the_snapshot(): void
@@ -101,7 +101,7 @@ class StatusSnapshotTest extends TestCase
         );
         app(StatusSnapshotService::class)->record($this->currentYear() - 1, $kpiData);
 
-        $this->assertSame(13, $this->snapshot()['counts']['na']);
+        $this->assertSame(count(self::ACTIVE_KPI_CODES), $this->snapshot()['counts']['na']);
     }
 
     // ---- The login page ----
@@ -134,7 +134,7 @@ class StatusSnapshotTest extends TestCase
 
         $this->assertSame(1, preg_match('#<script type="application/json" id="rduSceneData">(.*?)</script>#s', $html, $m));
         $data = json_decode($m[1], true);
-        $this->assertCount(13, $data['kpis']);
+        $this->assertCount(count(self::ACTIVE_KPI_CODES), $data['kpis']);
         foreach ($data['kpis'] as $kpi) {
             $this->assertSame(['code', 'name', 'category', 'status'], array_keys($kpi));
         }
@@ -155,7 +155,7 @@ class StatusSnapshotTest extends TestCase
     {
         Storage::disk('local')->put('status_snapshot.json', json_encode(['year' => $this->currentYear(), 'statuses' => ['KPI09' => 'pass']]));
 
-        $this->assertSame(13, $this->snapshot()['counts']['na']);
+        $this->assertSame(count(self::ACTIVE_KPI_CODES), $this->snapshot()['counts']['na']);
         $this->get(route('login'))->assertOk()->assertSee('ยังไม่มีข้อมูลสถานะ', false);
     }
 

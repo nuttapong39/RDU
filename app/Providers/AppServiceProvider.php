@@ -7,13 +7,13 @@ use App\DataSources\MockRduDataSource;
 use App\DataSources\RduDataSourceInterface;
 use App\DataSources\UnconfiguredRduDataSource;
 use App\Database\ReadonlyConnection;
+use App\Models\RduIndicator;
 use App\Queries\Kpi\Antibiotic\AccidentWoundAntibioticQuery;
 use App\Queries\Kpi\Antibiotic\AcuteDiarrheaAntibioticQuery;
 use App\Queries\Kpi\Antibiotic\DiarrheaNoAntibioticQuery;
 use App\Queries\Kpi\Antibiotic\NormalDeliveryAntibioticQuery;
 use App\Queries\Kpi\Antibiotic\RespiratoryInfectionAntibioticQuery;
 use App\Queries\Kpi\ChronicDisease\MetforminDiabetesQuery;
-use App\Queries\Kpi\DrugQuality\NationalDrugListValueQuery;
 use App\Queries\Kpi\PatientSafety\AsthmaInhaledCorticosteroidQuery;
 use App\Queries\Kpi\PatientSafety\ChildRespiratoryNonSedatingQuery;
 use App\Queries\Kpi\PatientSafety\CkdNsaidQuery;
@@ -21,6 +21,7 @@ use App\Queries\Kpi\PatientSafety\ElderlyLongActingBenzodiazepineQuery;
 use App\Queries\Kpi\PatientSafety\NsaidDuplicationQuery;
 use App\Queries\Kpi\PatientSafety\RasDualBlockadeQuery;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -34,7 +35,6 @@ class AppServiceProvider extends ServiceProvider
                 'KPI03' => $app->make(NormalDeliveryAntibioticQuery::class),
                 'KPI04' => $app->make(RespiratoryInfectionAntibioticQuery::class),
                 'KPI05' => $app->make(AcuteDiarrheaAntibioticQuery::class),
-                'KPI06' => $app->make(NationalDrugListValueQuery::class),
                 'KPI07' => $app->make(NsaidDuplicationQuery::class),
                 'KPI08' => $app->make(AsthmaInhaledCorticosteroidQuery::class),
                 'KPI09' => $app->make(CkdNsaidQuery::class),
@@ -76,6 +76,9 @@ class AppServiceProvider extends ServiceProvider
 
             return $connection;
         });
+
+        // The sidebar's "ภาพรวม N ตัวชี้วัด" follows the KPIs switched on (rdu_indicators.is_active).
+        View::composer('layouts.dashboard', fn ($view) => $view->with('activeKpiCount', RduIndicator::active()->count()));
 
         Gate::define('manage-settings', fn ($user) => in_array(
             strtolower((string) $user->username),

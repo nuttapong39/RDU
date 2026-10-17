@@ -333,7 +333,7 @@ KPI Card ขณะโหลด:
 | Route | หน้า | Middleware |
 |---|---|---|
 | `/login` | หน้า Login | guest |
-| `/dashboard` | Overview 13 KPI | auth |
+| `/dashboard` | Overview of every active KPI | auth |
 | `/dashboard/kpi/{code}` | KPI Detail | auth |
 | `/reports` | ออกรายงาน | auth |
 | `/admin/settings/database` | DB Config | auth + admin |

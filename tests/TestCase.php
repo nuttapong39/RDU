@@ -6,6 +6,12 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
+    /** The KPIs the seeder switches on — every code KPI01–KPI13 except KPI06, removed 2026-10-17. */
+    protected const ACTIVE_KPI_CODES = [
+        'KPI01', 'KPI02', 'KPI03', 'KPI04', 'KPI05', 'KPI07',
+        'KPI08', 'KPI09', 'KPI10', 'KPI11', 'KPI12', 'KPI13',
+    ];
+
     /**
      * Every test runs against a throw-away storage directory. Tests such as DatabaseConfigTest create
      * and delete storage/app/private/config/rdu_database.json — pointed at the real storage path they

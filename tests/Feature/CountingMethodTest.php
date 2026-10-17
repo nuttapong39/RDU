@@ -160,7 +160,7 @@ class CountingMethodTest extends TestCase
     {
         $response = $this->actingAs($this->user())->get(route('dashboard.counting-methods'))->assertOk();
 
-        foreach (RduIndicator::pluck('code') as $code) {
+        foreach (RduIndicator::active()->pluck('code') as $code) {
             $response->assertSee('id="method-'.$code.'"', false);
         }
         $response->assertSee('ยังรอนิยามจากเภสัชกร', false);

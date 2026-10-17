@@ -26,7 +26,7 @@ class PerformanceTest extends TestCase
     {
         $indicators = RduIndicator::active()->ordered()->get();
 
-        // Pre-populate stored results for all 13 KPIs
+        // Pre-populate stored results for every active KPI
         foreach ($indicators as $ind) {
             RduIndicatorResult::factory()->create([
                 'indicator_id' => $ind->id,
@@ -47,7 +47,7 @@ class PerformanceTest extends TestCase
             ->filter(fn ($q) => str_contains($q['query'], 'rdu_indicator_results'))
             ->values();
 
-        // Must be exactly one batch SELECT, not 13 individual SELECTs
+        // Must be exactly one batch SELECT, not one SELECT per KPI
         $this->assertCount(1, $resultsQueries, 'Expected exactly 1 batch query to rdu_indicator_results');
     }
 
@@ -71,14 +71,14 @@ class PerformanceTest extends TestCase
         $this->assertCount(0, $resultsQueries, 'month=0 must not query rdu_indicator_results');
     }
 
-    public function test_get_or_calculate_many_returns_all_13_kpis(): void
+    public function test_get_or_calculate_many_returns_every_active_kpi(): void
     {
         $indicators = RduIndicator::active()->ordered()->get();
         $service    = app(RduCalculationService::class);
 
         $result = $service->getOrCalculateMany($indicators, 2568, 3);
 
-        $this->assertCount(13, $result);
+        $this->assertCount(count(self::ACTIVE_KPI_CODES), $result);
     }
 
     public function test_get_or_calculate_many_returns_from_cache_true_for_stored(): void
@@ -138,7 +138,7 @@ class PerformanceTest extends TestCase
             ->filter(fn ($q) => str_contains($q['query'], 'rdu_indicator_results'))
             ->values();
 
-        // With getOrCalculateMany(): only 1 batch SELECT (not 13)
+        // With getOrCalculateMany(): only 1 batch SELECT (not one per KPI)
         $this->assertLessThanOrEqual(2, $resultsQueries->count(),
             "Expected ≤2 queries to rdu_indicator_results, got {$resultsQueries->count()}");
     }

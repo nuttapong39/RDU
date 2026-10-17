@@ -73,7 +73,7 @@ KPI ที่ยังไม่มีตาราง HDC คู่กัน ย�
   - KPI05 → `s_rdu7`, `target` / `result`
   - KPI08 → `s_rdu15` (asthma, ICS), KPI09 → `s_rdu14` (CKD stage ≥ 3, NSAIDs), KPI10 → `s_rdu12` (metformin), KPI13 → `s_rdu16` (elderly, long-acting benzodiazepine) — linked 2026-09-25 together with corrected seed names/targets
   - KPI12 → `s_rdu10`, published per month: denominator = sum of `t10`…`t09`, numerator = sum of `r10`…`r09` (linked 2026-10-09)
-  - KPI06, KPI07, KPI11 → not linked (the modal shows the "no HDC equivalent yet" state); no HDC table with a matching definition was found
+  - KPI07, KPI11 → not linked (KPI06 was removed on 2026-10-17) (the modal shows the "no HDC equivalent yet" state); no HDC table with a matching definition was found
 - **HDC as a stand-in (added 2026-09-25).** A KPI whose HOSxP query is not implemented yet (not listed in `rdu.hosxp_kpis`) but is linked to an HDC table shows our hospital's HDC whole-year figure everywhere the KPI appears (KPI page, overview card, sidebar), labelled as HDC. It is always the whole-year figure, with a note when a quarter or month is selected; per-quarter cards, the visit donut and the quarterly split stay empty. A KPI listed in `rdu.hosxp_kpis` always uses HOSxP. When HDC is unreachable, the KPI shows "no data" with a note, and HDC is not retried for 5 minutes on dashboard pages (the modal still retries on demand).
 - **Configuration.** Hospital code (default `11179`, confirmed by the user) and province code (default `55`, Nan) come from environment config, not code.
 - **District labels.** Hospitals are labelled "อ.<district> (<hospcode>)". The district name comes from the first 4 digits of `areacode` via a fixed map of Nan's 15 district codes (5501 เมืองน่าน … 5515 เฉลิมพระเกียรติ). An unknown code falls back to the hospital code alone.
@@ -91,7 +91,7 @@ KPI ที่ยังไม่มีตาราง HDC คู่กัน ย�
   - KPI03: HDC numerator converted to "not received"
   - KPI02: uses the second column pair and has no HOSxP side
   - A KPI without a HOSxP query shows its HDC whole-year figure on its page and the overview, never spread over quarter cards; a KPI with a HOSxP query ignores HDC
-  - An unlinked KPI (e.g. KPI06): the "not linked" state, and HDC is never called
+  - An unlinked KPI (e.g. KPI07): the "not linked" state, and HDC is never called
   - HDC timeout or HTTP error: the error state, not a 500
   - A second request is served from cache (the HDC fake is hit once)
   - A guest is redirected to login
@@ -101,7 +101,7 @@ KPI ที่ยังไม่มีตาราง HDC คู่กัน ย�
 ## Out of Scope
 
 - Monthly or quarterly HDC comparison (HDC publishes fiscal-year totals only)
-- Linking KPI06, KPI07, KPI11, KPI12 to HDC tables (no matching table found)
+- Linking KPI07, KPI11, KPI12 to HDC tables (no matching table found)
 - Storing HDC history in the application database, or a scheduled sync job
 - Full hospital names (HDC does not provide them; districts are used instead)
 - Comparing with provinces other than the configured one, or a national view

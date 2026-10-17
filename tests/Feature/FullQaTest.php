@@ -104,13 +104,12 @@ class FullQaTest extends TestCase
         $response->assertSee('ไม่มีข้อมูล', false);
     }
 
-    public function test_dashboard_shows_links_to_all_13_kpi_detail_pages(): void
+    public function test_dashboard_shows_links_to_every_active_kpi_detail_page(): void
     {
         $user = User::factory()->create();
         $response = $this->actingAs($user)->get(route('dashboard'))->assertOk();
 
-        foreach (range(1, 13) as $n) {
-            $code = 'KPI' . str_pad($n, 2, '0', STR_PAD_LEFT);
+        foreach (self::ACTIVE_KPI_CODES as $code) {
             $response->assertSee(route('dashboard.kpi', $code), false);
         }
     }
@@ -174,7 +173,7 @@ class FullQaTest extends TestCase
     }
 
     // =========================================================================
-    // KPI Detail Pages — All 13
+    // KPI Detail Pages — every active KPI
     // =========================================================================
 
     /**
@@ -191,8 +190,8 @@ class FullQaTest extends TestCase
     public static function kpiCodeProvider(): array
     {
         return array_combine(
-            array_map(fn ($n) => 'KPI' . str_pad($n, 2, '0', STR_PAD_LEFT), range(1, 13)),
-            array_map(fn ($n) => ['KPI' . str_pad($n, 2, '0', STR_PAD_LEFT)], range(1, 13))
+            self::ACTIVE_KPI_CODES,
+            array_map(fn ($code) => [$code], self::ACTIVE_KPI_CODES)
         );
     }
 

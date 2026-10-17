@@ -22,7 +22,7 @@ class HdcComparisonController extends Controller
 
     public function show(Request $request, string $code): JsonResponse
     {
-        $indicator = RduIndicator::where('code', strtoupper($code))->firstOrFail();
+        $indicator = RduIndicator::active()->where('code', strtoupper($code))->firstOrFail();
         $year      = $this->sanitizeYear((int) $request->input('year', $this->calcService->currentFiscalYear()));
 
         try {

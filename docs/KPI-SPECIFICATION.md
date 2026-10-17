@@ -5,7 +5,8 @@
 
 ## ภาพรวม
 
-ระบบ RDU Dashboard ติดตาม **13 ตัวชี้วัด (KPI)** การใช้ยาอย่างสมเหตุผล (Rational Drug Use)
+ระบบ RDU Dashboard ติดตาม **12 ตัวชี้วัด (KPI)** การใช้ยาอย่างสมเหตุผล (Rational Drug Use)
+— รหัส KPI01–KPI13 โดยไม่มี KPI06 ซึ่งตัดออกเมื่อ 2026-10-17 (ดู KPI-06 ด้านล่าง)
 
 ข้อมูลทั้งหมดอ่านมาจาก HOSxP Database ผ่าน **Read-Only Connection** เท่านั้น
 
@@ -58,7 +59,7 @@ trend, calculated_at, created_at
 
 ---
 
-## รายการ 13 KPI (Placeholder — รอยืนยัน)
+## รายการ KPI (KPI01–KPI13 ยกเว้น KPI06)
 
 ### หมวด A: ยาปฏิชีวนะใน OPD (Antibiotic in Outpatient)
 
@@ -151,7 +152,12 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-06: การใช้ยาปฏิชีวนะใน Pyelonephritis / UTI เฉียบพลัน (OPD)
+#### KPI-06: การใช้ยาปฏิชีวนะใน Pyelonephritis / UTI เฉียบพลัน (OPD) ⛔ ตัดออกแล้ว (2026-10-17)
+
+ไม่ติดตามแล้ว — ไม่มีแหล่งข้อมูลที่ใช้ได้ (ยังไม่เคยมี query) แถว KPI06 ใน `rdu_indicators` คงไว้แต่ `is_active = false`
+(seeder ตั้งไว้) ทุกหน้าจึงไม่แสดง และ URL ของ KPI06 ตอบ 404 · รหัสของ KPI อื่นไม่เลื่อน · ไฟล์ stub ของ query ถูกถอดการลงทะเบียน
+ข้อมูลเดิมด้านล่างเก็บไว้เป็นประวัติ
+
 ```
 ชื่อ:         ร้อยละการใช้ยาปฏิชีวนะในผู้ป่วยกลุ่ม Pylonephritis,
               ปัสสาวะอักเสบเฉียบพลัน (ผู้ป่วยนอก)
@@ -328,7 +334,7 @@ HDC:          s_rdu16 (target / result) ใช้ในปุ่ม "เที�
 
 ---
 
-## สรุปตาราง 13 KPI
+## สรุปตาราง KPI
 
 | # | Code | ชื่อย่อ | Target | Direction | Category |
 |---|---|---|---|---|---|
@@ -337,7 +343,7 @@ HDC:          s_rdu16 (target / result) ใช้ในปุ่ม "เที�
 | KPI-03 | wound_no_antibiotic | ATB ในหญิงคลอดปกติครบกำหนด | ≥ 80% | สูงดี | antibiotic_opd |
 | KPI-04 | ipd_antibiotic_use | ATB ใน URI/หลอดลมอักเสบเฉียบพลัน (OPD) | ≤ 30% | ต่ำดี | antibiotic_ipd |
 | KPI-05 | cap_appropriate_antibiotic | ATB ในอุจจาระร่วงเฉียบพลัน | ≥ 80% | สูงดี | antibiotic_ipd |
-| KPI-06 | national_drug_list_value | ATB ใน Pyelonephritis/UTI เฉียบพลัน | ≥ 80% | สูงดี | drug_quality |
+| ~~KPI-06~~ | — | ⛔ ตัดออก 2026-10-17 (ATB ใน Pyelonephritis/UTI เฉียบพลัน) | — | — | — |
 | KPI-07 | nsaid_duplication | NSAIDs ซ้ำซ้อน (OPD) | ≤ 5% | ต่ำดี | patient_safety |
 | KPI-08 | asthma_ics | Inhaled Corticosteroid ในผู้ป่วยหืด (นับเป็นคน) | ≥ 80% | สูงดี | patient_safety |
 | KPI-09 | ckd_nsaids | NSAIDs ในโรคไตเรื้อรังระดับ 3+ (นับเป็นคน) | ≤ 10% | ต่ำดี | patient_safety |
@@ -363,8 +369,6 @@ app/
         │   ├── NormalDeliveryAntibioticQuery.php ← KPI-03
         │   ├── RespiratoryInfectionAntibioticQuery.php ← KPI-04
         │   └── AcuteDiarrheaAntibioticQuery.php ← KPI-05
-        ├── DrugQuality/
-        │   └── NationalDrugListValueQuery.php  ← KPI-06
         ├── PatientSafety/
         │   ├── NsaidDuplicationQuery.php       ← KPI-07
         │   ├── AsthmaInhaledCorticosteroidQuery.php ← KPI-08
@@ -442,9 +446,9 @@ Chart.js
 
 | Phase | เนื้อหา |
 |---|---|
-| Phase 5 | Dashboard Foundation: Layout, Sidebar, 13 KPI Cards, Filters (Mock Data) |
+| Phase 5 | Dashboard Foundation: Layout, Sidebar, KPI Cards, Filters (Mock Data) |
 | Phase 6 | KPI Engine: KpiQueryInterface, Query classes (ทั้ง 13 ตัว), RduCalculationService |
-| Phase 7 | KPI Detail: Detail Page ทั้ง 13 KPI พร้อม Chart และ Data Table |
+| Phase 7 | KPI Detail: Detail Page ทุก KPI พร้อม Chart และ Data Table |
 | Phase 8 | Reports: Excel, CSV, PDF Export |
 
 > **Note:** Query รายละเอียดของแต่ละ KPI จะ Plan แยกต่างหากหลัง Roadmap นี้เสร็จสิ้น

@@ -106,7 +106,7 @@ class DashboardController extends Controller
         $quarter = $this->sanitizeQuarter($request->input('quarter'));
         $month   = $quarter ? 0 : $this->sanitizeMonth((int) $request->input('month', 0));
 
-        $indicator = RduIndicator::where('code', strtoupper($code))->firstOrFail();
+        $indicator = RduIndicator::active()->where('code', strtoupper($code))->firstOrFail();
         $trendData = $this->calcService->getTrend($indicator, $year);
 
         $allIndicators = RduIndicator::active()->ordered()->get();

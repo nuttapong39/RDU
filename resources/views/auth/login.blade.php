@@ -238,7 +238,7 @@ a{text-decoration:none;color:inherit}
   <div class="blob b3"></div>
   <div class="grid-dots"></div>
 
-  {{-- 3D scene: 13 KPI capsules orbiting HOSxP XE, ring colour = last overview's status (CONTEXT.md: ภาพสถานะล่าสุด) --}}
+  {{-- 3D scene: a capsule per active KPI orbiting HOSxP XE, ring colour = last overview's status (CONTEXT.md: ภาพสถานะล่าสุด) --}}
   <div id="rduScene" class="rdu-scene" aria-hidden="true"></div>
   {{-- Above the text and the card (the scene layer sits below them) --}}
   <div id="rduSceneTooltip" class="scene-tip" aria-hidden="true" hidden></div>

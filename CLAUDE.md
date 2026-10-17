@@ -1,7 +1,7 @@
 # CLAUDE.md — RDU Dashboard
 ## โรงพยาบาลเชียงกลาง จังหวัดน่าน
 
-ระบบ **RDU Dashboard** (Rational Drug Use) ติดตาม 13 ตัวชี้วัดการใช้ยาอย่างสมเหตุผล
+ระบบ **RDU Dashboard** (Rational Drug Use) ติดตาม 12 ตัวชี้วัดการใช้ยาอย่างสมเหตุผล (รหัส KPI01–KPI13 ไม่มี KPI06 ซึ่งตัดออก 2026-10-17)
 พัฒนาด้วย Laravel บน XAMPP (dev) ใช้งานจริงบน server AlmaLinux (production) เชื่อมต่อ HOSxP Database แบบ **อ่านอย่างเดียวเท่านั้น**
 
 ---

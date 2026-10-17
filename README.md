@@ -81,7 +81,7 @@ Script อัจฉริยะ: ตรวจว่าอะไรเปลี�
 
 ## 🎯 Features
 
-- **13 KPI Indicators** — Antibiotic (5), DrugQuality (3), PatientSafety (4), ChronicDisease (1)
+- **12 KPI Indicators** (KPI01–KPI13 without KPI06, removed 2026-10-17) — Antibiotic (5), PatientSafety (6), ChronicDisease (1)
 - **HOSxP Integration** — Read-only ผ่าน VIEW schema (`rdu_kpi`) ที่จำกัดสิทธิ์เฉพาะ column ที่ใช้
 - **Dashboard**  — Welcome banner, category summary, KPI grid grouped by category, trend charts (Chart.js)
 - **KPI Detail** — Hero metric card, 12-month trend, drill-down table, export (Excel/CSV/PDF)
@@ -129,7 +129,7 @@ RDU Dashboard เชื่อมต่อ HOSxP แบบ **อ่านอย�
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Deployment + troubleshooting คู่มือละเอียด |
 | [CLAUDE.md](./CLAUDE.md) | Project overview + coding conventions |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Data flow + architecture |
-| [docs/KPI-SPECIFICATION.md](./docs/KPI-SPECIFICATION.md) | 13 KPI definitions + formulas |
+| [docs/KPI-SPECIFICATION.md](./docs/KPI-SPECIFICATION.md) | KPI definitions + formulas |
 | [docs/DATABASE-SECURITY.md](./docs/DATABASE-SECURITY.md) | Read-only enforcement rules |
 
 ---

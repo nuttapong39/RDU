@@ -62,6 +62,8 @@ class RduIndicatorSeeder extends Seeder
                 'sort_order' => 5,
             ],
             // ---- KPI06-08 ----
+            // KPI06 is no longer tracked (removed 2026-10-17: no data source). The row stays, switched off,
+            // so its stored results are kept and the other KPIs keep their codes.
             [
                 'code' => 'KPI06',
                 'name' => 'ร้อยละการใช้ยาปฏิชีวนะในผู้ป่วยกลุ่ม Pylonephritis, ปัสสาวะอักเสบเฉียบพลัน (ผู้ป่วยนอก)',
@@ -71,6 +73,7 @@ class RduIndicatorSeeder extends Seeder
                 'target_value' => 80.00,
                 'target_direction' => 'higher',
                 'sort_order' => 6,
+                'is_active' => false,
             ],
             [
                 'code' => 'KPI07',
@@ -149,8 +152,7 @@ class RduIndicatorSeeder extends Seeder
         foreach ($indicators as $data) {
             DB::table('rdu_indicators')->updateOrInsert(
                 ['code' => $data['code']],
-                array_merge($data, [
-                    'is_active' => true,
+                array_merge(['is_active' => true], $data, [
                     'unit' => '%',
                     'created_at' => now(),
                     'updated_at' => now(),

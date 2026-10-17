@@ -65,12 +65,12 @@ class DashboardTest extends TestCase
 
     // ---- Dashboard content ----
 
-    public function test_dashboard_shows_13_kpi_cards(): void
+    public function test_dashboard_shows_the_active_kpi_cards(): void
     {
         $user = User::factory()->create();
         $response = $this->actingAs($user)->get(route('dashboard'));
         $response->assertOk();
-        // All 13 KPI codes should appear in the page
+        // Active KPI codes should appear in the page
         foreach (['KPI01', 'KPI05', 'KPI09', 'KPI13'] as $code) {
             $response->assertSee($code);
         }

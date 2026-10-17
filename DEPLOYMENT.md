@@ -52,7 +52,7 @@ ssh -t nuttapong@192.168.1.244 /var/www/rdu/scripts/deploy.sh
 
 `scripts/deploy.sh` ตรวจความปลอดภัย (`APP_ENV=production`, `DB_DATABASE=rdu_dashboard`, ไม่มีไฟล์ที่ git ติดตามถูกแก้บน server)
 → เปิดหน้าปิดปรับปรุง → ดึงโค้ด → `composer install --no-dev` → `npm ci && npm run build` → `migrate --force`
-→ `db:seed --class=RduIndicatorSeeder` (ชื่อ/เป้าของ 13 ตัวชี้วัด — อัปเดตทับ ไม่ลบอะไร) → cache + `cache:clear`
+→ `db:seed --class=RduIndicatorSeeder` (ชื่อ/เป้า/การเปิดใช้ของทุกตัวชี้วัด — อัปเดตทับ ไม่ลบอะไร, KPI06 ถูกปิด) → cache + `cache:clear`
 → `reload php-fpm` → เปิดเว็บ
 
 - ล้มเหลวก่อนเปลี่ยนโค้ด → เว็บกลับมาใช้โค้ดเดิมเอง

@@ -60,10 +60,10 @@ class HosxpQueryTest extends TestCase
 
     // ---- HosxpRduDataSource dispatcher ----
 
-    public function test_hosxp_data_source_resolves_all_13_kpi_codes(): void
+    public function test_hosxp_data_source_resolves_every_active_kpi_code(): void
     {
         // When no JSON config is present, AppServiceProvider binds MockRduDataSource.
-        // This test verifies that HosxpRduDataSource can be constructed with all 13 entries.
+        // This test verifies that HosxpRduDataSource can be constructed with an entry for every active KPI.
         $source = app(\App\DataSources\HosxpRduDataSource::class);
         $this->assertInstanceOf(\App\DataSources\HosxpRduDataSource::class, $source);
     }
@@ -94,7 +94,6 @@ class HosxpQueryTest extends TestCase
             'KPI03' => [\App\Queries\Kpi\Antibiotic\NormalDeliveryAntibioticQuery::class],
             'KPI04' => [\App\Queries\Kpi\Antibiotic\RespiratoryInfectionAntibioticQuery::class],
             'KPI05' => [\App\Queries\Kpi\Antibiotic\AcuteDiarrheaAntibioticQuery::class],
-            'KPI06' => [\App\Queries\Kpi\DrugQuality\NationalDrugListValueQuery::class],
             'KPI07' => [\App\Queries\Kpi\PatientSafety\NsaidDuplicationQuery::class],
             'KPI08' => [\App\Queries\Kpi\PatientSafety\AsthmaInhaledCorticosteroidQuery::class],
             'KPI09' => [\App\Queries\Kpi\PatientSafety\CkdNsaidQuery::class],

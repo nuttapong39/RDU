@@ -16,7 +16,7 @@ class HdcDataService
      * KPI code => HDC table and the columns holding the denominator / numerator — one column, or a list
      * of columns that are summed (tables published per month, e.g. s_rdu10's t10…t09 / r10…r09).
      * `inverted`: HDC counts cases that RECEIVED an antibiotic while our numerator counts cases that did not.
-     * Not linked yet (no matching HDC table found): KPI06, KPI07. KPI11 matches s_rdu18 but HDC counts this
+     * Not linked yet (no matching HDC table found): KPI07 (KPI06 was removed). KPI11 matches s_rdu18 but HDC counts this
      * hospital's numerator as 0 all year (likely an unmapped Cetirizine drug code), so it is not shown.
      */
     private const MAPPING = [
