@@ -81,19 +81,28 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-02: การใช้ยาปฏิชีวนะในบาดแผลจากอุบัติเหตุ (ไม่รวมบางประเภท)
+#### KPI-02: การใช้ยาปฏิชีวนะในบาดแผลสดจากอุบัติเหตุ (ไม่รวมบางประเภท) ✅ implement แล้ว (2026-10)
 ```
-ชื่อ:         ร้อยละการใช้ยาปฏิชีวนะในบาดแผลจากอุบัติเหตุ
-              ไม่บวมรวมแผลสัตว์กัด แผลลึกถึงกล้ามเนื้อ
+ชื่อ:         ร้อยละการใช้ยาปฏิชีวนะในบาดแผลสดจากอุบัติเหตุ ไม่นับรวมแผลสัตว์กัด แผลลึกถึงกล้ามเนื้อ
               และแผลไฟไหม้น้ำร้อนลวก
-Code:         diarrhea_no_antibiotic
-Numerator:    จำนวนผู้ป่วยอุจจาระร่วงที่ไม่ได้รับยาปฏิชีวนะ
-Denominator:  จำนวนผู้ป่วยอุจจาระร่วงเฉียบพลันทั้งหมด
-Target:       ≥ 80%
-Direction:    สูงดี (higher_better)
-Category:     antibiotic_opd
-HOSxP Tables: [TBD]
-Query:        [TBD — Plan แยกต่างหาก]
+Numerator:    visit ในตัวส่วนที่ได้รับยาปฏิชีวนะชนิดกินหรือฉีดตามรายการ (qty > 0)
+Denominator:  visit ผู้ป่วยนอก (ovst.an IS NULL) ที่มี "ทั้ง" รหัสลักษณะการบาดเจ็บตามชุดรหัสของ KPI02 "และ"
+              รหัสสาเหตุภายนอก (V / W / X00-X59) ในวิสิตเดียวกัน ตำแหน่งใดก็ได้ — เหมือนหลักของ KPI01 (ADR 0001)
+              ตัดออกทั้งวิสิตถ้ามีรหัสขึ้นต้นด้วย W54-W56 (สัตว์กัด), T20-T32 (ไฟไหม้น้ำร้อนลวก) หรือ
+              S16/S46/S56/S66/S76/S86/S96/S390/T095/T115/T135/T146 (กล้ามเนื้อ/เอ็น)
+Target:       ≤ 40%
+Direction:    ต่ำดี (lower)
+Category:     Antibiotic · กลุ่มยาของตัวชี้วัด: ยาปฏิชีวนะ
+ยาปฏิชีวนะ:   เภสัชกรกำหนด 28 รหัส ชนิดกิน/ฉีดล้วน — ต่างจากลิสต์ของ KPI01 (มี Clindamycin, Levofloxacin,
+              Nitrofurantoin · ไม่มียาตา/หู และยาที่ไม่ใช่ปฏิชีวนะ)
+ชุดรหัสแผล:  ต่างจาก KPI01 (รวม S05 แผลที่ตา, S07/S08, T13/T14 ทั้งหมด) จึงไม่ใช่ส่วนย่อยของ KPI01 พอดี
+HOSxP Tables: ovst, ovstdiag, opitemrece, drugitems, patient, doctor, pttype, spclty, kskdepartment
+Query:        app/Queries/Kpi/Antibiotic/FreshAccidentWoundAntibioticQuery.php · docs/SQL_KPI/KPI2.sql
+              (ต้นฉบับของเภสัชกรอยู่ใน git commit 0f565ab — ใช้ "แผล OR สาเหตุ" ได้ 899 / 2,401 ห่าง HDC เกือบเท่าตัว
+              — เหตุผลที่เปลี่ยนเป็น AND และใช้รายการยาของตัวเอง: docs/adr/0003)
+HDC:          s_rdu8 (target1 / result1) ใช้ในปุ่ม "เทียบ HDC"
+ผลปีงบ 2569:  750 / 1,437 visit (52.2%) — HDC 655 / 1,309 (50.0%) · ไตรมาส 185/301, 168/289, 230/410, 167/437
+ผลปีงบ 2568:  801 / 1,516 visit (52.8%) — HDC 704 / 1,348 (52.2%)
 ```
 
 ---
@@ -339,7 +348,7 @@ HDC:          s_rdu16 (target / result) ใช้ในปุ่ม "เที�
 | # | Code | ชื่อย่อ | Target | Direction | Category |
 |---|---|---|---|---|---|
 | KPI-01 | uri_no_antibiotic | ATB ในแผลอุบัติเหตุ (ทุกชนิด) | ≥ 80% | สูงดี | antibiotic_opd |
-| KPI-02 | diarrhea_no_antibiotic | ATB ในแผลอุบัติเหตุ (ไม่รวมบางประเภท) | ≥ 80% | สูงดี | antibiotic_opd |
+| KPI-02 | fresh_accident_wound_antibiotic | ATB ในบาดแผลสดจากอุบัติเหตุ (ไม่รวมสัตว์กัด/ไฟไหม้/แผลลึก) | ≤ 40% | ต่ำดี | antibiotic_opd |
 | KPI-03 | wound_no_antibiotic | ATB ในหญิงคลอดปกติครบกำหนด | ≥ 80% | สูงดี | antibiotic_opd |
 | KPI-04 | ipd_antibiotic_use | ATB ใน URI/หลอดลมอักเสบเฉียบพลัน (OPD) | ≤ 30% | ต่ำดี | antibiotic_ipd |
 | KPI-05 | cap_appropriate_antibiotic | ATB ในอุจจาระร่วงเฉียบพลัน | ≥ 80% | สูงดี | antibiotic_ipd |
@@ -365,7 +374,7 @@ app/
         ├── KpiQueryInterface.php          ← Interface กำหนด contract
         ├── Antibiotic/
         │   ├── AccidentWoundAntibioticQuery.php ← KPI-01
-        │   ├── DiarrheaNoAntibioticQuery.php  ← KPI-02
+        │   ├── FreshAccidentWoundAntibioticQuery.php ← KPI-02
         │   ├── NormalDeliveryAntibioticQuery.php ← KPI-03
         │   ├── RespiratoryInfectionAntibioticQuery.php ← KPI-04
         │   └── AcuteDiarrheaAntibioticQuery.php ← KPI-05

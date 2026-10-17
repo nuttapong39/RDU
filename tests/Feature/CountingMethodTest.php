@@ -50,6 +50,7 @@ class CountingMethodTest extends TestCase
 
     public function test_a_kpi_without_a_query_has_no_counting_method_yet(): void
     {
+        $this->withKpiAwaitingQuery('KPI02');
         $this->assertNull($this->describe('KPI02')['method']);
     }
 
@@ -148,6 +149,7 @@ class CountingMethodTest extends TestCase
 
     public function test_a_kpi_without_a_query_says_it_awaits_the_pharmacist(): void
     {
+        $this->withKpiAwaitingQuery('KPI02');
         $kpi02 = $this->kpi('KPI02');
 
         $this->actingAs($this->user())->get(route('dashboard.kpi', ['code' => 'KPI02', 'year' => 2569]))
@@ -163,7 +165,7 @@ class CountingMethodTest extends TestCase
         foreach (RduIndicator::active()->pluck('code') as $code) {
             $response->assertSee('id="method-'.$code.'"', false);
         }
-        $response->assertSee('ยังรอนิยามจากเภสัชกร', false);
+        $response->assertDontSee('ยังรอนิยามจากเภสัชกร', false);   // every active KPI has its definition
     }
 
     public function test_the_counting_methods_page_requires_login(): void

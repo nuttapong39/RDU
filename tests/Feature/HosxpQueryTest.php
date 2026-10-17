@@ -90,7 +90,7 @@ class HosxpQueryTest extends TestCase
     {
         return [
             'KPI01' => [\App\Queries\Kpi\Antibiotic\AccidentWoundAntibioticQuery::class],
-            'KPI02' => [\App\Queries\Kpi\Antibiotic\DiarrheaNoAntibioticQuery::class],
+            'KPI02' => [\App\Queries\Kpi\Antibiotic\FreshAccidentWoundAntibioticQuery::class],
             'KPI03' => [\App\Queries\Kpi\Antibiotic\NormalDeliveryAntibioticQuery::class],
             'KPI04' => [\App\Queries\Kpi\Antibiotic\RespiratoryInfectionAntibioticQuery::class],
             'KPI05' => [\App\Queries\Kpi\Antibiotic\AcuteDiarrheaAntibioticQuery::class],

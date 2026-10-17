@@ -95,7 +95,7 @@ class HdcComparisonTest extends TestCase
             ->assertJsonPath('ours.hdc.den', 10);
     }
 
-    public function test_kpi02_uses_the_second_column_pair_and_has_no_hosxp_side(): void
+    public function test_kpi02_uses_the_second_column_pair(): void
     {
         $this->fakeHdc([$this->row('11179', '55090111', ['target' => 1670, 'result' => 923, 'target1' => 1214, 'result1' => 613])]);
 
@@ -105,7 +105,8 @@ class HdcComparisonTest extends TestCase
             ->assertJsonPath('ours.hdc.num', 613)
             ->assertJsonPath('ours.hdc.den', 1214)
             ->assertJsonPath('ours.hdc.status', 'fail') // 50.5% against the corrected ≤ 40% target
-            ->assertJsonPath('ours.hosxp.den', 0);     // KPI02 has no HOSxP query yet
+            ->assertJsonPath('ours.hosxp.num', 750)    // MockRduDataSource KPI02 = 750/1437
+            ->assertJsonPath('ours.hosxp.den', 1437);
     }
 
     public function test_kpi12_sums_the_twelve_monthly_columns_of_s_rdu10(): void
@@ -127,10 +128,23 @@ class HdcComparisonTest extends TestCase
             ->assertJsonPath('ours.hdc.status', 'fail'); // 0% target: one case already fails
     }
 
-    // ---- KPIs without a HOSxP query show their HDC whole-year figure ----
+    // ---- KPIs without a HOSxP query show their HDC whole-year figure (KPI02 put back to that state) ----
+
+    public function test_a_kpi_awaiting_its_query_has_no_hosxp_side_in_the_comparison(): void
+    {
+        $this->withKpiAwaitingQuery('KPI02');
+        $this->fakeHdc([$this->row('11179', '55090111', ['target1' => 1214, 'result1' => 613])]);
+
+        $this->actingAs($this->user())
+            ->getJson(route('dashboard.kpi.hdc', ['code' => 'KPI02', 'year' => 2569]))
+            ->assertOk()
+            ->assertJsonPath('ours.hdc.den', 1214)
+            ->assertJsonPath('ours.hosxp.den', 0);
+    }
 
     public function test_kpi_without_hosxp_query_shows_the_hdc_figure_on_its_page_and_overview(): void
     {
+        $this->withKpiAwaitingQuery('KPI02');
         $this->fakeHdc([$this->row('11179', '55090111', ['target1' => 2000, 'result1' => 46])]); // s_rdu8 second pair, acute diarrhoea
         $user = $this->user();
 
@@ -150,6 +164,7 @@ class HdcComparisonTest extends TestCase
 
     public function test_hdc_whole_year_figure_is_not_spread_over_quarter_cards_or_the_visit_donut(): void
     {
+        $this->withKpiAwaitingQuery('KPI02');
         $this->fakeHdc([$this->row('11179', '55090111', ['target1' => 2000, 'result1' => 46])]);
 
         $this->actingAs($this->user())->get(route('dashboard.kpi', ['code' => 'KPI02', 'year' => 2569, 'quarter' => 2]))
@@ -179,6 +194,7 @@ class HdcComparisonTest extends TestCase
 
     public function test_hdc_outage_shows_no_data_with_a_note_and_is_not_retried_on_every_page_load(): void
     {
+        $this->withKpiAwaitingQuery('KPI02');
         Http::fake(['opendata.moph.go.th/*' => Http::response('down', 500)]);
         $user = $this->user();
 
@@ -195,6 +211,8 @@ class HdcComparisonTest extends TestCase
 
     public function test_hdc_timeout_is_waited_out_once_per_page_not_once_per_hdc_table(): void
     {
+        $this->withKpiAwaitingQuery('KPI02');   // s_rdu8
+        $this->withKpiAwaitingQuery('KPI04');   // s_rdu6
         $attempts = 0;
         Http::fake(function () use (&$attempts) {
             $attempts++;

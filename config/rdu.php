@@ -9,7 +9,7 @@ return [
 
     // KPIs whose HOSxP query is implemented (not a stub). These always use HOSxP; every other KPI
     // falls back to its HDC whole-year figure when one is linked (see HdcDataService::MAPPING).
-    'hosxp_kpis' => ['KPI01', 'KPI03', 'KPI04', 'KPI05', 'KPI07', 'KPI08', 'KPI09', 'KPI10', 'KPI11', 'KPI12', 'KPI13'],
+    'hosxp_kpis' => ['KPI01', 'KPI02', 'KPI03', 'KPI04', 'KPI05', 'KPI07', 'KPI08', 'KPI09', 'KPI10', 'KPI11', 'KPI12', 'KPI13'],
 
     // The drug each KPI judges (CONTEXT.md: กลุ่มยาของตัวชี้วัด) and the wording the KPI page uses for it.
     // KPIs not listed in `kpi_drug_group` use `antibiotic`. Read through RduIndicator::drugGroup().

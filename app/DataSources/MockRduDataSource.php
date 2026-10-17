@@ -8,7 +8,7 @@ class MockRduDataSource implements RduDataSourceInterface
 {
     private array $mockData = [
         'KPI01' => ['numerator' => 340, 'denominator' => 399],  // Accident wound antibiotic
-        'KPI02' => ['numerator' => 156, 'denominator' => 199],  // Diarrhea no antibiotic
+        'KPI02' => ['numerator' => 750, 'denominator' => 1437], // Fresh accident wound (no bites/burns/deep) given an antibiotic
         'KPI03' => ['numerator' => 182, 'denominator' => 200],  // Wound no antibiotic
         'KPI04' => ['numerator' => 97,  'denominator' => 400],  // IPD antibiotic use
         'KPI05' => ['numerator' => 61,  'denominator' => 80],   // CAP appropriate antibiotic

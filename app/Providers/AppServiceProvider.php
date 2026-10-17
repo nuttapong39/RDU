@@ -10,7 +10,7 @@ use App\Database\ReadonlyConnection;
 use App\Models\RduIndicator;
 use App\Queries\Kpi\Antibiotic\AccidentWoundAntibioticQuery;
 use App\Queries\Kpi\Antibiotic\AcuteDiarrheaAntibioticQuery;
-use App\Queries\Kpi\Antibiotic\DiarrheaNoAntibioticQuery;
+use App\Queries\Kpi\Antibiotic\FreshAccidentWoundAntibioticQuery;
 use App\Queries\Kpi\Antibiotic\NormalDeliveryAntibioticQuery;
 use App\Queries\Kpi\Antibiotic\RespiratoryInfectionAntibioticQuery;
 use App\Queries\Kpi\ChronicDisease\MetforminDiabetesQuery;
@@ -31,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(HosxpRduDataSource::class, function ($app) {
             return new HosxpRduDataSource([
                 'KPI01' => $app->make(AccidentWoundAntibioticQuery::class),
-                'KPI02' => $app->make(DiarrheaNoAntibioticQuery::class),
+                'KPI02' => $app->make(FreshAccidentWoundAntibioticQuery::class),
                 'KPI03' => $app->make(NormalDeliveryAntibioticQuery::class),
                 'KPI04' => $app->make(RespiratoryInfectionAntibioticQuery::class),
                 'KPI05' => $app->make(AcuteDiarrheaAntibioticQuery::class),

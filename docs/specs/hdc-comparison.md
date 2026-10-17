@@ -89,7 +89,7 @@ KPI ที่ยังไม่มีตาราง HDC คู่กัน ย�
 - **Primary seam: one feature test of the new comparison endpoint**, with the HDC API faked by the HTTP client's fake and the HOSxP side supplied by the mock data source already used in testing. It covers:
   - KPI01: correct HOSxP vs HDC numbers, difference and HDC date for hospital 11179, and provincial rows sorted by %, with our row flagged and the weighted province average
   - KPI03: HDC numerator converted to "not received"
-  - KPI02: uses the second column pair and has no HOSxP side
+  - KPI02: uses the second column pair (KPI02 has had a HOSxP query since 2026-10-17; the "no HOSxP side" case is tested by putting a KPI back to awaiting its query)
   - A KPI without a HOSxP query shows its HDC whole-year figure on its page and the overview, never spread over quarter cards; a KPI with a HOSxP query ignores HDC
   - An unlinked KPI (e.g. KPI07): the "not linked" state, and HDC is never called
   - HDC timeout or HTTP error: the error state, not a 500

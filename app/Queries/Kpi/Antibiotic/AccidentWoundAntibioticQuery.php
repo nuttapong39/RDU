@@ -34,11 +34,11 @@ class AccidentWoundAntibioticQuery implements KpiQueryInterface, DescribesCounti
         'T090', 'T091', 'T095', 'T110', 'T111', 'T115', 'T130', 'T131', 'T135', 'T140', 'T141', 'T146', 'T149',
     ];
 
-    /** External-cause group: every code starting with one of these letters… */
-    private const EXTERNAL_CAUSE_LETTERS = ['V', 'W'];
+    /** External-cause group: every code starting with one of these letters… (also KPI02's — referenced, not copied) */
+    public const EXTERNAL_CAUSE_LETTERS = ['V', 'W'];
 
     /** …plus the 3-character categories in this range (inclusive). */
-    private const EXTERNAL_CAUSE_RANGE = ['X00', 'X59'];
+    public const EXTERNAL_CAUSE_RANGE = ['X00', 'X59'];
 
     /**
      * `drugitems.icode` whitelist for antibiotics — hospital-provided list (docs/SQL_KPI/KPI1.sql),

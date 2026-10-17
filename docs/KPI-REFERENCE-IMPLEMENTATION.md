@@ -20,7 +20,8 @@ KPI01, KPI03, KPI04 และ KPI05 คือตัวชี้วัดที�
 | **KPI03** | `Antibiotic/NormalDeliveryAntibioticQuery` | `docs/SQL_KPI/KPI3.sql` | IPD (`ipt` + `an_stat`, AN) | admission ที่**ไม่ได้รับ**ยาปฏิชีวนะ | ≥ 80% (`higher`) | ผู้ป่วยใน และตัวชี้วัดกลับทิศ (ยิ่งสูงยิ่งดี) |
 
 **เริ่มจาก KPI04 เสมอ** แล้วนำส่วนที่ต่างจาก KPI01 (เงื่อนไขหลายกลุ่ม) หรือ KPI03 (IPD / กลับทิศ) มาใช้เฉพาะเมื่อจำเป็น
-ตัวชี้วัดที่ยังไม่ implement (KPI02) ตอนนี้เป็น stub ที่คืน 0 / collection ว่างทุก method (KPI06 ตัดออกแล้ว 2026-10-17)
+ทุกตัวชี้วัดที่เปิดใช้ implement ครบแล้ว (KPI06 ตัดออก 2026-10-17) — ตัวชี้วัดใหม่ที่ยังไม่มีนิยามให้เริ่มจาก stub ที่คืน 0 / collection ว่างทุก method
+(หน้าตัวชี้วัดจะแสดงผลจาก HDC แทนชั่วคราวถ้าเชื่อมตาราง HDC ไว้)
 
 **KPI ที่ไม่ใช่ยาปฏิชีวนะ — ดู KPI12** (`PatientSafety/RasDualBlockadeQuery`, `docs/SQL_KPI/KPI12.sql`): โครงเดียวกับ KPI04
 แต่กลุ่มยาต่างไป, นับ "ตัวยา" แทนรหัสยา และเป้า 0% — ดูหัวข้อ 4.1 และ 4.2
@@ -108,7 +109,7 @@ KPI01, KPI03, KPI04 และ KPI05 คือตัวชี้วัดที�
 | ตัดเคสทดสอบ | `hn NOT IN (SELECT hn FROM patient WHERE fname LIKE '%ทดสอบ%')` ทั้งตัวตั้ง ตัวส่วน และรายกรณี | ทุกตัว |
 | รายการรหัส | เก็บเป็น `private const` แล้วต่อด้วย `quotedList()` (ค่าคงที่ภายใน ไม่ใช่ input ผู้ใช้) | `DIAGNOSIS_CODES`, `ANTIBIOTIC_ICODES` |
 | กรองวินิจฉัยระดับ visit | `EXISTS (SELECT 1 FROM ovstdiag … )` ผ่าน helper `diagnosisExists()` | KPI04/05 |
-| ยาปฏิชีวนะ | `drugitems.icode IN (ANTIBIOTIC_ICODES)` และ `opitemrece.qty > 0` (66 รหัสชุดเดียวกันทุก KPI) | ทุกตัว |
+| ยาปฏิชีวนะ | `drugitems.icode IN (ANTIBIOTIC_ICODES)` และ `opitemrece.qty > 0` (66 รหัสชุดเดียวกัน ยกเว้น KPI02 ที่ใช้ 28 รหัสของเภสัชกร — ADR 0003) | ทุกตัว |
 | ตัวตั้งแบบกลับทิศ | `an NOT IN (… รายการที่ได้ยา …)` | KPI03 |
 | โครง CTE รายกรณี | `vn_list` (หรือ `an_list`) → `drug_info` (เฉพาะยาปฏิชีวนะ) → `all_drug_info` (ยาทุกชนิด) | ทุกตัว |
 | ค่ายา | `SUM(opitemrece.sum_price)` (ราคาตอนจ่ายจริง) **ห้ามใช้** `drugitems.unitprice` | ทุกตัว |
@@ -145,8 +146,8 @@ KPI01, KPI03, KPI04 และ KPI05 คือตัวชี้วัดที�
 - ชื่อแพทย์ในหน้าเว็บแสดงเป็นรหัสปกปิด `DR-XX` โดยอัตโนมัติ (ADR 0002) ไม่ต้องทำใน query
 
 ### 3.5 สิ่งที่ซ้ำกันโดยตั้งใจ (ต้องแก้ให้ตรงกันทุกไฟล์)
-`ANTIBIOTIC_ICODES`, `quotedList()` และ `maskThaiName()` ยังคัดลอกอยู่ในทั้ง 4 class ถ้าแก้รายการยาปฏิชีวนะ
-ต้องแก้ทุก class และทุกไฟล์ใน `docs/SQL_KPI/` พร้อมกัน ถ้าจะแยกเป็นส่วนกลาง ให้ทำเป็นงาน refactor แยก
+`ANTIBIOTIC_ICODES`, `quotedList()` และ `maskThaiName()` ยังคัดลอกอยู่ในทั้ง 4 class ถ้าแก้รายการยาปฏิชีวนะ 66 รหัส
+ต้องแก้ทุก class (KPI02 มีรายการ 28 รหัสของตัวเอง ไม่ต้องแก้ตาม — ADR 0003) และทุกไฟล์ใน `docs/SQL_KPI/` พร้อมกัน ถ้าจะแยกเป็นส่วนกลาง ให้ทำเป็นงาน refactor แยก
 ไม่ปนกับการเพิ่ม KPI
 
 ---

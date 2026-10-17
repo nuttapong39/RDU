@@ -867,7 +867,7 @@
 @endif
 @php
     $numeratorLabel = match ($ind->code) {
-        'KPI01', 'KPI04', 'KPI05' => 'visit ที่ได้รับยาปฏิชีวนะ',
+        'KPI01', 'KPI02', 'KPI04', 'KPI05' => 'visit ที่ได้รับยาปฏิชีวนะ',
         'KPI03'                   => 'visit ที่ไม่ได้รับยาปฏิชีวนะ',
         'KPI07'                   => 'visit ที่ได้รับ NSAIDs ≥ 2 รายการ',
         'KPI08'                   => 'ผู้ป่วยที่ได้รับ ICS',
