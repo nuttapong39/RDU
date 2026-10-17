@@ -155,11 +155,11 @@ class HdcComparisonTest extends TestCase
             ->assertSee('ผ่านเกณฑ์');           // ≤ 40%, lower is better
 
         $this->actingAs($user)->get(route('dashboard', ['year' => 2569]))
-            ->assertOk()->assertSee('HDC · ทั้งปี', false)
-            ->assertDontSee('ไม่เปลี่ยนตามเดือนที่เลือก', false);
+            ->assertOk()->assertSee('HDC · ทั้งปี', false);
 
+        // A month filter can't narrow an HDC figure — the card keeps saying it is the whole year.
         $this->actingAs($user)->get(route('dashboard', ['year' => 2569, 'month' => 3]))
-            ->assertOk()->assertSee('ไม่เปลี่ยนตามเดือนที่เลือก', false);
+            ->assertOk()->assertSee('HDC · ทั้งปี', false);
     }
 
     public function test_hdc_whole_year_figure_is_not_spread_over_quarter_cards_or_the_visit_donut(): void

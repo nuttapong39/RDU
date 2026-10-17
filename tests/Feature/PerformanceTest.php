@@ -180,7 +180,7 @@ class PerformanceTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertOk();
-        // chartData is embedded in Blade — verify the page renders without extra payload bloat
+        // Every KPI card is rendered server-side — verify the page renders without payload bloat
         // (structural check: page loads under 1 MB is a reasonable proxy)
         $this->assertLessThan(1_048_576, strlen($response->content()),
             'Dashboard response should be under 1 MB');

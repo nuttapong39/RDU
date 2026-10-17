@@ -153,54 +153,24 @@ html[data-sidebar="closed"] .sidebar-toggle-icon {
 }
 
 /* ==========================================================================
-   WELCOME BANNER — hero card at top of dashboard
+   HERO — project name, status counts and the period filter at the top of the overview
    ========================================================================== */
-.welcome-banner {
-    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 45%, #059669 100%);
+.rdu-hero {
+    background: #fff;
+    border: 1px solid #e2e8f0;
     border-radius: 16px;
-    padding: 24px 28px;
-    color: #fff;
-    box-shadow: 0 8px 32px rgba(29, 78, 216, .22);
-    position: relative;
-    overflow: hidden;
+    padding: 20px 24px;
+    box-shadow: var(--card-shadow);
 }
-.welcome-banner::before {
-    content: "";
-    position: absolute;
-    top: -40px; right: -40px;
-    width: 220px; height: 220px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, .08);
-    pointer-events: none;
+.rdu-select {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: .875rem;
+    background: #fff;
+    cursor: pointer;
 }
-.welcome-banner::after {
-    content: "";
-    position: absolute;
-    bottom: -50px; right: 22%;
-    width: 160px; height: 160px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, .06);
-    pointer-events: none;
-}
-.wb-avatar {
-    width: 60px; height: 60px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, .18);
-    border: 3px solid rgba(255, 255, 255, .35);
-    display: grid; place-items: center;
-    font-size: 1.5rem; font-weight: 700; color: #fff;
-    flex-shrink: 0;
-    position: relative; z-index: 1;
-}
-.wb-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(255, 255, 255, .18);
-    border: 1px solid rgba(255, 255, 255, .25);
-    border-radius: 999px;
-    padding: 3px 12px;
-    font-size: .78rem;
-    margin-top: 6px;
-}
+.rdu-select:focus { outline: none; box-shadow: 0 0 0 2px #3b82f6; }
 
 /* ==========================================================================
    SECTION HEAD — uppercase label + horizontal rule
@@ -245,113 +215,31 @@ html[data-sidebar="closed"] .sidebar-toggle-icon {
 .kpi-card-v2.status-fail    { border-left-color: var(--status-fail); }
 .kpi-card-v2.status-na      { border-left-color: var(--status-na); }
 
-/* ==========================================================================
-   DASH CARD — category summary card (icon + count + stats)
-   ========================================================================== */
-.dash-card {
-    display: flex; align-items: center; gap: 14px;
-    padding: 16px;
-    background: #fff;
+/* KPI code chip — neutral, so colour on a card always means status */
+.kpi-code {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: .78rem;
+    font-weight: 600;
+    color: #334155;
+    background: #f1f5f9;
+}
+/* Small sample (CONTEXT.md: เคสน้อย) — denominator below 5 */
+.small-sample {
+    display: inline-flex; align-items: center;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: .65rem;
+    font-weight: 600;
+    color: #475569;
+    background: #f1f5f9;
     border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    box-shadow: var(--card-shadow);
-    text-decoration: none;
-    color: inherit;
-    transition: box-shadow .2s, transform .15s, border-color .2s;
+    white-space: nowrap;
 }
-.dash-card:hover {
-    box-shadow: var(--card-shadow-hover);
-    transform: translateY(-2px);
-    border-color: #dbeafe;
-}
-.dash-thumb {
-    width: 54px; height: 54px;
-    border-radius: 14px;
-    flex-shrink: 0;
-    display: grid; place-items: center;
-    color: #fff;
-    font-size: 1.5rem;
-}
-.dash-thumb-antibiotic { background: linear-gradient(135deg, #ef4444, #dc2626); }
-.dash-thumb-drug       { background: linear-gradient(135deg, #10b981, #059669); }
-.dash-thumb-safety     { background: linear-gradient(135deg, #818cf8, #4f46e5); }
-.dash-thumb-chronic    { background: linear-gradient(135deg, #22d3ee, #0891b2); }
 
-/* ==========================================================================
-   SHORTCUT CARD — icon + title + desc, hover translate-y
-   ========================================================================== */
-.shortcut-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 20px 18px;
-    display: flex; align-items: flex-start; gap: 14px;
-    text-decoration: none;
-    color: #0f172a;
-    box-shadow: var(--card-shadow);
-    transition: box-shadow .2s, transform .15s, border-color .2s;
-    height: 100%;
-}
-.shortcut-card:hover {
-    box-shadow: var(--card-shadow-hover);
-    transform: translateY(-2px);
-    border-color: #dbeafe;
-    color: #0f172a;
-}
-.sc-icon {
-    width: 48px; height: 48px;
-    border-radius: 12px;
-    display: grid; place-items: center;
-    font-size: 1.3rem;
-    color: #2563eb;
-    background: #eff6ff;
-    flex-shrink: 0;
-}
-.sc-icon.sc-green  { color: #059669; background: #ecfdf5; }
-.sc-icon.sc-amber  { color: #d97706; background: #fffbeb; }
-.sc-icon.sc-red    { color: #dc2626; background: #fef2f2; }
-.sc-icon.sc-indigo { color: #4f46e5; background: #eef2ff; }
-.sc-icon.sc-slate  { color: #475569; background: #f1f5f9; }
-
-/* ==========================================================================
-   STATUS CARD — recent activity feed / watchlist
-   ========================================================================== */
-.status-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    box-shadow: var(--card-shadow);
-    overflow: hidden;
-    height: 100%;
-    display: flex; flex-direction: column;
-}
-.status-card-head {
-    padding: 12px 16px;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex; align-items: center; justify-content: space-between;
-    font-weight: 700; font-size: .9rem;
-    color: #0f172a;
-}
-.status-card-body { padding: 0; flex: 1; }
-.status-item {
-    display: flex; align-items: flex-start; gap: 12px;
-    padding: 12px 16px;
-    border-bottom: 1px solid #f1f5f9;
-}
-.status-item:last-child { border-bottom: 0; }
-.status-item-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    margin-top: 6px;
-    flex-shrink: 0;
-}
-.dot-pass    { background: #10b981; }
-.dot-warning { background: #f59e0b; }
-.dot-fail    { background: #ef4444; }
-.dot-na      { background: #94a3b8; }
-.dot-info    { background: #3b82f6; }
-.status-item-name { font-size: .87rem; font-weight: 500; line-height: 1.35; color: #0f172a; }
-.status-item-meta { font-size: .72rem; color: #64748b; margin-top: 2px; }
+/* Empty state inside a card (KPI page) */
 .status-empty {
     display: flex; flex-direction: column; align-items: center;
     padding: 32px 20px;
@@ -399,7 +287,7 @@ html[data-sidebar="closed"] .sidebar-toggle-icon {
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
     .animate-progress,
-    .kpi-card-v2, .dash-card, .shortcut-card {
+    .kpi-card-v2 {
         transition: none !important;
         animation: none !important;
     }

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\SanitizesDateParams;
-use App\Models\AuditLog;
 use App\Models\RduIndicator;
 use App\Services\CountingMethodService;
 use App\Services\DoctorAliasService;
@@ -39,57 +38,47 @@ class DashboardController extends Controller
             $this->statusSnapshot->record($year, $kpiData);
         }
 
+        // CONTEXT.md เคสน้อย: a few cases still get a status, but the viewer is told how few.
+        $kpiData = $kpiData->map(fn ($i) => $i + [
+            'small_sample' => $i['denominator'] > 0 && $i['denominator'] < self::SMALL_SAMPLE_MIN,
+        ]);
+
         $summary       = $this->calcService->summarize($kpiData->pluck('status')->all());
         $kpiByCategory = $kpiData->groupBy(fn ($i) => $i['indicator']->category);
 
-        $chartData = $kpiData->map(fn ($i) => [
-            'label'     => $i['indicator']->code,
-            'name'      => mb_substr($i['indicator']->name, 0, 20),
-            'pct'       => $i['percentage'],
-            'target'    => $i['indicator']->target_value,
-            'direction' => $i['indicator']->target_direction,
-            'status'    => $i['status'],
-        ])->values()->toArray();
-
-        $categoryStats = $kpiByCategory->map(fn ($items) => [
-            'count'   => count($items),
-            'avg_pct' => collect($items)->pluck('percentage')->filter(fn ($v) => $v !== null)->avg(),
-            'pass'    => collect($items)->where('status', 'pass')->count(),
-            'warning' => collect($items)->where('status', 'warning')->count(),
-            'fail'    => collect($items)->where('status', 'fail')->count(),
-            'na'      => collect($items)->where('status', 'na')->count(),
-        ]);
-
-        $watchlist = $kpiData
-            ->filter(fn ($i) => in_array($i['status'], ['fail', 'warning']))
-            ->sortBy(function ($i) {
-                if ($i['percentage'] === null) return 0;
-                $diff = $i['indicator']->target_value - $i['percentage'];
-                return $i['indicator']->target_direction === 'higher' ? -$diff : $diff;
-            })
-            ->take(5)
+        // Every KPI short of its target, failures first, then furthest from the target (direction-corrected).
+        $attention = $kpiData
+            ->filter(fn ($i) => in_array($i['status'], ['fail', 'warning'], true))
+            ->sortBy([
+                fn ($a, $b) => ($a['status'] === 'fail' ? 0 : 1) <=> ($b['status'] === 'fail' ? 0 : 1),
+                fn ($a, $b) => $this->shortfall($b) <=> $this->shortfall($a),
+            ])
             ->values();
-
-        $recentActivity = AuditLog::with('user')
-            ->orderByDesc('created_at')
-            ->limit(8)
-            ->get();
 
         return view('dashboard.index', [
             'kpiData'        => $kpiData,
             'kpiByCategory'  => $kpiByCategory,
             'categories'     => $this->categories(),
             'summary'        => $summary,
+            'attention'      => $attention,
+            'smallSampleMin' => self::SMALL_SAMPLE_MIN,
             'year'           => $year,
             'month'          => $month,
             'yearOptions'    => $this->calcService->fiscalYearOptions(4),
             'monthOptions'   => RduCalculationService::thaiMonths(),
-            'chartData'      => $chartData,
-            'categoryStats'  => $categoryStats,
-            'watchlist'      => $watchlist,
-            'recentActivity' => $recentActivity,
         ]);
     }
+
+    /** Percentage points a result falls short of its target; negative when it meets it. */
+    private function shortfall(array $item): float
+    {
+        $gap = (float) $item['percentage'] - (float) $item['indicator']->target_value;
+
+        return $item['indicator']->target_direction === 'higher' ? -$gap : $gap;
+    }
+
+    /** A denominator below this is a small sample (CONTEXT.md: เคสน้อย) — one case swings the rate. */
+    private const SMALL_SAMPLE_MIN = 5;
 
     /** Cap on distinct bars shown in the drug-usage chart before folding the rest into "อื่นๆ". */
     private const DRUG_USAGE_TOP_N = 12;
@@ -98,7 +87,7 @@ class DashboardController extends Controller
     private const ICD10_TOP_N = 10;
 
     /** Doctors with fewer visits than this are excluded from red/green judgement in the doctor-rate table (too few cases for the rate to be meaningful) — still listed, just ungraded. */
-    private const DOCTOR_RATE_MIN_VISITS = 5;
+    private const DOCTOR_RATE_MIN_VISITS = self::SMALL_SAMPLE_MIN;
 
     public function kpi(Request $request, string $code): View
     {

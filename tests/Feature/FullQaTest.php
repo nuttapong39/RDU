@@ -134,13 +134,13 @@ class FullQaTest extends TestCase
             ->assertSee('2568', false);
     }
 
-    public function test_dashboard_shows_overview_chart_canvas(): void
+    public function test_dashboard_shows_hero_card(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('overviewChart', false);
+            ->assertSee('RDU Dashboard', false);
     }
 
     public function test_dashboard_sidebar_shows_admin_database_link(): void
@@ -161,15 +161,15 @@ class FullQaTest extends TestCase
             ->assertSee('ออกจากระบบ', false);
     }
 
-    public function test_dashboard_sidebar_shows_all_four_category_labels(): void
+    public function test_dashboard_shows_every_category_that_has_an_active_kpi(): void
     {
         $user = User::factory()->create();
         $response = $this->actingAs($user)->get(route('dashboard'))->assertOk();
 
         $response->assertSee('ยาปฏิชีวนะ', false);
-        $response->assertSee('คุณภาพยา', false);
         $response->assertSee('ความปลอดภัย', false);
         $response->assertSee('โรคเรื้อรัง', false);
+        $response->assertDontSee('คุณภาพยา', false);   // its only KPI (KPI06) is switched off
     }
 
     // =========================================================================
