@@ -875,6 +875,7 @@
         'KPI10'                   => 'ผู้ป่วยที่ได้รับ Metformin',
         'KPI11'                   => 'visit ที่ได้รับยาแก้แพ้ชนิด non-sedating',
         'KPI12'                   => 'visit ที่ได้รับ RAS blockade ≥ 2 ชนิด',
+        'KPI13'                   => 'visit ที่ได้รับยากลุ่ม Long-acting Benzodiazepine',
         default                   => 'ตัวตั้งของตัวชี้วัด',
     };
 @endphp

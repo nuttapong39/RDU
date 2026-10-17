@@ -131,14 +131,14 @@ class HdcComparisonTest extends TestCase
 
     public function test_kpi_without_hosxp_query_shows_the_hdc_figure_on_its_page_and_overview(): void
     {
-        $this->fakeHdc([$this->row('11179', '55090111', ['target' => 2000, 'result' => 46])]); // s_rdu16, elderly long-acting BZD
+        $this->fakeHdc([$this->row('11179', '55090111', ['target1' => 2000, 'result1' => 46])]); // s_rdu8 second pair, acute diarrhoea
         $user = $this->user();
 
-        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI13', 'year' => 2569]))
+        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI02', 'year' => 2569]))
             ->assertOk()
             ->assertSee('แสดงผลจาก HDC (ข้อมูลส่วนกลาง) แทนชั่วคราว', false)
             ->assertSee('2.3')                   // 46 / 2000
-            ->assertSee('ผ่านเกณฑ์');           // ≤ 5%, lower is better
+            ->assertSee('ผ่านเกณฑ์');           // ≤ 40%, lower is better
 
         $this->actingAs($user)->get(route('dashboard', ['year' => 2569]))
             ->assertOk()->assertSee('HDC · ทั้งปี', false)
@@ -150,9 +150,9 @@ class HdcComparisonTest extends TestCase
 
     public function test_hdc_whole_year_figure_is_not_spread_over_quarter_cards_or_the_visit_donut(): void
     {
-        $this->fakeHdc([$this->row('11179', '55090111', ['target' => 2000, 'result' => 46])]);
+        $this->fakeHdc([$this->row('11179', '55090111', ['target1' => 2000, 'result1' => 46])]);
 
-        $this->actingAs($this->user())->get(route('dashboard.kpi', ['code' => 'KPI13', 'year' => 2569, 'quarter' => 2]))
+        $this->actingAs($this->user())->get(route('dashboard.kpi', ['code' => 'KPI02', 'year' => 2569, 'quarter' => 2]))
             ->assertOk()
             ->assertSee('ตัวเลขนี้จึงไม่เปลี่ยนตามช่วงเวลาที่เลือก', false)
             ->assertDontSee('id="visitProportionDonut"', false)
@@ -182,12 +182,12 @@ class HdcComparisonTest extends TestCase
         Http::fake(['opendata.moph.go.th/*' => Http::response('down', 500)]);
         $user = $this->user();
 
-        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI13', 'year' => 2569]))
+        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI02', 'year' => 2569]))
             ->assertOk()
             ->assertSee('ดึงข้อมูลจาก HDC ไม่ได้ในขณะนี้', false);
         $sent = count(Http::recorded());
 
-        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI13', 'year' => 2569]))->assertOk();
+        $this->actingAs($user)->get(route('dashboard.kpi', ['code' => 'KPI02', 'year' => 2569]))->assertOk();
         $this->actingAs($user)->get(route('dashboard', ['year' => 2569]))
             ->assertOk()->assertSee('HDC ไม่ตอบสนอง', false);
         $this->assertSame($sent, count(Http::recorded()), 'HDC was called again although it just failed');
@@ -201,7 +201,7 @@ class HdcComparisonTest extends TestCase
             throw new \Illuminate\Http\Client\ConnectionException('timed out');
         });
 
-        // The overview needs five HDC tables (KPI02, 08, 09, 10, 13); only the first may hit the network.
+        // The overview needs an HDC table for every linked KPI without a HOSxP query; only the first may hit the network.
         $this->actingAs($this->user())->get(route('dashboard', ['year' => 2569]))->assertOk();
         $this->assertSame(1, $attempts);
     }

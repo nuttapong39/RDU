@@ -308,17 +308,22 @@ HDC:          s_rdu10 (รวม t10..t09 = ตัวส่วน, r10..r09 = �
 
 ---
 
-#### KPI-13: การใช้ Long-acting Benzodiazepine ในผู้สูงอายุ
+#### KPI-13: การใช้ Long-acting Benzodiazepine ในผู้สูงอายุ ✅ implement แล้ว (2026-10)
 ```
 ชื่อ:         ร้อยละผู้ป่วยนอกสูงอายุที่ใช้ยากลุ่ม Long-acting Benzodiazepine
-Code:         dm_hba1c_controlled
-Numerator:    จำนวนผู้ป่วยเบาหวานที่มี HbA1c < 7%
-Denominator:  จำนวนผู้ป่วยเบาหวานที่มีการตรวจ HbA1c ทั้งหมด
-Target:       ≥ 40%
-Direction:    สูงดี (higher_better)
-Category:     chronic_disease
-HOSxP Tables: [TBD]
-Query:        [TBD — Plan แยกต่างหาก]
+Numerator:    visit ในตัวส่วนที่ได้รับ Diazepam (qty > 0)
+Denominator:  ทุก visit ของผู้สูงอายุ 65 ปีเต็มขึ้นไป ณ วันที่มารับบริการ (จาก patient.birthday) ไม่จำกัดโรคหรือยา
+              รวม visit ที่ต่อมารับไว้นอนโรงพยาบาล (ไม่กรอง ovst.an) — ตามนิยามของ HDC
+Target:       ≤ 5% — HDC s_rdu21 ตัวชี้วัดที่ 10: ทุกโรงพยาบาลผ่าน (สูงสุด 4.43% ปีงบ 2569) จึงยืนยันเกณฑ์ตัดจากข้อมูลไม่ได้
+Direction:    ต่ำดี (lower)
+Category:     PatientSafety · กลุ่มยาของตัวชี้วัด: long_acting_bzd (config rdu.drug_groups) · หน่วยนับ: visit
+ยา:           1000107 Diazepam 5 mg เม็ด, 1460009 Diazepam 2 mg เม็ด, 1000108 Diazepam ฉีด 10 mg/2ml
+              ไม่นับ Clonazepam 1483866 (เภสัชกรตัดออก) และยาออกฤทธิ์สั้น-ปานกลาง (Lorazepam, Alprazolam)
+ต่างจาก query ต้นฉบับ: อายุ ≥ 65 (เดิม ≥ 60), ไม่นับ Clonazepam, ไม่กรอง o.an, คิดอายุจากวันเกิดแทน vn_stat
+HOSxP Tables: ovst, ovstdiag, opitemrece, drugitems, patient, doctor, pttype, spclty, kskdepartment
+Query:        app/Queries/Kpi/PatientSafety/ElderlyLongActingBenzodiazepineQuery.php · docs/SQL_KPI/KPI13.sql
+HDC:          s_rdu16 (target / result) ใช้ในปุ่ม "เทียบ HDC"
+ผลปีงบ 2569:  97 / 31,517 visit (0.31%) — HDC 93 / 31,453 (0.30%) · ปีงบ 2568: 127 / 25,956 — HDC 118 / 25,951
 ```
 
 ---
@@ -339,7 +344,7 @@ Query:        [TBD — Plan แยกต่างหาก]
 | KPI-10 | dm_metformin | Metformin ในเบาหวานชนิดที่ 2 ไม่มีข้อห้ามใช้ (นับเป็นคน) | ≥ 80% | สูงดี | chronic_disease |
 | KPI-11 | child_respiratory_non_sedating | ยาน้ำ non-sedating ในเด็กติดเชื้อทางเดินหายใจ | ≤ 20% | ต่ำดี | patient_safety |
 | KPI-12 | ras_dual_blockade | RAS Blockade 2 ชนิดร่วมกัน (HT) | ≤ 0% | ต่ำดี | patient_safety |
-| KPI-13 | dm_hba1c_controlled | Long-acting Benzodiazepine ผู้สูงอายุ | ≥ 40% | สูงดี | chronic_disease |
+| KPI-13 | elderly_long_acting_bzd | Long-acting Benzodiazepine ผู้สูงอายุ | ≤ 5% | ต่ำดี | patient_safety |
 
 ---
 
@@ -365,10 +370,10 @@ app/
         │   ├── AsthmaInhaledCorticosteroidQuery.php ← KPI-08
         │   ├── CkdNsaidQuery.php               ← KPI-09
         │   ├── ChildRespiratoryNonSedatingQuery.php ← KPI-11
-        │   └── RasDualBlockadeQuery.php        ← KPI-12
+        │   ├── RasDualBlockadeQuery.php        ← KPI-12
+        │   └── ElderlyLongActingBenzodiazepineQuery.php ← KPI-13
         └── ChronicDisease/
-            ├── MetforminDiabetesQuery.php      ← KPI-10
-            └── DmHba1cControlledQuery.php      ← KPI-13
+            └── MetforminDiabetesQuery.php      ← KPI-10
 ```
 
 ### KpiQueryInterface (โครงสร้าง)

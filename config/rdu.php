@@ -9,7 +9,7 @@ return [
 
     // KPIs whose HOSxP query is implemented (not a stub). These always use HOSxP; every other KPI
     // falls back to its HDC whole-year figure when one is linked (see HdcDataService::MAPPING).
-    'hosxp_kpis' => ['KPI01', 'KPI03', 'KPI04', 'KPI05', 'KPI07', 'KPI08', 'KPI09', 'KPI10', 'KPI11', 'KPI12'],
+    'hosxp_kpis' => ['KPI01', 'KPI03', 'KPI04', 'KPI05', 'KPI07', 'KPI08', 'KPI09', 'KPI10', 'KPI11', 'KPI12', 'KPI13'],
 
     // The drug each KPI judges (CONTEXT.md: กลุ่มยาของตัวชี้วัด) and the wording the KPI page uses for it.
     // KPIs not listed in `kpi_drug_group` use `antibiotic`. Read through RduIndicator::drugGroup().
@@ -85,6 +85,16 @@ return [
             'doctor_rate'  => 'อัตราการสั่งยาแก้แพ้ชนิด non-sedating ในเด็กติดเชื้อทางเดินหายใจรายแพทย์ผู้ตรวจ',
             'usage'        => 'สัดส่วนยาแก้แพ้ชนิด non-sedating ที่สั่งจ่าย',
         ],
+        // KPI13: Diazepam tablets and injection (CONTEXT.md: ผู้สูงอายุที่ได้ยากลุ่ม Long-acting Benzodiazepine).
+        'long_acting_bzd' => [
+            'name'         => 'ยากลุ่ม Long-acting Benzodiazepine',
+            'short'        => 'Long-acting BZD',
+            'received'     => 'ได้ Long-acting BZD',
+            'not_received' => 'ไม่ได้ Long-acting BZD',
+            'cost'         => 'มูลค่ายา Long-acting BZD (บาท)',
+            'doctor_rate'  => 'อัตราการสั่งยากลุ่ม Long-acting Benzodiazepine ในผู้สูงอายุรายแพทย์ผู้ตรวจ',
+            'usage'        => 'สัดส่วนยา Long-acting BZD ที่สั่งจ่าย',
+        ],
     ],
     'kpi_drug_group' => [
         'KPI07' => 'nsaid',
@@ -93,6 +103,7 @@ return [
         'KPI10' => 'metformin',
         'KPI11' => 'antihistamine',
         'KPI12' => 'ras',
+        'KPI13' => 'long_acting_bzd',
     ],
 
     // KPIs whose numerator is the cases that did NOT get the KPI's drug (KPI03: deliveries without an

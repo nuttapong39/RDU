@@ -29,7 +29,7 @@ class HdcDataService
         'KPI09' => ['table' => 's_rdu14', 'den' => 'target',  'num' => 'result'], // CKD stage ≥3 given NSAIDs
         'KPI10' => ['table' => 's_rdu12', 'den' => 'target',  'num' => 'result'], // type 2 DM (eGFR ≥30) on metformin
         'KPI12' => ['table' => 's_rdu10', 'den' => self::FISCAL_MONTHS_T, 'num' => self::FISCAL_MONTHS_R], // essential HT visits: ≥ 1 / ≥ 2 RAS drugs
-        'KPI13' => ['table' => 's_rdu16', 'den' => 'target',  'num' => 'result'], // elderly OPD visits given the drug
+        'KPI13' => ['table' => 's_rdu16', 'den' => 'target',  'num' => 'result'], // visits of patients aged 65+ given a long-acting benzodiazepine
     ];
 
     /** s_rdu10's per-month columns, October → September. */

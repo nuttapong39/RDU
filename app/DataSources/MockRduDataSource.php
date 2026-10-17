@@ -19,7 +19,7 @@ class MockRduDataSource implements RduDataSourceInterface
         'KPI10' => ['numerator' => 1400, 'denominator' => 1478], // Type 2 DM patients on metformin
         'KPI11' => ['numerator' => 58,  'denominator' => 476],  // Child respiratory infection given non-sedating antihistamine
         'KPI12' => ['numerator' => 2,   'denominator' => 800],  // Dual RAS blockade (target 0%)
-        'KPI13' => ['numerator' => 171, 'denominator' => 400],  // DM HbA1c controlled
+        'KPI13' => ['numerator' => 97,  'denominator' => 31517], // Elderly (65+) visits given a long-acting benzodiazepine
     ];
 
     public function getNumerator(string $kpiCode, int $year, int $month): int
