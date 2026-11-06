@@ -122,14 +122,7 @@ class RduCalculationService
                 ->first();
 
             if ($stored !== null) {
-                return [
-                    'indicator'   => $indicator,
-                    'numerator'   => $stored->numerator,
-                    'denominator' => $stored->denominator,
-                    'percentage'  => $stored->result !== null ? round((float) $stored->result, 1) : null,
-                    'status'      => $stored->status ?? 'na',
-                    'from_cache'  => true,
-                ];
+                return $this->storedResult($indicator, $stored);
             }
         }
 
@@ -138,6 +131,25 @@ class RduCalculationService
             $this->queryService->getNumerator($indicator->code, $year, $month),
             $this->queryService->getDenominator($indicator->code, $year, $month),
         ]);
+    }
+
+    /**
+     * A result saved by calculate(), judged against the indicator's current target. The saved status is not
+     * used (it only records the verdict at calculation time): a KPI has one target for every period, so a
+     * row saved before the target changed (KPI04's ≤ 40% → ≤ 20%) must not keep its old verdict.
+     */
+    private function storedResult(RduIndicator $indicator, RduIndicatorResult $stored): array
+    {
+        $pct = self::percentage($stored->numerator, $stored->denominator);
+
+        return [
+            'indicator'   => $indicator,
+            'numerator'   => $stored->numerator,
+            'denominator' => $stored->denominator,
+            'percentage'  => $pct,
+            'status'      => $this->getStatus($pct, $indicator->target_value, $indicator->target_direction),
+            'from_cache'  => true,
+        ];
     }
 
     /**
@@ -189,14 +201,7 @@ class RduCalculationService
                 }
                 $result = $stored->get($ind->id);
                 if ($result !== null) {
-                    return [
-                        'indicator'   => $ind,
-                        'numerator'   => $result->numerator,
-                        'denominator' => $result->denominator,
-                        'percentage'  => self::percentage($result->numerator, $result->denominator),
-                        'status'      => $result->status ?? 'na',
-                        'from_cache'  => true,
-                    ];
+                    return $this->storedResult($ind, $result);
                 }
                 // No stored result — fall through to live query (cached by RduQueryService)
                 return $this->getOrCalculate($ind, $year, $month);
@@ -268,14 +273,15 @@ class RduCalculationService
             $result = $stored->get($key);
 
             if ($result !== null) {
+                $graded  = $this->storedResult($indicator, $result);
                 $trend[] = [
                     'year'   => $y,
                     'month'  => $m,
                     'label'  => $labels[$m],
-                    'pct'    => self::percentage($result->numerator, $result->denominator),
-                    'num'    => $result->numerator,
-                    'den'    => $result->denominator,
-                    'status' => $result->status ?? 'na',
+                    'pct'    => $graded['percentage'],
+                    'num'    => $graded['numerator'],
+                    'den'    => $graded['denominator'],
+                    'status' => $graded['status'],
                 ];
                 continue;
             }

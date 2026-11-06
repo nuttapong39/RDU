@@ -88,8 +88,8 @@ class DashboardOverviewTest extends TestCase
 
     public function test_hero_counts_kpis_in_each_status(): void
     {
-        // KPI01 57.5% and KPI02 52.2% fail (≤ 40%); KPI04 42% is within 5 points of 40% → warning; the rest pass.
-        $this->withCounts(['KPI01' => [575, 1000], 'KPI02' => [522, 1000], 'KPI04' => [42, 100]] + $this->allPassing());
+        // KPI01 57.5% and KPI02 52.2% fail (≤ 40%); KPI04 22% is within 5 points of 20% → warning; the rest pass.
+        $this->withCounts(['KPI01' => [575, 1000], 'KPI02' => [522, 1000], 'KPI04' => [22, 100]] + $this->allPassing());
 
         $html = $this->overview();
 
@@ -121,7 +121,7 @@ class DashboardOverviewTest extends TestCase
     {
         // Six fail (more than the old watchlist's cap of 5), one warning.
         $this->withCounts([
-            'KPI04' => [42, 100],                                               // warning, listed after the failures
+            'KPI04' => [22, 100],                                               // warning, listed after the failures
             'KPI01' => [575, 1000], 'KPI02' => [522, 1000], 'KPI05' => [50, 100],
             'KPI07' => [30, 100],   'KPI11' => [60, 100],   'KPI12' => [1, 1000], // KPI12: 0.1% of a 0% target, still fail
         ] + $this->allPassing());

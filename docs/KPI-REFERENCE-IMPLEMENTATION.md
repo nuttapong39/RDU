@@ -14,7 +14,7 @@ KPI01, KPI03, KPI04 และ KPI05 คือตัวชี้วัดที�
 
 | KPI | Query class | Reference SQL | ประเภทข้อมูล | ตัวตั้ง (ตัวเศษ) | เป้าหมาย | ใช้เป็นต้นแบบเมื่อ |
 |---|---|---|---|---|---|---|
-| **KPI04** | `Antibiotic/RespiratoryInfectionAntibioticQuery` | `docs/SQL_KPI/KPI4.sql` | OPD (`ovst`, VN) | visit ที่**ได้รับ**ยาปฏิชีวนะ | ≤ 40% (`lower`) | **แม่แบบหลัก** — OPD + รายการ ICD-10 ชุดเดียว |
+| **KPI04** | `Antibiotic/RespiratoryInfectionAntibioticQuery` | `docs/SQL_KPI/KPI4.sql` | OPD (`ovst`, VN) | visit ที่**ได้รับ**ยาปฏิชีวนะ | ≤ 20% (`lower`) | **แม่แบบหลัก** — OPD + รายการ ICD-10 ชุดเดียว |
 | **KPI05** | `Antibiotic/AcuteDiarrheaAntibioticQuery` | `docs/SQL_KPI/KPI5.sql` | OPD (`ovst`, VN) | visit ที่**ได้รับ**ยาปฏิชีวนะ | ≤ 20% (`lower`) | โครงเดียวกับ KPI04 ทุกอย่าง ต่างแค่รหัสวินิจฉัย |
 | **KPI01** | `Antibiotic/AccidentWoundAntibioticQuery` | `docs/SQL_KPI/KPI1.sql` | OPD (`ovst`, VN) | visit ที่**ได้รับ**ยาปฏิชีวนะ | ≤ 40% (`lower`) | เงื่อนไขวินิจฉัย 2 กลุ่มต้องมีคู่กัน (ADR 0001), แพทย์ 2 บทบาท, มี CC/HPI |
 | **KPI03** | `Antibiotic/NormalDeliveryAntibioticQuery` | `docs/SQL_KPI/KPI3.sql` | IPD (`ipt` + `an_stat`, AN) | admission ที่**ไม่ได้รับ**ยาปฏิชีวนะ | ≥ 80% (`higher`) | ผู้ป่วยใน และตัวชี้วัดกลับทิศ (ยิ่งสูงยิ่งดี) |

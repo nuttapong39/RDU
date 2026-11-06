@@ -190,7 +190,8 @@ class KpiEngineTest extends TestCase
         // January is index 3 (Oct=0, Nov=1, Dec=2, Jan=3)
         $jan = collect($trend)->firstWhere('month', 1);
         $this->assertSame(80.0, $jan['pct']);
-        $this->assertSame('pass', $jan['status']);
+        // Judged against the current target (≤ 40%), not the status saved with the row.
+        $this->assertSame('fail', $jan['status']);
     }
 
     public function test_get_trend_null_pct_for_months_without_data(): void

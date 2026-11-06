@@ -126,18 +126,22 @@ Query:        [TBD — Plan แยกต่างหาก]
 
 ---
 
-#### KPI-04: การใช้ยาปฏิชีวนะใน URI และหลอดลมอักเสบเฉียบพลัน (OPD)
+#### KPI-04: การใช้ยาปฏิชีวนะใน URI และหลอดลมอักเสบเฉียบพลัน (OPD) ✅ implement แล้ว (2026-09)
 ```
 ชื่อ:         ร้อยละการใช้ยาปฏิชีวนะในโรคติดเชื้อที่ระบบการหายใจ
               ช่วงบนและหลอดลมอักเสบเฉียบพลันในผู้ป่วยนอก
-Code:         ipd_antibiotic_use
-Numerator:    จำนวนผู้ป่วยในที่ได้รับยาปฏิชีวนะ
-Denominator:  จำนวนผู้ป่วยในทั้งหมด
-Target:       ≤ 30%
-Direction:    ต่ำดี (lower_better)
-Category:     antibiotic_ipd
-HOSxP Tables: [TBD]
-Query:        [TBD — Plan แยกต่างหาก]
+Code:         uri_antibiotic
+Numerator:    visit ในตัวส่วนที่ได้รับยาปฏิชีวนะ (รายการยาปฏิชีวนะชุดเดียวกับ KPI01/KPI03)
+Denominator:  visit ผู้ป่วยนอกที่มีวินิจฉัยโรคติดเชื้อทางเดินหายใจช่วงบน / หลอดลมอักเสบเฉียบพลัน (ICD-10 ชุดเดียว
+              รวมหูชั้นกลางอักเสบที่เกี่ยวข้อง)
+Target:       ≤ 20% — เกณฑ์ RDU ของกระทรวงสาธารณสุข (Service Plan) เปลี่ยนจาก ≤ 40% เมื่อ 2026-11
+              ใช้กับทุกปีงบรวมย้อนหลัง (CONTEXT.md: เป้าหมาย) · 20.1–25% = ใกล้เป้าหมาย, เกิน 25% = ไม่ผ่าน
+Direction:    ต่ำดี (lower)
+Category:     Antibiotic · หน่วยนับ: visit
+HOSxP Tables: ovst, ovstdiag, opitemrece, drugitems, doctor, kskdepartment
+Query:        app/Queries/Kpi/Antibiotic/RespiratoryInfectionAntibioticQuery.php · docs/SQL_KPI/KPI4.sql
+HDC:          s_rdu6 (target / result) ใช้ในปุ่ม "เทียบ HDC"
+ผลปีงบ 2569:  516 / 2,505 visit (20.6%) — ใกล้เป้าหมายตามเกณฑ์ ≤ 20% (ผ่านตามเกณฑ์เดิม ≤ 40%)
 ```
 
 ---
@@ -350,7 +354,7 @@ HDC:          s_rdu16 (target / result) ใช้ในปุ่ม "เที�
 | KPI-01 | uri_no_antibiotic | ATB ในแผลอุบัติเหตุ (ทุกชนิด) | ≥ 80% | สูงดี | antibiotic_opd |
 | KPI-02 | fresh_accident_wound_antibiotic | ATB ในบาดแผลสดจากอุบัติเหตุ (ไม่รวมสัตว์กัด/ไฟไหม้/แผลลึก) | ≤ 40% | ต่ำดี | antibiotic_opd |
 | KPI-03 | wound_no_antibiotic | ATB ในหญิงคลอดปกติครบกำหนด | ≥ 80% | สูงดี | antibiotic_opd |
-| KPI-04 | ipd_antibiotic_use | ATB ใน URI/หลอดลมอักเสบเฉียบพลัน (OPD) | ≤ 30% | ต่ำดี | antibiotic_ipd |
+| KPI-04 | uri_antibiotic | ATB ใน URI/หลอดลมอักเสบเฉียบพลัน (OPD) | ≤ 20% | ต่ำดี | antibiotic_opd |
 | KPI-05 | cap_appropriate_antibiotic | ATB ในอุจจาระร่วงเฉียบพลัน | ≥ 80% | สูงดี | antibiotic_ipd |
 | ~~KPI-06~~ | — | ⛔ ตัดออก 2026-10-17 (ATB ใน Pyelonephritis/UTI เฉียบพลัน) | — | — | — |
 | KPI-07 | nsaid_duplication | NSAIDs ซ้ำซ้อน (OPD) | ≤ 5% | ต่ำดี | patient_safety |

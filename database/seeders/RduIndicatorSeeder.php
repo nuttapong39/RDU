@@ -47,7 +47,7 @@ class RduIndicatorSeeder extends Seeder
                 'category' => 'Antibiotic',
                 'numerator_desc' => 'จำนวนครั้งบริการโรคติดเชื้อทางเดินหายใจส่วนบน/หลอดลมอักเสบเฉียบพลันที่ได้รับยาปฏิชีวนะ',
                 'denominator_desc' => 'จำนวนครั้งบริการโรคติดเชื้อทางเดินหายใจส่วนบน/หลอดลมอักเสบเฉียบพลันทั้งหมด',
-                'target_value' => 40.00,
+                'target_value' => 20.00,   // RDU Service Plan criterion (was 40 until 2026-11)
                 'target_direction' => 'lower',
                 'sort_order' => 4,
             ],
