@@ -36,14 +36,16 @@
         <div class="px-4 py-4 border-b border-slate-200 flex-shrink-0">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ring-1 ring-slate-200 bg-white p-0.5">
-                    <img src="{{ asset('images/logo_ck.png') }}" alt="ตราสัญลักษณ์โรงพยาบาลเชียงกลาง" class="w-full h-full object-contain rounded-full">
+                    <x-facility-logo :facility="$facility" class="w-full h-full object-contain rounded-full" />
                 </div>
                 <div class="min-w-0">
                     <div class="text-sm font-bold text-slate-800 leading-snug">
                         RDU Dashboard
                         <span class="text-[.65rem] font-medium text-slate-400 ml-1">V.1.0</span>
                     </div>
-                    <div class="text-slate-500 text-xs leading-tight mt-0.5">รพ.เชียงกลาง จ.น่าน</div>
+                    @if($facility['configured'])
+                        <div class="text-slate-500 text-xs leading-tight mt-0.5">{{ $facility['shortTitle'] }}</div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -149,6 +151,14 @@
                aria-current="{{ request()->routeIs('admin.drug-code-editors.*') ? 'page' : 'false' }}">
                 <span class="msi text-[1.1rem]">manage_accounts</span>
                 <span>ผู้ตั้งค่ารหัสยา</span>
+            </a>
+
+            <a href="{{ route('admin.facility.show') }}"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
+                      {{ request()->routeIs('admin.facility.*') ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
+               aria-current="{{ request()->routeIs('admin.facility.*') ? 'page' : 'false' }}">
+                <span class="msi text-[1.1rem]">apartment</span>
+                <span>ข้อมูลสถานบริการ</span>
             </a>
             @endcan
         </nav>
@@ -262,6 +272,15 @@
 
         {{-- Page Content --}}
         <main class="flex-1 px-4 lg:px-6 py-5">
+            @if(! $facility['configured'])
+                @can('manage-settings')
+                    <div data-facility-warning class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex flex-wrap items-center gap-2" role="status">
+                        <span class="msi text-[1.1rem]" aria-hidden="true">info</span>
+                        ยังไม่ได้ตั้งค่าข้อมูลสถานบริการ (ชื่อ จังหวัด รหัสหน่วยบริการ โลโก้)
+                        <a href="{{ route('admin.facility.show') }}" class="font-semibold underline underline-offset-2 cursor-pointer">ไปตั้งค่า</a>
+                    </div>
+                @endcan
+            @endif
             @yield('content')
         </main>
     </div>

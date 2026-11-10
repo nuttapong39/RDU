@@ -48,7 +48,7 @@
             </svg>
             <div class="min-w-0">
                 <h1 id="hero-title" class="text-xl md:text-2xl font-bold text-slate-900 leading-tight">RDU Dashboard</h1>
-                <p class="text-sm text-slate-600 mt-0.5">การใช้ยาอย่างสมเหตุสมผล (Rational Drug Use) · โรงพยาบาลเชียงกลาง</p>
+                <p class="text-sm text-slate-600 mt-0.5">การใช้ยาอย่างสมเหตุสมผล (Rational Drug Use){{ $facility['configured'] ? ' · '.$facility['name'] : '' }}</p>
                 <p class="text-xs text-slate-400 mt-0.5">ข้อมูลจาก HOSxP · อัปเดตทุก 1 ชั่วโมง</p>
             </div>
         </div>

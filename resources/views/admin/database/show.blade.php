@@ -257,7 +257,7 @@
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
             <div class="text-xs font-semibold text-gray-500 mb-2">ตัวอย่าง</div>
             <div id="preview-sans" class="text-base text-gray-900">การใช้ยาอย่างสมเหตุผล — Rational Drug Use 0123456789 (ร้อยละ 20.5)</div>
-            <div id="preview-sans-bold" class="text-base font-bold text-gray-900 mt-1">โรงพยาบาลเชียงกลาง จังหวัดน่าน</div>
+            <div id="preview-sans-bold" class="text-base font-bold text-gray-900 mt-1">{{ $facility['configured'] ? $facility['title'] : 'โรงพยาบาลตัวอย่าง จังหวัดตัวอย่าง' }}</div>
             <div id="preview-mono" class="text-sm text-gray-700 mt-2">KPI01 · 12,345 ครั้ง · 85.2%</div>
         </div>
 

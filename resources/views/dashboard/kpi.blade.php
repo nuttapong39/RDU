@@ -1367,9 +1367,9 @@
             <p class="text-xs text-slate-400 mt-2">เป้าหมาย ${esc(targetTxt)} · ตัวเลขสองฝั่งอาจต่างกันได้ เพราะใช้นิยาม แหล่งข้อมูล และวันตัดข้อมูลต่างกัน (HDC ใช้ข้อมูล 43 แฟ้มที่ส่งเข้าส่วนกลาง)</p>
 
             <h3 class="font-semibold text-sm text-slate-800 mt-6 mb-1">กราฟเปรียบเทียบผลลัพธ์ในจังหวัด</h3>
-            <p class="text-xs text-slate-500 mb-2">สีแท่งตามสถานะ · แท่งขอบม่วงคือ รพ.เชียงกลาง (แท่งสีจาง = HOSxP ระบบนี้, แท่งสีเต็ม = HDC) · เส้นประ = เป้าหมาย</p>
+            <p class="text-xs text-slate-500 mb-2">สีแท่งตามสถานะ · แท่งขอบม่วงคือ {{ $facility['configured'] ? $facility['shortName'] : 'โรงพยาบาลนี้' }} (แท่งสีจาง = HOSxP ระบบนี้, แท่งสีเต็ม = HDC) · เส้นประ = เป้าหมาย</p>
             <div class="relative" style="height: 300px;">
-                <canvas id="hdcCompareChart" role="img" aria-label="กราฟแท่งผลลัพธ์ร้อยละของโรงพยาบาลในจังหวัดจากข้อมูล HDC เทียบกับผลจาก HOSxP ของโรงพยาบาลเชียงกลาง"></canvas>
+                <canvas id="hdcCompareChart" role="img" aria-label="กราฟแท่งผลลัพธ์ร้อยละของโรงพยาบาลในจังหวัดจากข้อมูล HDC เทียบกับผลจาก HOSxP ของ{{ $facility['configured'] ? $facility['name'] : 'โรงพยาบาลนี้' }}"></canvas>
             </div>
 
             <h3 class="font-semibold text-sm text-slate-800 mt-6 mb-2">โรงพยาบาลในจังหวัดจากข้อมูล HDC (เรียงจากผลดีที่สุด)</h3>

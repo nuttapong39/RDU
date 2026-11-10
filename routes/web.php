@@ -2,16 +2,21 @@
 
 use App\Http\Controllers\Admin\DatabaseConfigController;
 use App\Http\Controllers\Admin\DrugCodeEditorController;
+use App\Http\Controllers\Admin\FacilityController;
 use App\Http\Controllers\Admin\FontConfigController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CountingMethodController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DrugCodeSetController;
+use App\Http\Controllers\FacilityLogoController;
 use App\Http\Controllers\HdcComparisonController;
 use Illuminate\Support\Facades\Route;
 
 // ---- Public ----
 Route::get('/', fn () => redirect()->route('dashboard'));
+
+// The hospital's logo is shown on the login page too, so it is served without signing in.
+Route::get('/facility/logo', FacilityLogoController::class)->name('facility.logo');
 
 // ---- Auth ----
 Route::middleware('guest')->group(function () {
@@ -41,6 +46,8 @@ Route::middleware(['auth', 'can:manage-settings'])->prefix('admin')->name('admin
     Route::post('/settings/database/test', [DatabaseConfigController::class, 'test'])->name('database.test');
     Route::post('/settings/fonts', [FontConfigController::class, 'update'])->name('fonts.update');
     Route::post('/settings/fonts/reset', [FontConfigController::class, 'reset'])->name('fonts.reset');
+    Route::get('/facility', [FacilityController::class, 'show'])->name('facility.show');
+    Route::post('/facility', [FacilityController::class, 'update'])->name('facility.update');
     Route::get('/drug-code-editors', [DrugCodeEditorController::class, 'index'])->name('drug-code-editors.index');
     Route::post('/drug-code-editors', [DrugCodeEditorController::class, 'store'])->name('drug-code-editors.store');
     Route::delete('/drug-code-editors/{editor}', [DrugCodeEditorController::class, 'destroy'])->name('drug-code-editors.destroy');

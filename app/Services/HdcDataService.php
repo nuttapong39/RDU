@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Http;
  */
 class HdcDataService
 {
+    public function __construct(private FacilityProfileService $facility) {}
+
     /**
      * KPI code => HDC table and the columns holding the denominator / numerator — one column, or a list
      * of columns that are summed (tables published per month, e.g. s_rdu10's t10…t09 / r10…r09).
@@ -41,9 +43,10 @@ class HdcDataService
     /** How long a failed HDC call suppresses further dashboard calls (the modal's retry ignores this). */
     private const DOWN_TTL = 300;
 
+    /** A KPI is compared with HDC only when it has an HDC table and this hospital's hospcode and province are set. */
     public function isLinked(string $kpiCode): bool
     {
-        return isset(self::MAPPING[$kpiCode]);
+        return isset(self::MAPPING[$kpiCode]) && $this->facility->hospcode() !== '' && $this->facility->provinceCode() !== '';
     }
 
     public function table(string $kpiCode): ?string
@@ -93,7 +96,7 @@ class HdcDataService
      */
     public function ours(string $kpiCode, int $fyYear): ?array
     {
-        $hospcode = config('rdu.hdc.hospcode');
+        $hospcode = $this->facility->hospcode();
 
         return collect($this->rows($kpiCode, $fyYear))->firstWhere('hospcode', $hospcode);
     }
@@ -117,7 +120,7 @@ class HdcDataService
     /** @throws HdcUnavailableException */
     private function fetch(string $table, int $fyYear, bool $honourOutage): array
     {
-        $province = config('rdu.hdc.province');
+        $province = $this->facility->provinceCode();
         $key      = "rdu.hdc.{$table}.{$fyYear}.{$province}";
         $downKey  = "rdu.hdc.down.{$table}.{$fyYear}.{$province}";
         $offline  = 'rdu.hdc.down';   // HDC unreachable at all (timeout/network) — covers every table

@@ -36,7 +36,7 @@
             </div>
         </div>
         <div class="text-xs text-blue-400">
-            โรงพยาบาลเชียงกลาง จ.น่าน
+            {{ $facility['configured'] ? $facility['shortTitle'] : '' }}
         </div>
     </div>
 </header>

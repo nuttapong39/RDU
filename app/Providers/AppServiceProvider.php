@@ -21,6 +21,7 @@ use App\Queries\Kpi\PatientSafety\ElderlyLongActingBenzodiazepineQuery;
 use App\Queries\Kpi\PatientSafety\NsaidDuplicationQuery;
 use App\Queries\Kpi\PatientSafety\RasDualBlockadeQuery;
 use App\Services\DrugCodeSetService;
+use App\Services\FacilityProfileService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -29,6 +30,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->singleton(FacilityProfileService::class);
+
         // One instance per request, so the KPI queries share a single read of each drug code set.
         $this->app->singleton(DrugCodeSetService::class);
 
@@ -89,6 +92,11 @@ class AppServiceProvider extends ServiceProvider
             $unconfigured = $codes->reject(fn ($code) => $sets->isKpiConfigured($code))->count();
 
             $view->with('activeKpiCount', $codes->count() - $unconfigured)->with('unconfiguredKpiCount', $unconfigured);
+        });
+
+        // Every page that names the hospital reads it from the facility profile (CONTEXT.md: ข้อมูลสถานบริการ).
+        View::composer(['layouts.*', 'auth.login', 'dashboard.*', 'admin.*'], function ($view) {
+            $view->with('facility', $this->app->make(FacilityProfileService::class)->profile());
         });
 
         Gate::define('manage-settings', fn ($user) => in_array(

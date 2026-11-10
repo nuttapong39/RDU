@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>เข้าสู่ระบบ | RDU Dashboard - โรงพยาบาลเชียงกลาง</title>
+<title>เข้าสู่ระบบ | RDU Dashboard{{ $facility['configured'] ? ' - '.$facility['name'] : '' }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@ a{text-decoration:none;color:inherit}
 .header-inner{max-width:1640px;margin:0 auto;padding:10px 48px;display:flex;align-items:center;justify-content:space-between;gap:24px}
 .brand{display:flex;align-items:center;gap:14px}
 .logo-moph{width:46px;height:46px;padding:3px;border-radius:50%;flex:none;display:grid;place-items:center;background:#fff;border:2.5px solid var(--green);box-shadow:0 4px 12px rgba(22,163,74,.15);overflow:hidden}
-.logo-moph img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+.logo-moph img,.logo-moph svg{width:100%;height:100%;object-fit:contain;border-radius:50%}
 .brand-text h1{font-size:17px;font-weight:700;line-height:1.25}
 .brand-text span{font-size:11px;color:var(--muted);letter-spacing:1.4px;text-transform:uppercase}
 .nav{display:flex;align-items:center;gap:30px}
@@ -114,7 +114,7 @@ a{text-decoration:none;color:inherit}
 .card{width:100%;max-width:430px;background:rgba(255,255,255,.98);border:1px solid #eef2f7;border-radius:24px;box-shadow:0 20px 50px rgba(15,23,42,.10);padding:26px 32px 22px;backdrop-filter:blur(14px)}
 .card-head{text-align:center;margin-bottom:18px}
 .card-icon{width:68px;height:68px;padding:4px;margin:0 auto 10px;border-radius:50%;background:#fff;border:3px solid var(--green);display:grid;place-items:center;box-shadow:0 10px 24px rgba(22,163,74,.22);overflow:hidden}
-.card-icon img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+.card-icon img,.card-icon svg{width:100%;height:100%;object-fit:contain;border-radius:50%}
 .card-head h4{font-size:21px;font-weight:700}
 .card-head p{font-size:13.5px;color:var(--muted);margin-top:4px}
 .alert-box{display:none;align-items:center;gap:9px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:13px;padding:11px 14px;border-radius:11px;margin-bottom:16px}
@@ -200,11 +200,11 @@ a{text-decoration:none;color:inherit}
   <div class="header-inner">
     <div class="brand">
       <div class="logo-moph">
-        <img src="{{ asset('images/logo_ck.png') }}" alt="ตราสัญลักษณ์โรงพยาบาลเชียงกลาง">
+        <x-facility-logo :facility="$facility" />
       </div>
       <div class="brand-text">
-        <h1>โรงพยาบาลเชียงกลาง จังหวัดน่าน</h1>
-        <span>Chiangklang Hospital</span>
+        <h1>{{ $facility['title'] }}</h1>
+        <span>Rational Drug Use Dashboard</span>
       </div>
     </div>
 
@@ -344,10 +344,10 @@ a{text-decoration:none;color:inherit}
       <div class="card">
         <div class="card-head">
           <div class="card-icon">
-            <img src="{{ asset('images/logo_ck.png') }}" alt="ตราสัญลักษณ์โรงพยาบาลเชียงกลาง">
+            <x-facility-logo :facility="$facility" />
           </div>
           <h4>เข้าสู่ระบบ</h4>
-          <p>สำหรับเจ้าหน้าที่โรงพยาบาลเชียงกลาง</p>
+          <p>{{ $facility['configured'] ? 'สำหรับเจ้าหน้าที่'.$facility['name'] : 'สำหรับเจ้าหน้าที่' }}</p>
         </div>
 
         {{-- Error alert --}}
@@ -449,7 +449,7 @@ a{text-decoration:none;color:inherit}
 
 <!-- FOOTER -->
 <footer class="footer">
-  <span>&copy; 2569 โรงพยาบาลเชียงกลาง จังหวัดน่าน | RDU Dashboard v1.0</span>
+  <span>&copy; {{ now()->year + 543 }} {{ $facility['configured'] ? $facility['title'].' | ' : '' }}RDU Dashboard v1.0</span>
   <span class="dev">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
       <rect x="2" y="3" width="20" height="14" rx="2"/>

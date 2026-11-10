@@ -7,6 +7,7 @@ use App\Queries\Kpi\KpiQueryInterface;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 abstract class TestCase extends BaseTestCase
@@ -27,6 +28,14 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // RefreshDatabase runs `$seed`/`$seeder` only when it migrates the database, i.e. for the first test class of
+        // a process; later classes find the tables already built and empty. Seed here so a class that asks for
+        // seeding gets it whichever class ran before it.
+        if (property_exists($this, 'seed') && $this->seed && Schema::hasTable('rdu_indicators')
+            && ! DB::table('rdu_indicators')->exists()) {
+            $this->seed(property_exists($this, 'seeder') ? $this->seeder : 'Database'.chr(92).'Seeders'.chr(92).'DatabaseSeeder');
+        }
 
         if ($this->seedDrugCodeSets && Schema::hasTable('drug_code_sets')) {
             Artisan::call('rdu:import-drug-code-sets');
@@ -70,6 +79,11 @@ abstract class TestCase extends BaseTestCase
             }
         }
         $app->useStoragePath($storage);
+
+        // The "local" disk's root was fixed from the real storage path when config loaded; without this the
+        // facility logo (and any other file a test writes) would land in the real storage/app/private.
+        $app['config']->set('filesystems.disks.local.root', $storage.'/app/private');
+        $app['filesystem']->forgetDisk('local');
 
         return $app;
     }

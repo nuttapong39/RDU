@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\DrugCodeSet;
 use App\Services\DrugCodeSetService;
+use App\Services\FacilityProfileService;
 use App\Support\DrugCodeSetRegistry;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,9 @@ use Illuminate\Support\Facades\DB;
  * run it. A set that already has items is left alone, so running it twice, or after a pharmacist has edited a
  * set, changes nothing. It does not set `changed_at`: the import is the baseline, so results calculated
  * before it stay valid.
+ *
+ * With the default file it also sets Chiang Klang as the facility (name, province, hospcode, the old logo file) —
+ * but only when no facility is set yet, so it never overwrites what an admin saved.
  */
 class ImportDrugCodeSetsCommand extends Command
 {
@@ -21,7 +25,7 @@ class ImportDrugCodeSetsCommand extends Command
 
     protected $description = "Import Chiang Klang Hospital's drug code sets once (skips any set that already has items)";
 
-    public function handle(DrugCodeSetService $service): int
+    public function handle(DrugCodeSetService $service, FacilityProfileService $facility): int
     {
         $file = $this->option('file') ?: database_path('data/chiangklang-drug-code-sets.php');
 
@@ -56,7 +60,31 @@ class ImportDrugCodeSetsCommand extends Command
 
         $service->flush();
 
+        if (! $this->option('file')) {
+            $this->importFacility($facility);
+        }
+
         return self::SUCCESS;
+    }
+
+    private function importFacility(FacilityProfileService $facility): void
+    {
+        if ($facility->isConfigured()) {
+            $this->line('  facility: already set, skipped');
+
+            return;
+        }
+
+        $facility->save([
+            'name' => 'โรงพยาบาลเชียงกลาง', 'short_name' => 'รพ.เชียงกลาง', 'province_code' => '55', 'hospcode' => '11179',
+        ]);
+
+        $logo = public_path('images/logo_ck.png');
+        if (is_file($logo)) {
+            $facility->importLogoFile($logo);
+        }
+
+        $this->info('  facility: set to Chiang Klang Hospital');
     }
 
     /** @param array<int|string, ?string> $items code => attribute */

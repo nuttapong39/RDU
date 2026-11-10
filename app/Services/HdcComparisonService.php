@@ -13,22 +13,16 @@ use App\Models\RduIndicator;
  */
 class HdcComparisonService
 {
-    /** Nan district codes (first 4 digits of HDC `areacode`). */
-    private const NAN_DISTRICTS = [
-        '5501' => 'เมืองน่าน', '5502' => 'แม่จริม', '5503' => 'บ้านหลวง', '5504' => 'นาน้อย', '5505' => 'ปัว',
-        '5506' => 'ท่าวังผา', '5507' => 'เวียงสา', '5508' => 'ทุ่งช้าง', '5509' => 'เชียงกลาง', '5510' => 'นาหมื่น',
-        '5511' => 'สันติสุข', '5512' => 'บ่อเกลือ', '5513' => 'สองแคว', '5514' => 'ภูเพียง', '5515' => 'เฉลิมพระเกียรติ',
-    ];
-
     public function __construct(
         private RduCalculationService $calcService,
-        private HdcDataService $hdc
+        private HdcDataService $hdc,
+        private FacilityProfileService $facility
     ) {}
 
     /** @throws HdcUnavailableException */
     public function compare(RduIndicator $indicator, int $fyYear): array
     {
-        $hospcode = config('rdu.hdc.hospcode');
+        $hospcode = $this->facility->hospcode();
 
         if (! $this->hdc->isLinked($indicator->code)) {
             return ['linked' => false, 'kpi' => $indicator->code, 'year' => $fyYear, 'hospcode' => $hospcode];
@@ -113,7 +107,7 @@ class HdcComparisonService
 
     private function label(string $hospcode, string $areacode): string
     {
-        $district = self::NAN_DISTRICTS[substr($areacode, 0, 4)] ?? null;
+        $district = FacilityProfileService::districtName($areacode);
 
         return $district ? "อ.{$district} ({$hospcode})" : $hospcode;
     }
