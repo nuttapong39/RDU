@@ -40,15 +40,31 @@ class HisAuthService
         }
 
 
-        // Sync HOSxP officer → local users table (Laravel auth needs a local record)
-        return User::updateOrCreate(
-            ['username' => $username],
-            [
-                'name'     => $officer->officer_name ?? $username,
-                'email'    => $username . '@rdu.local',
-                'password' => Hash::make(uniqid('', true)), // random — login always goes through HOSxP
-            ]
-        );
+        return $this->syncLocalUser($username, $officer->officer_name ?? null);
+    }
+
+    /**
+     * HOSxP officer → local users table (Laravel auth needs a local record).
+     *
+     * The local password is a random, unknowable value set ONCE, when the account is first taken over from HOSxP
+     * (login always goes through HOSxP). It must not change on later logins: Laravel's "remember me" cookie is tied
+     * to the current password hash, so re-randomising it on every login signed the user out of every other browser.
+     */
+    public function syncLocalUser(string $username, ?string $name): User
+    {
+        $user = User::firstOrNew(['username' => $username]);
+        $user->name = $name ?: $username;
+
+        $syncedEmail = $username . '@rdu.local';
+        if ($user->email !== $syncedEmail) {
+            // New account, or a local one (known password) being taken over by HOSxP — first time only.
+            $user->email    = $syncedEmail;
+            $user->password = Hash::make(uniqid('', true));
+        }
+
+        $user->save();
+
+        return $user;
     }
 
     public function isAvailable(): bool
