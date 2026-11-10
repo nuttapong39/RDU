@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DatabaseConfigController;
+use App\Http\Controllers\Admin\DrugCodeEditorController;
 use App\Http\Controllers\Admin\FontConfigController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CountingMethodController;
@@ -33,4 +34,7 @@ Route::middleware(['auth', 'can:manage-settings'])->prefix('admin')->name('admin
     Route::post('/settings/database/test', [DatabaseConfigController::class, 'test'])->name('database.test');
     Route::post('/settings/fonts', [FontConfigController::class, 'update'])->name('fonts.update');
     Route::post('/settings/fonts/reset', [FontConfigController::class, 'reset'])->name('fonts.reset');
+    Route::get('/drug-code-editors', [DrugCodeEditorController::class, 'index'])->name('drug-code-editors.index');
+    Route::post('/drug-code-editors', [DrugCodeEditorController::class, 'store'])->name('drug-code-editors.store');
+    Route::delete('/drug-code-editors/{editor}', [DrugCodeEditorController::class, 'destroy'])->name('drug-code-editors.destroy');
 });

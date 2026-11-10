@@ -20,6 +20,7 @@ use App\Queries\Kpi\PatientSafety\CkdNsaidQuery;
 use App\Queries\Kpi\PatientSafety\ElderlyLongActingBenzodiazepineQuery;
 use App\Queries\Kpi\PatientSafety\NsaidDuplicationQuery;
 use App\Queries\Kpi\PatientSafety\RasDualBlockadeQuery;
+use App\Services\DrugCodeSetService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -85,5 +86,8 @@ class AppServiceProvider extends ServiceProvider
             config('rdu.settings_admins', []),
             true
         ));
+
+        // Admins always may; other users only when an admin granted it (admin/drug-code-editors).
+        Gate::define('edit-drug-code-sets', fn ($user) => DrugCodeSetService::userCanEdit($user));
     }
 }

@@ -129,6 +129,14 @@
                 <span class="msi text-[1.1rem]">storage</span>
                 <span>ตั้งค่าฐานข้อมูล HOSxP</span>
             </a>
+
+            <a href="{{ route('admin.drug-code-editors.index') }}"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
+                      {{ request()->routeIs('admin.drug-code-editors.*') ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
+               aria-current="{{ request()->routeIs('admin.drug-code-editors.*') ? 'page' : 'false' }}">
+                <span class="msi text-[1.1rem]">manage_accounts</span>
+                <span>ผู้ตั้งค่ารหัสยา</span>
+            </a>
             @endcan
         </nav>
 
