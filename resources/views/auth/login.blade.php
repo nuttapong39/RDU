@@ -9,8 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --green:#16a34a;--green-dark:#15803d;--green-soft:#dcfce7;
-  --blue:#2563eb;--blue-soft:#dbeafe;--teal:#0d9488;
+  /* Same violet as inside the system (resources/css/app.css --brand-*); status colours stay green/amber/red */
+  --brand:#7c3aed;--brand-dark:#6d28d9;--brand-soft:#ede9fe;--brand-2:#4f46e5;
+  --card-edge:rgba(167,139,250,.30);
+  --card-shadow:0 1px 2px rgba(76,29,149,.07),0 6px 16px -4px rgba(109,40,217,.13),0 16px 32px -14px rgba(76,29,149,.14);
+  --ease:cubic-bezier(.22,1,.36,1);
   --ink:#0f172a;--muted:#64748b;--line:#e2e8f0;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -19,32 +22,31 @@ body{font-family:'IBM Plex Sans Thai','Inter',system-ui,sans-serif;color:var(--i
 a{text-decoration:none;color:inherit}
 
 /* HEADER */
-.header{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.header{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--card-edge)}
 .header-inner{max-width:1640px;margin:0 auto;padding:10px 48px;display:flex;align-items:center;justify-content:space-between;gap:24px}
-.brand{display:flex;align-items:center;gap:14px}
-.logo-moph{width:46px;height:46px;padding:3px;border-radius:50%;flex:none;display:grid;place-items:center;background:#fff;border:2.5px solid var(--green);box-shadow:0 4px 12px rgba(22,163,74,.15);overflow:hidden}
+.brand{display:flex;align-items:center;gap:18px}
+.logo-moph{width:68px;height:68px;padding:4px;border-radius:50%;flex:none;display:grid;place-items:center;background:#fff;border:2.5px solid var(--brand);box-shadow:0 4px 12px rgba(109,40,217,.15);overflow:hidden}
 .logo-moph img,.logo-moph svg{width:100%;height:100%;object-fit:contain;border-radius:50%}
-.brand-text h1{font-size:17px;font-weight:700;line-height:1.25}
-.brand-text span{font-size:11px;color:var(--muted);letter-spacing:1.4px;text-transform:uppercase}
+.brand-text h1{font-size:24px;font-weight:700;line-height:1.2}
+.brand-text span{font-size:13px;color:var(--muted);letter-spacing:1.6px;text-transform:uppercase}
 .nav{display:flex;align-items:center;gap:30px}
 .nav-item{display:flex;align-items:flex-start;gap:8px;transition:.2s;cursor:default}
-.nav-item:hover{color:var(--green)}
+.nav-item:hover{color:var(--brand)}
 .nav-item strong{display:block;font-size:13px;font-weight:700;letter-spacing:.3px}
 .nav-item small{display:block;font-size:11px;color:var(--muted);font-weight:400}
 
 /* HERO */
 /* Fills the space between the header and the footer, content centred vertically */
 .hero{position:relative;overflow:hidden;padding:28px 48px;flex:1;display:flex;align-items:center;
-  background:radial-gradient(900px 520px at 8% 12%,rgba(209,250,229,.65) 0%,transparent 62%),
-    radial-gradient(800px 500px at 92% 20%,rgba(219,234,254,.6) 0%,transparent 64%),
-    radial-gradient(700px 500px at 55% 105%,rgba(204,251,241,.55) 0%,transparent 62%),
-    linear-gradient(160deg,#f6fdf9 0%,#fafbfc 45%,#f5f9ff 100%)}
-.blob{position:absolute;border-radius:50%;pointer-events:none;filter:blur(70px)}
-.b1{width:420px;height:420px;background:rgba(34,197,94,.14);top:-140px;left:-130px}
-.b2{width:340px;height:340px;background:rgba(45,212,191,.12);bottom:-130px;left:22%}
-.b3{width:480px;height:480px;background:rgba(59,130,246,.11);top:10px;right:-160px}
+  background:linear-gradient(160deg,#fbfaff 0%,#fcfbff 45%,#f7f5ff 100%)}
+.blob{position:absolute;border-radius:50%;pointer-events:none;filter:blur(70px);will-change:transform}
+.b1{width:520px;height:520px;background:rgba(167,139,250,.30);top:-190px;left:-160px;animation:drift-a 38s ease-in-out infinite alternate}
+.b2{width:420px;height:420px;background:rgba(196,181,253,.34);bottom:-170px;left:24%;animation:drift-b 44s ease-in-out infinite alternate}
+.b3{width:560px;height:560px;background:rgba(139,92,246,.20);top:0;right:-200px;animation:drift-a 50s ease-in-out infinite alternate-reverse}
+@keyframes drift-a{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(60px,40px,0) scale(1.12)}}
+@keyframes drift-b{from{transform:translate3d(0,0,0) scale(1.08)}to{transform:translate3d(-50px,-36px,0) scale(.96)}}
 .grid-dots{position:absolute;inset:0;pointer-events:none;opacity:.35;
-  background-image:radial-gradient(circle,#94a3b8 1px,transparent 1px);
+  background-image:radial-gradient(circle,#a78bfa 1px,transparent 1px);
   background-size:28px 28px;
   -webkit-mask-image:linear-gradient(to bottom,#000,transparent 72%);
   mask-image:linear-gradient(to bottom,#000,transparent 72%)}
@@ -64,22 +66,39 @@ a{text-decoration:none;color:inherit}
 .hero-inner{position:relative;z-index:3;width:100%;max-width:1640px;margin:0 auto;display:grid;grid-template-columns:minmax(0,620px) minmax(360px,1fr) minmax(0,430px);gap:24px;align-items:center}
 .hero-text{container-type:inline-size}
 
+/* VITAL SIGN MONITOR: like a hospital monitor in a film. A bright dot starts at the left edge of the screen and draws a
+   flat line first, then heartbeats of different heights; the trace behind it slowly fades and an erase gap runs ahead of
+   the dot. Drawn on a canvas by the script below. */
+.vital{position:absolute;left:0;right:0;bottom:0;height:112px;overflow:hidden;pointer-events:none;z-index:1;
+  -webkit-mask-image:linear-gradient(90deg,#000 94%,transparent);mask-image:linear-gradient(90deg,#000 94%,transparent)}
+.vital canvas{display:block;width:100%;height:100%;filter:drop-shadow(0 0 4px rgba(139,92,246,.8))}
+.vital-dot{position:absolute;left:0;top:0;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:#fff;
+  box-shadow:0 0 0 3px rgba(124,58,237,.95),0 0 16px 6px rgba(139,92,246,.75);will-change:transform}
+
+/* ENTRANCE: one short sequence. The text rises line by line, then the card; the status numbers count up (script below) */
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.hero-text>*{animation:rise .6s var(--ease) both}
+.hero-text>:nth-child(1){animation-delay:.05s}.hero-text>:nth-child(2){animation-delay:.12s}.hero-text>:nth-child(3){animation-delay:.2s}
+.hero-text>:nth-child(4){animation-delay:.3s}.hero-text>:nth-child(5){animation-delay:.42s}.hero-text>:nth-child(6){animation-delay:.54s}.hero-text>:nth-child(7){animation-delay:.62s}
+.login-wrap .card{animation:rise .7s var(--ease) .25s both}
+
 /* HERO TEXT */
-.pill{display:inline-flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 18px 9px 12px;font-size:13.5px;font-weight:600;box-shadow:0 4px 14px rgba(15,23,42,.06)}
-.pill .dot{width:24px;height:24px;border-radius:7px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center}
+.pill{display:inline-flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--card-edge);border-radius:999px;padding:9px 18px 9px 12px;font-size:13.5px;font-weight:600;box-shadow:0 4px 14px rgba(15,23,42,.06)}
+.pill .dot{width:24px;height:24px;border-radius:7px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center}
 .hero h2{font-size:clamp(30px,4.2vw,52px);font-size:clamp(28px,8.4cqi,52px);font-weight:700;line-height:1.15;margin:14px 0 4px}
-.hero h3{font-size:clamp(24px,3.6vw,44px);font-weight:700;line-height:1.15;background:linear-gradient(90deg,var(--green),#0891b2);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h3{font-size:clamp(24px,3.6vw,44px);font-weight:700;line-height:1.15;background:linear-gradient(90deg,var(--brand),var(--brand-2) 55%,#a855f7);-webkit-background-clip:text;background-clip:text;color:transparent}
 /* Sized to the text column, so "RDU – การใช้ยาอย่างสมเหตุผล" stays on one line */
 .hero h3{font-size:clamp(22px,7.2cqi,44px)}
 .hero h3 .nowrap{white-space:nowrap}
 .hero p{max-width:600px;color:#475569;font-size:14.5px;margin:14px 0 20px}
-.hero p b{color:var(--green-dark);font-weight:600}
+.hero p b{color:var(--brand-dark);font-weight:600}
 .chips{display:flex;flex-wrap:wrap;gap:12px}
-.chip{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.85);border:1px solid var(--line);border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:500;transition:.2s;backdrop-filter:blur(4px)}
-.chip:hover{border-color:var(--green);color:var(--green-dark);transform:translateY(-2px);box-shadow:0 6px 16px rgba(22,163,74,.13)}
+.chip{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.9);border:1px solid var(--card-edge);border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:500;transition:.2s;backdrop-filter:blur(4px)}
+.chip:hover{border-color:var(--brand);color:var(--brand-dark);transform:translateY(-2px);box-shadow:0 6px 16px rgba(109,40,217,.13)}
 .stats{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
 .stats-title{width:100%;font-size:12.5px;font-weight:600;color:#475569}
-.st{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:12px;padding:8px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 12px rgba(15,23,42,.05)}
+.st{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,#fff,#fcfbff);border:1px solid var(--card-edge);border-radius:12px;padding:8px 14px;font-size:14px;font-weight:600;box-shadow:var(--card-shadow);transition:transform .22s var(--ease),box-shadow .22s var(--ease)}
+.st:hover{transform:translateY(-3px);box-shadow:0 12px 28px -6px rgba(109,40,217,.20),0 0 0 1px rgba(167,139,250,.55)}
 .st b{font-size:20px;font-weight:700}
 .st i{width:10px;height:10px;border-radius:50%;flex:none}
 .st-pass i{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18)} .st-pass b{color:#15803d}
@@ -97,23 +116,46 @@ a{text-decoration:none;color:inherit}
   .st b{font-size:16px}
 }
 
-/* 3D SCENE (resources/js/login-scene.js) — replaces the decorative background when WebGL is available */
-.rdu-scene{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity 1.2s ease}
-.rdu-scene.is-ready{opacity:1}
-.rdu-scene canvas{display:block;width:100%;height:100%}
-.hero.has-scene .blob,.hero.has-scene .grid-dots,.hero.has-scene .float-ico{display:none}
-/* Keep the text readable where capsules pass behind it: a soft white wash, not a text-shadow
-   (the h3 is gradient-clipped transparent text — a shadow would show through and wash it out) */
-.hero.has-scene .hero-text{position:relative}
-.hero.has-scene .hero-text::before{content:"";position:absolute;inset:-16px -60px -16px -24px;z-index:-1;border-radius:40px;
-  background:radial-gradient(ellipse at 35% 50%,rgba(255,255,255,.85) 0%,rgba(255,255,255,.7) 48%,rgba(255,255,255,0) 70%)}
-.scene-tip{position:absolute;z-index:5;pointer-events:none;max-width:320px;background:rgba(15,23,42,.88);color:#fff;font-size:12.5px;line-height:1.45;padding:7px 11px;border-radius:10px;box-shadow:0 8px 20px rgba(15,23,42,.25)}
+/* PHARMACIST SCENE. The base style is the FINAL pose (she holds the jar, her other palm is out, "RDU" above it);
+   .play replays the story: she walks in, tips the jar, pills drop into her palm, "RDU" pops out of the hand. ~3.6 s. */
+.scene-stage{display:flex;align-items:center;justify-content:center;position:relative;z-index:2}
+.rx-stage{width:100%;max-width:480px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+.rx-stage svg{display:block;width:100%;height:auto;max-height:64vh;overflow:visible}
+.rx-stage .pill{opacity:0}
+.rx-stage .pill-r{transform-box:fill-box;transform-origin:center}
+.rx-stage .eye{transform-box:fill-box;transform-origin:center;animation:rx-blink 6s ease-in-out 4.2s infinite}
+.rx-stage .forearm{transform-origin:124px 298px}
+.rx-stage .jar{transform-origin:150px 276px}
+.rx-stage .badge{transform-origin:205px 312px}
+.rx-stage .sp{transform-box:fill-box;transform-origin:center}
+.rx-stage.play .rx-char{animation:rx-enter .7s var(--ease) backwards}
+.rx-stage.play .forearm{animation:rx-forearm 2.6s ease-in-out .8s backwards}
+.rx-stage.play .jar{animation:rx-jar 2.6s ease-in-out .8s backwards}
+.rx-stage.play .pill{animation:rx-pf calc(3.1s - var(--d)) linear var(--d) both}
+.rx-stage.play .pill-x{animation:rx-px .5s cubic-bezier(.2,.7,.4,1) var(--d) both}
+.rx-stage.play .pill-y{animation:rx-py .7s linear var(--d) both}
+.rx-stage.play .pill-r{animation:rx-pr .6s linear var(--d) both}
+.rx-stage.play .badge{animation:rx-pop .75s cubic-bezier(.34,1.56,.64,1) 2.85s backwards}
+.rx-stage.play .sp{animation:rx-pop .6s cubic-bezier(.34,1.56,.64,1) calc(3.05s + var(--s,0s)) backwards}
+@keyframes rx-enter{from{opacity:0;translate:70px 0}to{opacity:1;translate:0 0}}
+@keyframes rx-forearm{0%,100%{rotate:0deg}18%,82%{rotate:-10deg}}
+@keyframes rx-jar{0%,14%,92%,100%{rotate:0deg}30%,72%{rotate:108deg}}
+@keyframes rx-pf{0%{opacity:0}3%,86%{opacity:1}100%{opacity:0}}
+@keyframes rx-px{from{translate:0 0}to{translate:var(--tx) 0}}
+@keyframes rx-py{0%{translate:0 0;animation-timing-function:cubic-bezier(.5,0,1,.6)}
+  55%{translate:0 var(--ty);animation-timing-function:cubic-bezier(.2,.7,.4,1)}
+  75%{translate:0 calc(var(--ty) - 7px);animation-timing-function:cubic-bezier(.5,0,1,.6)}
+  100%{translate:0 var(--ty)}}
+@keyframes rx-pr{from{rotate:0deg}to{rotate:var(--rot)}}
+@keyframes rx-pop{0%{scale:0;rotate:-10deg;opacity:0}60%{scale:1.18;rotate:3deg;opacity:1}80%{scale:.95;rotate:0deg}100%{scale:1;opacity:1}}
+@keyframes rx-blink{0%,92%,100%{scale:1 1}95%{scale:1 .1}}
+.float-ico{display:none}
 
 /* LOGIN CARD */
 .login-wrap{display:flex;justify-content:flex-end}
-.card{width:100%;max-width:430px;background:rgba(255,255,255,.98);border:1px solid #eef2f7;border-radius:24px;box-shadow:0 20px 50px rgba(15,23,42,.10);padding:26px 32px 22px;backdrop-filter:blur(14px)}
+.card{width:100%;max-width:430px;background:linear-gradient(180deg,#fff,#fcfbff);border:1px solid var(--card-edge);border-radius:24px;box-shadow:var(--card-shadow),0 24px 48px -20px rgba(76,29,149,.22);padding:26px 32px 22px;backdrop-filter:blur(14px)}
 .card-head{text-align:center;margin-bottom:18px}
-.card-icon{width:68px;height:68px;padding:4px;margin:0 auto 10px;border-radius:50%;background:#fff;border:3px solid var(--green);display:grid;place-items:center;box-shadow:0 10px 24px rgba(22,163,74,.22);overflow:hidden}
+.card-icon{width:68px;height:68px;padding:4px;margin:0 auto 10px;border-radius:50%;background:#fff;border:3px solid var(--brand);display:grid;place-items:center;box-shadow:0 10px 24px rgba(109,40,217,.22);overflow:hidden}
 .card-icon img,.card-icon svg{width:100%;height:100%;object-fit:contain;border-radius:50%}
 .card-head h4{font-size:21px;font-weight:700}
 .card-head p{font-size:13.5px;color:var(--muted);margin-top:4px}
@@ -123,31 +165,33 @@ a{text-decoration:none;color:inherit}
 .field label{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
 .input-box{position:relative}
 .input-box .lead-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex;align-items:center;color:#94a3b8}
-.input-box input{width:100%;padding:13px 44px 13px 42px;border:1px solid var(--line);border-radius:12px;font-family:inherit;font-size:14.5px;background:#fff;transition:.2s;color:var(--ink)}
-.input-box input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 4px var(--green-soft)}
+.input-box input{width:100%;padding:13px 44px 13px 42px;border:1px solid #ddd6fe;border-radius:12px;font-family:inherit;font-size:14.5px;background:#fff;transition:.2s;color:var(--ink)}
+.input-box input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px var(--brand-soft)}
 .input-box input.is-error{border-color:#f87171;background:#fff5f5}
 .toggle-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;padding:6px;display:flex;align-items:center}
 .toggle-eye:hover{color:#64748b}
 .row-between{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 14px;flex-wrap:wrap}
 .check-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
-.check-label input{width:16px;height:16px;accent-color:var(--green);cursor:pointer}
+.check-label input{width:16px;height:16px;accent-color:var(--brand);cursor:pointer}
 .btn{width:100%;padding:14px;border:none;border-radius:12px;cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;transition:.2s;display:flex;align-items:center;justify-content:center;gap:9px}
-.btn-primary{background:linear-gradient(135deg,var(--green),var(--teal));color:#fff;box-shadow:0 8px 20px rgba(22,163,74,.28)}
+.btn-primary{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;box-shadow:0 8px 20px rgba(109,40,217,.30)}
+.btn-primary::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);transition:left .6s var(--ease)}
+.btn-primary:hover::after{left:130%}
 .btn-primary:hover{filter:brightness(1.06);transform:translateY(-2px)}
 .btn-primary:active{transform:translateY(0);filter:brightness(.97)}
 .divider{display:flex;align-items:center;gap:12px;margin:12px 0;color:#94a3b8;font-size:12px}
 .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
 .btn-ghost{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
-.btn-ghost:not(:disabled):hover{border-color:var(--blue);color:var(--blue);background:#f8fbff}
+.btn-ghost:not(:disabled):hover{border-color:var(--brand);color:var(--brand);background:#faf8ff}
 .btn-ghost:disabled{opacity:.45;cursor:not-allowed}
-.badge-soon{margin-left:6px;font-size:11px;font-weight:600;background:#f0fdf4;color:var(--green-dark);border:1px solid #bbf7d0;border-radius:999px;padding:2px 8px}
+.badge-soon{margin-left:6px;font-size:11px;font-weight:600;background:var(--brand-soft);color:var(--brand-dark);border:1px solid #ddd6fe;border-radius:999px;padding:2px 8px}
 .card-foot{text-align:center;font-size:12px;color:var(--muted);margin-top:14px}
 .field-error{font-size:12px;color:#dc2626;margin-top:5px}
 
 /* FOOTER */
-.footer{border-top:1px solid var(--line);padding:7px 48px;background:#fff;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 14px;font-size:11.5px;line-height:1.5;color:var(--muted)}
+.footer{border-top:1px solid var(--card-edge);padding:7px 48px;background:#fff;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 14px;font-size:11.5px;line-height:1.5;color:var(--muted)}
 .footer .dev{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center}
-.footer .dev b{color:var(--green-dark);font-weight:600}
+.footer .dev b{color:var(--brand-dark);font-weight:600}
 
 /* RESPONSIVE */
 @media(max-width:900px){
@@ -163,11 +207,17 @@ a{text-decoration:none;color:inherit}
   .float-ico{display:none}
 }
 @media(max-width:560px){
+  .logo-moph{width:52px;height:52px}
+  .brand-text h1{font-size:18px}
+  .brand-text span{font-size:11px}
   .header-inner{padding:12px 16px}
   .card{padding:28px 20px 24px;border-radius:20px}
 }
 @media(prefers-reduced-motion:reduce){
-  .float-ico,.btn-primary,.chip{animation:none;transition:none}
+  .float-ico,.btn-primary,.chip,.blob,.hero-text>*,.login-wrap .card,.st{animation:none!important;transition:none!important}
+  .btn-primary::after{display:none}
+  .rx-stage,.rx-stage *{animation:none!important}
+  .vital-dot{display:none}
 }
 /* Compact further on short viewports (typical 1366x768 laptop) so the footer never needs a scroll */
 @media(max-height:820px){
@@ -238,51 +288,8 @@ a{text-decoration:none;color:inherit}
   <div class="blob b3"></div>
   <div class="grid-dots"></div>
 
-  {{-- 3D scene: a capsule per active KPI orbiting HOSxP XE, ring colour = last overview's status (CONTEXT.md: ภาพสถานะล่าสุด) --}}
-  <div id="rduScene" class="rdu-scene" aria-hidden="true"></div>
-  {{-- Above the text and the card (the scene layer sits below them) --}}
-  <div id="rduSceneTooltip" class="scene-tip" aria-hidden="true" hidden></div>
-  <script type="application/json" id="rduSceneData">@json(['kpis' => $snapshot['kpis']])</script>
-
-  {{-- Floating icons --}}
-  <div class="float-ico f1" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round">
-      <rect x="2.5" y="8" width="19" height="8" rx="4" transform="rotate(-45 12 12)"/>
-      <line x1="9.2" y1="14.8" x2="14.8" y2="9.2"/>
-    </svg>
-  </div>
-  <div class="float-ico f2" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round">
-      <rect x="7" y="2.5" width="10" height="3.5" rx="1"/>
-      <rect x="5.5" y="6" width="13" height="15.5" rx="2.5"/>
-      <line x1="12" y1="10.5" x2="12" y2="17"/>
-      <line x1="8.8" y1="13.7" x2="15.2" y2="13.7"/>
-    </svg>
-  </div>
-  <div class="float-ico f3" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8">
-      <circle cx="12" cy="12" r="9"/>
-      <line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/>
-    </svg>
-  </div>
-  <div class="float-ico f4" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round">
-      <path d="M4.5 3v6a4.5 4.5 0 009 0V3"/>
-      <line x1="2.8" y1="3" x2="6.2" y2="3"/>
-      <line x1="11.8" y1="3" x2="15.2" y2="3"/>
-      <path d="M9 13.5v2a5 5 0 0010 0v-1"/>
-      <circle cx="19" cy="11" r="2.3"/>
-    </svg>
-  </div>
-  <div class="float-ico f5" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="1.8">
-      <rect x="3" y="3" width="18" height="18" rx="3"/>
-      <circle cx="8.5" cy="8.5" r="1.8"/>
-      <circle cx="15.5" cy="8.5" r="1.8"/>
-      <circle cx="8.5" cy="15.5" r="1.8"/>
-      <circle cx="15.5" cy="15.5" r="1.8"/>
-    </svg>
-  </div>
+  {{-- Vital-sign line flowing left to right along the bottom (decorative) --}}
+  <div class="vital" aria-hidden="true"><canvas></canvas><i class="vital-dot"></i></div>
 
   <div class="hero-inner">
 
@@ -336,8 +343,159 @@ a{text-decoration:none;color:inherit}
       </p>
     </div>
 
-    {{-- Kept empty: the 3D scene's core and orbits show here --}}
-    <div class="scene-stage" aria-hidden="true"></div>
+    {{-- A cute pharmacist tips a jar of pills into her other palm and "RDU" pops out of that hand; the scene rests on
+         that pose. Inline SVG + CSS only, decorative (aria-hidden). Click to replay. With prefers-reduced-motion it shows
+         the final pose at once. --}}
+    <div class="scene-stage" aria-hidden="true">
+      <div class="rx-stage play" id="rxStage" title="คลิกเพื่อดูอีกครั้ง">
+        <svg viewBox="-30 20 420 430" xmlns="http://www.w3.org/2000/svg" focusable="false">
+          <defs>
+            <radialGradient id="rxHalo" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#c4b5fd" stop-opacity=".55"/><stop offset="1" stop-color="#c4b5fd" stop-opacity="0"/></radialGradient>
+            <linearGradient id="rxBadge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#4f46e5"/></linearGradient>
+            <linearGradient id="rxJar" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fbbf24"/><stop offset=".55" stop-color="#f59e0b"/><stop offset="1" stop-color="#d97706"/></linearGradient>
+          </defs>
+          <circle cx="200" cy="240" r="190" fill="url(#rxHalo)"/>
+          <ellipse cx="200" cy="432" rx="120" ry="13" fill="rgba(76,29,149,.14)"/>
+
+          <g class="rx-char">
+            <!-- legs and shoes -->
+            <rect x="164" y="380" width="30" height="44" rx="9" fill="#5b4b8a"/>
+            <rect x="206" y="380" width="30" height="44" rx="9" fill="#5b4b8a"/>
+            <ellipse cx="177" cy="426" rx="21" ry="9" fill="#312e81"/>
+            <ellipse cx="223" cy="426" rx="21" ry="9" fill="#312e81"/>
+
+            <!-- hair behind the head: two buns with violet scrunchies -->
+            <circle cx="152" cy="82" r="21" fill="#3b2552"/>
+            <circle cx="248" cy="82" r="21" fill="#3b2552"/>
+            <rect x="141" y="96" width="24" height="9" rx="4.5" fill="#8b5cf6" transform="rotate(-24 153 100)"/>
+            <rect x="235" y="96" width="24" height="9" rx="4.5" fill="#8b5cf6" transform="rotate(24 247 100)"/>
+            <ellipse cx="200" cy="132" rx="66" ry="64" fill="#3b2552"/>
+
+            <!-- coat -->
+            <path d="M130 234Q130 206 162 202H238Q270 206 270 234L278 394Q200 412 122 394Z" fill="#fff" stroke="#ddd6fe" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M200 266V404" stroke="#ede9fe" stroke-width="3"/>
+            <path d="M177 204 200 266 223 204Z" fill="#8b5cf6"/>
+            <path d="M162 202 192 270 170 276 140 222Z" fill="#fff" stroke="#c4b5fd" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M238 202 208 270 230 276 260 222Z" fill="#fff" stroke="#c4b5fd" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M156 318v14M149 325h14" stroke="#8b5cf6" stroke-width="4.5" stroke-linecap="round"/>
+
+            <!-- head -->
+            <rect x="188" y="180" width="24" height="26" rx="8" fill="#f7c9a0"/>
+            <circle cx="143" cy="140" r="10" fill="#ffe2c6"/><circle cx="257" cy="140" r="10" fill="#ffe2c6"/>
+            <circle cx="200" cy="130" r="58" fill="#ffe2c6"/>
+            <path d="M143 122Q146 66 200 64Q254 66 257 122Q240 96 216 106Q198 82 178 106Q158 98 143 122Z" fill="#3b2552"/>
+            <path d="M142 124Q132 174 152 186L160 142Z" fill="#3b2552"/>
+            <path d="M258 124Q268 174 248 186L240 142Z" fill="#3b2552"/>
+            <ellipse cx="160" cy="154" rx="11" ry="6.5" fill="#fb9fb0" opacity=".6"/>
+            <ellipse cx="240" cy="154" rx="11" ry="6.5" fill="#fb9fb0" opacity=".6"/>
+            <g class="eye"><ellipse cx="177" cy="138" rx="9.5" ry="12" fill="#3b1d5a"/><circle cx="180.5" cy="133" r="4" fill="#fff"/><circle cx="173" cy="143.5" r="2" fill="#fff" opacity=".85"/></g>
+            <g class="eye"><ellipse cx="223" cy="138" rx="9.5" ry="12" fill="#3b1d5a"/><circle cx="226.5" cy="133" r="4" fill="#fff"/><circle cx="219" cy="143.5" r="2" fill="#fff" opacity=".85"/></g>
+            <path d="M166 128l-7-4M234 128l7-4" stroke="#3b1d5a" stroke-width="2.6" stroke-linecap="round"/>
+            <path d="M166 119Q177 112 188 118M212 118Q223 112 234 119" stroke="#3b2552" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+            <path d="M199 150q1.5 3.5 4 .5" stroke="#e8a98a" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M189 160Q200 177 211 160Z" fill="#e11d48"/>
+            <ellipse cx="200" cy="168" rx="6" ry="3.4" fill="#fb7185"/>
+
+            <!-- the arm that receives: held out in front, palm up -->
+            <path d="M262 230Q292 258 280 296" stroke="#c4b5fd" stroke-width="34" stroke-linecap="round" fill="none"/>
+            <path d="M262 230Q292 258 280 296" stroke="#fff" stroke-width="28" stroke-linecap="round" fill="none"/>
+            <path d="M280 296Q248 308 216 318" stroke="#c4b5fd" stroke-width="32" stroke-linecap="round" fill="none"/>
+            <path d="M280 296Q248 308 216 318" stroke="#fff" stroke-width="26" stroke-linecap="round" fill="none"/>
+            <ellipse cx="204" cy="322" rx="21" ry="8.5" fill="#ffe2c6"/>
+            <ellipse cx="190" cy="315.5" rx="9" ry="4.6" fill="#ffe2c6" transform="rotate(-24 190 315.5)"/>
+            <path d="M192 324q12 3 24-1" stroke="#f0c19c" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+
+            <!-- the arm that pours: upper arm stays, forearm lifts a little, the jar tips about the hand -->
+            <path d="M140 230Q114 260 124 298" stroke="#c4b5fd" stroke-width="34" stroke-linecap="round" fill="none"/>
+            <path d="M140 230Q114 260 124 298" stroke="#fff" stroke-width="28" stroke-linecap="round" fill="none"/>
+            <g class="forearm">
+              <path d="M124 298Q146 296 150 278" stroke="#c4b5fd" stroke-width="32" stroke-linecap="round" fill="none"/>
+              <path d="M124 298Q146 296 150 278" stroke="#fff" stroke-width="26" stroke-linecap="round" fill="none"/>
+              <g class="jar">
+                <rect x="126" y="228" width="48" height="62" rx="9" fill="url(#rxJar)"/>
+                <rect x="132" y="218" width="36" height="14" rx="4" fill="#b45309"/>
+                <rect x="130" y="242" width="40" height="30" rx="4" fill="#fff"/>
+                <path d="M150 248v18M141 257h18" stroke="#7c3aed" stroke-width="5" stroke-linecap="round"/>
+                <path d="M132 236v48" stroke="#fff" stroke-width="3" opacity=".35" stroke-linecap="round"/>
+                <circle cx="150" cy="278" r="13" fill="#ffe2c6"/>
+              </g>
+            </g>
+          </g>
+
+          <!-- pills poured into her palm -->
+          <g class="pill" style="--d:1.55s;--tx:-12px;--ty:33px;--rot:420deg" transform="translate(203 280)">
+            <g class="pill-x"><g class="pill-y"><g class="pill-r">
+              <rect x="-9" y="-4.5" width="18" height="9" rx="4.5" fill="#dc2626"/>
+              <path d="M0 -4.5H4.5a4.5 4.5 0 0 1 0 9H0Z" fill="#fff" opacity=".85"/>
+            </g></g></g>
+          </g>
+          <g class="pill" style="--d:1.62s;--tx:4px;--ty:30px;--rot:-380deg" transform="translate(203 280)">
+            <g class="pill-x"><g class="pill-y"><g class="pill-r">
+              <rect x="-9" y="-4.5" width="18" height="9" rx="4.5" fill="#059669"/>
+              <path d="M0 -4.5H4.5a4.5 4.5 0 0 1 0 9H0Z" fill="#fff" opacity=".85"/>
+            </g></g></g>
+          </g>
+          <g class="pill" style="--d:1.69s;--tx:12px;--ty:35px;--rot:460deg" transform="translate(203 280)">
+            <g class="pill-x"><g class="pill-y"><g class="pill-r">
+              <rect x="-9" y="-4.5" width="18" height="9" rx="4.5" fill="#4f46e5"/>
+              <path d="M0 -4.5H4.5a4.5 4.5 0 0 1 0 9H0Z" fill="#fff" opacity=".85"/>
+            </g></g></g>
+          </g>
+          <g class="pill" style="--d:1.76s;--tx:-4px;--ty:31px;--rot:-420deg" transform="translate(203 280)">
+            <g class="pill-x"><g class="pill-y"><g class="pill-r">
+              <rect x="-9" y="-4.5" width="18" height="9" rx="4.5" fill="#0891b2"/>
+              <path d="M0 -4.5H4.5a4.5 4.5 0 0 1 0 9H0Z" fill="#fff" opacity=".85"/>
+            </g></g></g>
+          </g>
+          <g class="pill" style="--d:1.83s;--tx:8px;--ty:36px;--rot:360deg" transform="translate(203 280)">
+            <g class="pill-x"><g class="pill-y"><g class="pill-r">
+              <rect x="-9" y="-4.5" width="18" height="9" rx="4.5" fill="#dc2626"/>
+              <path d="M0 -4.5H4.5a4.5 4.5 0 0 1 0 9H0Z" fill="#fff" opacity=".85"/>
+            </g></g></g>
+          </g>
+          <g class="pill" style="--d:1.90s;--tx:-9px;--ty:30px;--rot:-460deg" transform="translate(203 280)">
+            <g class="pill-x"><g class="pill-y"><g class="pill-r">
+              <rect x="-9" y="-4.5" width="18" height="9" rx="4.5" fill="#059669"/>
+              <path d="M0 -4.5H4.5a4.5 4.5 0 0 1 0 9H0Z" fill="#fff" opacity=".85"/>
+            </g></g></g>
+          </g>
+          <g class="pill" style="--d:1.97s;--tx:0px;--ty:34px;--rot:400deg" transform="translate(203 280)">
+            <g class="pill-x"><g class="pill-y"><g class="pill-r">
+              <rect x="-9" y="-4.5" width="18" height="9" rx="4.5" fill="#4f46e5"/>
+              <path d="M0 -4.5H4.5a4.5 4.5 0 0 1 0 9H0Z" fill="#fff" opacity=".85"/>
+            </g></g></g>
+          </g>
+          <g class="pill" style="--d:2.04s;--tx:14px;--ty:32px;--rot:-360deg" transform="translate(203 280)">
+            <g class="pill-x"><g class="pill-y"><g class="pill-r">
+              <rect x="-9" y="-4.5" width="18" height="9" rx="4.5" fill="#0891b2"/>
+              <path d="M0 -4.5H4.5a4.5 4.5 0 0 1 0 9H0Z" fill="#fff" opacity=".85"/>
+            </g></g></g>
+          </g>
+          <g class="pill" style="--d:2.11s;--tx:-6px;--ty:36px;--rot:440deg" transform="translate(203 280)">
+            <g class="pill-x"><g class="pill-y"><g class="pill-r">
+              <rect x="-9" y="-4.5" width="18" height="9" rx="4.5" fill="#dc2626"/>
+              <path d="M0 -4.5H4.5a4.5 4.5 0 0 1 0 9H0Z" fill="#fff" opacity=".85"/>
+            </g></g></g>
+          </g>
+          <g class="pill" style="--d:2.18s;--tx:6px;--ty:29px;--rot:-400deg" transform="translate(203 280)">
+            <g class="pill-x"><g class="pill-y"><g class="pill-r">
+              <rect x="-9" y="-4.5" width="18" height="9" rx="4.5" fill="#059669"/>
+              <path d="M0 -4.5H4.5a4.5 4.5 0 0 1 0 9H0Z" fill="#fff" opacity=".85"/>
+            </g></g></g>
+          </g>
+
+          <!-- "RDU" pops out of the palm -->
+          <g class="badge">
+            <path d="M212 289 205 312 232 289Z" fill="url(#rxBadge)"/>
+            <rect x="180" y="238" width="108" height="52" rx="22" fill="url(#rxBadge)"/>
+            <text x="234" y="274" text-anchor="middle" font-family="Inter, 'IBM Plex Sans Thai', system-ui, sans-serif" font-size="32" font-weight="800" fill="#fff" letter-spacing="2">RDU</text>
+          </g>
+          <g class="sp" style="--s:0s" transform="translate(300 232)"><path d="M0-9 2.5-2.5 9 0 2.5 2.5 0 9-2.5 2.5-9 0-2.5-2.5Z" fill="#fbbf24"/></g>
+          <g class="sp" style="--s:.12s" transform="translate(178 232)"><path d="M0-7 2-2 7 0 2 2 0 7-2 2-7 0-2-2Z" fill="#a78bfa"/></g>
+          <g class="sp" style="--s:.22s" transform="translate(308 274)"><path d="M0-6 1.7-1.7 6 0 1.7 1.7 0 6-1.7 1.7-6 0-1.7-1.7Z" fill="#a78bfa"/></g>
+        </svg>
+      </div>
+    </div>
 
     {{-- Login card --}}
     <div class="login-wrap">
@@ -460,8 +618,121 @@ a{text-decoration:none;color:inherit}
   </span>
 </footer>
 
-@vite('resources/js/login-scene.js')
 <script>
+// Vital-sign monitor along the bottom of the hero (see .vital in the CSS)
+(function () {
+    const box = document.querySelector('.vital');
+    if (!box) return;
+    const cv = box.querySelector('canvas'), dot = box.querySelector('.vital-dot'), ctx = cv.getContext('2d');
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const SPEED = 0.075, LIFE = 12, GROUP = 16, GAP = 36;   // screen widths per second (one sweep = ~13 s), trace lifetime (s), columns per stroke, erase gap (px)
+    let W, H, base, ys, born, beats, head, last = 0, sweepStart = 0;
+
+    function newSweep(now) {
+        beats = [];
+        let x = W * 0.2 + Math.random() * 40;                    // flat line first, then the first beat
+        while (x < W - 170) { beats.push({ x: x, k: 0.45 + Math.random() * 0.65 }); x += 210 + Math.random() * 90; }
+        head = 0;
+        sweepStart = now;
+    }
+    function yAt(x) {
+        for (const b of beats) {
+            const u = x - b.x, k = b.k;
+            if (u < 0 || u >= 160) continue;
+            if (u < 20)  return base - 10 * k * Math.sin(Math.PI * u / 20);              // P
+            if (u < 46)  return base;
+            if (u < 54)  return base + 6 * k * (u - 46) / 8;                              // Q
+            if (u < 66)  return base + 6 * k - 44 * k * (u - 54) / 12;                    // up to R
+            if (u < 78)  return base - 38 * k + 70 * k * (u - 66) / 12;                   // down to S
+            if (u < 88)  return base + 32 * k * (1 - (u - 78) / 10);
+            if (u < 120) return base;
+            return base - 18 * k * Math.sin(Math.PI * (u - 120) / 40);                   // T
+        }
+        return base;
+    }
+    function layout() {
+        const r = box.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+        W = r.width; H = r.height; base = H * 0.56;
+        cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ys = new Float32Array(Math.ceil(W) + 2);
+        born = new Float64Array(ys.length).fill(-1e9);
+        newSweep(performance.now() / 1000);
+        if (still) {                                              // no motion: one finished trace
+            for (let x = 0; x < ys.length; x++) { ys[x] = yAt(x); born[x] = sweepStart; }
+            head = W; draw(sweepStart, true);
+        }
+    }
+    function stroke(from, to, alpha) {
+        ctx.globalAlpha = alpha;
+        ctx.beginPath(); ctx.moveTo(from, ys[from]);
+        for (let x = from + 1; x <= to; x++) ctx.lineTo(x, ys[x]);
+        ctx.stroke();
+    }
+    function draw(t, whole) {
+        ctx.clearRect(0, 0, W, H);
+        const h = Math.floor(head), last = ys.length - 1;
+        for (let g = 0; g < last; g += GROUP) {
+            const to = Math.min(g + GROUP, last);
+            if (!whole && to > head && g < head + GAP) continue;                       // the dot's own group and the erase gap
+            const a = whole ? 1 : 1 - (t - born[g]) / LIFE;
+            if (a > 0) stroke(g, to, a * a);
+        }
+        if (!whole) {
+            const from = Math.floor(h / GROUP) * GROUP;                                // the freshly drawn part, right up to the dot
+            if (born[from] > -1e8 && h > from) stroke(from, Math.min(h, last), 1);
+        }
+        ctx.globalAlpha = 1;
+    }
+    function frame(now) {
+        const t = now / 1000, dt = Math.min(t - last, 0.05);
+        last = t;
+        const next = head + W * SPEED * dt;
+        for (let x = Math.floor(head); x <= Math.floor(next) && x < ys.length; x++) { ys[x] = yAt(x); born[x] = t; }
+        head = next;
+        draw(t, false);
+        dot.style.transform = 'translate3d(' + head + 'px,' + yAt(head) + 'px,0)';
+        if (head >= W + 6) newSweep(t);
+        requestAnimationFrame(frame);
+    }
+    layout();
+    if (typeof ResizeObserver !== 'undefined') new ResizeObserver(layout).observe(box);
+    if (!still) requestAnimationFrame(function (now) { last = now / 1000; frame(now); });
+})();
+</script>
+<script>
+// Click the pharmacist to watch the scene again
+(function () {
+    const stage = document.getElementById('rxStage');
+    if (!stage) return;
+    let busy = false;
+    stage.addEventListener('click', function () {
+        if (busy) return;
+        busy = true;
+        stage.classList.remove('play');
+        void stage.getBoundingClientRect();
+        stage.classList.add('play');
+        setTimeout(function () { busy = false; }, 3800);
+    });
+})();
+</script>
+<script>
+// Status numbers count up from 0 once the page is in (skipped when the user asked for less motion)
+(function () {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.querySelectorAll('.st b').forEach(function (el) {
+        const target = parseInt(el.textContent, 10);
+        if (!target || target < 1) return;
+        const start = performance.now() + 500, span = 900;
+        el.textContent = '0';
+        (function tick(now) {
+            const t = Math.min(Math.max((now - start) / span, 0), 1);
+            el.textContent = Math.round(target * (1 - Math.pow(1 - t, 3)));
+            if (t < 1) requestAnimationFrame(tick);
+        })(performance.now());
+    });
+})();
 (function () {
     const btn     = document.getElementById('togglePassword');
     const input   = document.getElementById('password');

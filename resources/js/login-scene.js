@@ -1,8 +1,10 @@
 /**
- * Login page 3D scene: a glowing "HOSxP XE" core with every active KPI orbiting it as a glass capsule.
+ * Login page 3D scene: a target. Every active KPI is a glass capsule orbiting the RDU core, and its distance
+ * from the core is how close it is to the goal: KPIs that pass orbit on the inner ring and feed light into the
+ * core, those near the target on the middle ring, those that miss (or have no data) on the outer ring, where
+ * their light drifts away. Soft ripples spread from the core like a monitor sweeping the target.
  * Capsule colour = KPI category (same colours as the dashboard); the ring around it = the KPI's status
- * from the last overview (CONTEXT.md: ภาพสถานะล่าสุด). Light particles stream from the core to every
- * capsule: data flowing from HOSxP into the indicators.
+ * from the last overview (CONTEXT.md: ภาพสถานะล่าสุด).
  *
  * Decorative only — the container is aria-hidden; the status summary is in the page text.
  * Falls back to the page's static background when WebGL is missing, renders one still frame under
@@ -22,8 +24,9 @@ const STATUS = {
     fail:    { color: 0xef4444, label: 'ไม่ผ่านเกณฑ์' },
     na:      { color: 0x94a3b8, label: 'ไม่มีข้อมูล' },
 };
-const CORE_COLOR = 0x0d9488;
-const INNER_RING_COUNT = 6;   // KPIs on the inner orbit; the rest go on the outer one
+const CORE_COLOR = 0x7c3aed;   // the violet of the RDU logo and the inside of the system
+// Orbit per status: closer to the core = closer to the goal.
+const ORBIT_OF = { pass: 0, warning: 1, fail: 2, na: 2 };
 const SCENE_WIDTH = 8.4;      // outer orbit's diameter (2 × 3.7) plus a capsule either side, in scene units
 
 function webglAvailable() {
@@ -46,7 +49,7 @@ function textSprite(text) {
     ctx.font = '700 64px Inter, "IBM Plex Sans Thai", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#0f766e';
+    ctx.fillStyle = '#6d28d9';
     ctx.fillText(text, 256, 64);
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -97,10 +100,10 @@ function start(container, kpis) {
     system.rotation.x = 0.5;   // flat, wide orbits: they pass behind the text and the card
     scene.add(system);
 
-    // ---- Core: HOSxP XE ----
+    // ---- Core: RDU (the target) ----
     const core = new THREE.Mesh(
         new THREE.IcosahedronGeometry(0.85, 4),
-        new THREE.MeshPhysicalMaterial({ color: 0x5eead4, emissive: CORE_COLOR, emissiveIntensity: 0.55, roughness: 0.25, clearcoat: 1, transparent: true, opacity: 0.92 }),
+        new THREE.MeshPhysicalMaterial({ color: 0xc4b5fd, emissive: CORE_COLOR, emissiveIntensity: 0.55, roughness: 0.25, clearcoat: 1, transparent: true, opacity: 0.92 }),
     );
     system.add(core);
     const shell = new THREE.Mesh(
@@ -109,18 +112,31 @@ function start(container, kpis) {
     );
     system.add(shell);
     const glow = glowTexture();
-    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: 0x5eead4, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending }));
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: 0xa78bfa, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending }));
     halo.scale.set(4.2, 4.2, 1);
     system.add(halo);
-    const label = textSprite('HOSxP XE');
+    const label = textSprite('RDU');
     label.position.set(0, -1.65, 0);
     scene.add(label);   // outside `system` so it stays upright
 
-    // ---- Orbits: KPIs split over two rings ----
-    const rings = [{ radius: 2.7, speed: 0.11 }, { radius: 3.7, speed: -0.075 }];
+    // ---- Ripples: the target being swept, rings spreading from the core and fading ----
+    const RIPPLES = 3;
+    const RIPPLE_SECONDS = 5;
+    const ripples = Array.from({ length: RIPPLES }, (_, i) => {
+        const mesh = new THREE.Mesh(
+            new THREE.TorusGeometry(1, 0.012, 6, 128),
+            new THREE.MeshBasicMaterial({ color: CORE_COLOR, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }),
+        );
+        mesh.rotation.x = Math.PI / 2;
+        system.add(mesh);
+        return { mesh, offset: i / RIPPLES };
+    });
+
+    // ---- Orbits: one per status (inner = passes, middle = near the target, outer = misses) ----
+    const rings = [{ radius: 2.3, speed: 0.12 }, { radius: 3.0, speed: -0.09 }, { radius: 3.7, speed: 0.07 }];
     const ringGroups = rings.map(({ radius }, i) => {
         const group = new THREE.Group();
-        group.rotation.z = i === 0 ? 0.12 : -0.18;
+        group.rotation.z = [0.12, -0.14, 0.18][i];
         const path = new THREE.Mesh(
             new THREE.TorusGeometry(radius, 0.008, 6, 160),
             new THREE.MeshBasicMaterial({ color: 0x64748b, transparent: true, opacity: 0.25 }),
@@ -133,11 +149,14 @@ function start(container, kpis) {
 
     const capsuleGeometry = new THREE.CapsuleGeometry(0.16, 0.42, 6, 16);
     const ringGeometry = new THREE.TorusGeometry(0.42, 0.028, 8, 48);
+    const ringOf = (kpi) => ORBIT_OF[kpi.status] ?? 2;
+    const onRingCount = rings.map((_, r) => kpis.filter((k) => ringOf(k) === r).length);
+    const slotOf = rings.map(() => 0);
     const capsules = kpis.map((kpi, index) => {
-        const ringIndex = index < INNER_RING_COUNT ? 0 : 1;
-        const onRing = ringIndex === 0 ? INNER_RING_COUNT : kpis.length - INNER_RING_COUNT;
-        const slot = ringIndex === 0 ? index : index - INNER_RING_COUNT;
-        const angle = (slot / onRing) * Math.PI * 2 + ringIndex * 0.4;
+        const ringIndex = ringOf(kpi);
+        const onRing = onRingCount[ringIndex];
+        const slot = slotOf[ringIndex]++;
+        const angle = (slot / onRing) * Math.PI * 2 + ringIndex * 0.5;
         const radius = rings[ringIndex].radius;
 
         const holder = new THREE.Group();
@@ -167,7 +186,7 @@ function start(container, kpis) {
         holder.add(statusGlow);
 
         ringGroups[ringIndex].add(holder);
-        return { kpi, holder, capsule, ring, statusGlow, spin: 0.4 + (index % 5) * 0.12, phase: index * 0.7 };
+        return { kpi, holder, capsule, ring, statusGlow, inward: ringIndex < 2, spin: 0.4 + (index % 5) * 0.12, phase: index * 0.7 };
     });
 
     // ---- Data streams: particles from the core to each capsule ----
@@ -175,10 +194,19 @@ function start(container, kpis) {
     const count = capsules.length * perStream;
     const positions = new Float32Array(count * 3);
     const progress = Float32Array.from({ length: count }, (_, i) => (i % perStream) / perStream + Math.random() * 0.05);
+    // Light flows INTO the core from capsules that reach the goal and drifts OUT from those that do not,
+    // each in its status colour.
+    const colors = new Float32Array(count * 3);
+    const tint = new THREE.Color();
+    capsules.forEach((c, ci) => {
+        tint.setHex((STATUS[c.kpi.status] ?? STATUS.na).color);
+        for (let k = 0; k < perStream; k++) tint.toArray(colors, (ci * perStream + k) * 3);
+    });
     const particleGeometry = new THREE.BufferGeometry();
     particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     const particles = new THREE.Points(particleGeometry, new THREE.PointsMaterial({
-        map: glow, color: 0x2dd4bf, size: 0.16, transparent: true, opacity: 0.85,
+        map: glow, vertexColors: true, size: 0.16, transparent: true, opacity: 0.85,
         depthWrite: false, blending: THREE.AdditiveBlending,
     }));
     system.add(particles);
@@ -283,6 +311,11 @@ function start(container, kpis) {
         shell.rotation.y -= 0.08 * dt;
         shell.rotation.x += 0.05 * dt;
         halo.material.opacity = 0.45 + Math.sin(t * 1.4) * 0.1;
+        ripples.forEach((r) => {
+            const k = ((t / RIPPLE_SECONDS) + r.offset) % 1;
+            r.mesh.scale.setScalar(0.9 + k * 3.4);
+            r.mesh.material.opacity = (1 - k) * (1 - k) * 0.35;
+        });
         system.rotation.x += (0.5 + tilt.x - system.rotation.x) * 0.05;
         system.rotation.y += (tilt.y - system.rotation.y) * 0.05;
 
@@ -305,7 +338,7 @@ function start(container, kpis) {
             for (let k = 0; k < perStream; k++) {
                 const i = ci * perStream + k;
                 progress[i] = (progress[i] + dt * 0.28) % 1;
-                const p = progress[i];
+                const p = c.inward ? 1 - progress[i] : progress[i];
                 from.set(0, 0, 0).lerp(to, p);
                 from.y += Math.sin(p * Math.PI) * 0.35;   // a slight arc
                 positions[i * 3] = from.x;
@@ -327,8 +360,22 @@ function start(container, kpis) {
 
     // Exactly one animation loop: stopped while the tab is hidden, restarted when it shows again.
     let rafId = null;
+    // A slow machine (about 28 fps or less over the first ~2.5 s) drops to 1x pixels and loses the ripples, once.
+    let sampled = 0, slow = 0, judged = false;
     function loop() {
-        const dt = Math.min(clock.getDelta(), 0.05);
+        const raw = clock.getDelta();
+        const dt = Math.min(raw, 0.05);
+        if (!judged && ++sampled > 30) {
+            if (raw > 1 / 28) slow++;
+            if (sampled >= 150) {
+                judged = true;
+                if (slow > 90) {
+                    renderer.setPixelRatio(1);
+                    renderer.setSize(container.clientWidth, container.clientHeight, false);
+                    ripples.forEach((r) => { r.mesh.visible = false; });
+                }
+            }
+        }
         frame(dt, clock.elapsedTime);
         // Re-check while a tooltip shows too: its capsule keeps orbiting away from a still pointer.
         if (pointerMoved || (tooltip && !tooltip.hidden)) {
