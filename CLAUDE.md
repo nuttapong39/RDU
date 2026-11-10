@@ -170,6 +170,8 @@ Admin → Config Page → DatabaseConfigService → Validate → Encrypt → JSO
 - `DatabaseConfigService` เท่านั้นที่อ่าน/เขียน JSON — ห้าม Controller อ่านโดยตรง
 - Password ต้อง Encrypt ด้วย Laravel Encryption ก่อนบันทึก และ Decrypt เมื่อใช้งาน
 - ห้ามแสดง Password ใน Response, Error Message, หรือ Log
+- **ห้ามฝัง icode/รหัสยา หรือชื่อ/รหัสโรงพยาบาลในโค้ด** — รหัสยาอ่านจากชุดรหัสยา (`DrugCodeSetService`, `UsesDrugCodeSets`, ADR 0004) ชื่อ/จังหวัด/hospcode/โลโก้อ่านจาก `FacilityProfileService`
+  (ตัวแปร `$facility` ใน view) — โปรเจกต์นี้ใช้ร่วมกับหลายโรงพยาบาล
 - **KPI ใหม่ทุกตัวต้องทำตาม `docs/KPI-REFERENCE-IMPLEMENTATION.md`** — KPI01, KPI03, KPI04, KPI05 คือแบบอ้างอิง
   (query class, reference SQL, key ของข้อมูลรายกรณี, การลงทะเบียน และหน้าแสดงผล) อ่านก่อนเริ่มทุกครั้ง
 
@@ -244,5 +246,6 @@ Read-Only Tests ที่ต้องผ่านก่อน Production:
 | UI/UX Design | `docs/UI-UX-SPECIFICATION.md` |
 | Testing Strategy | `docs/TESTING-STRATEGY.md` |
 | Phase Roadmap | `docs/DEVELOPMENT-PHASES.md` |
+| ชุดรหัสยา + ข้อมูลสถานบริการ (แผน/ADR) | `docs/plans/drug-code-sets-and-facility-profile.md`, `docs/adr/0004-*.md` |
 | Dev → Production deploy, ปัญหาที่เคยเจอ | `DEPLOYMENT.md` |
 | ติดตั้ง production server (AlmaLinux) | `docs/SERVER-SETUP-ALMALINUX.md` |

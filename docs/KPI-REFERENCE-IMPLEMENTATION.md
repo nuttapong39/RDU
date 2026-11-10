@@ -60,9 +60,14 @@ KPI01, KPI03, KPI04 และ KPI05 คือตัวชี้วัดที�
 - [ ] `database/seeders/RduIndicatorSeeder.php` — ข้อความตัวเศษ/ตัวส่วน, `target_value`, `target_direction` ที่ยืนยันแล้ว
 - [ ] **วิธีนับ** — query class `implements DescribesCountingMethod` แล้วเขียน `countingMethod()` คืน `CountingMethod`
       (หน่วยนับ, ตัวหาร, ตัวตั้ง, เงื่อนไขร่วม, รหัสยา, รหัสโรค, รหัสที่ตั้งใจไม่นับ, แพทย์ในตารางรายแพทย์, ที่มา, วันที่ตกลง)
-      รหัสยา/รหัสโรค**ต้องอ้างค่าคงที่ตัวเดียวกับที่ SQL ใช้** ห้ามพิมพ์ซ้ำ — ปุ่ม "วิธีนับ" บนหน้า KPI และหน้า
+      รหัสโรค**ต้องอ้างค่าคงที่ตัวเดียวกับที่ SQL ใช้** และรหัสยาต้องอ่านจากชุดรหัสยาตัวเดียวกัน (`drugItems()`) ห้ามพิมพ์ซ้ำ — ปุ่ม "วิธีนับ" บนหน้า KPI และหน้า
       "วิธีนับทุกตัวชี้วัด" อ่านจากที่นี่ (ชื่อยา/ชื่อโรคดึงจาก HOSxP เอง) `CountingMethodTest` จะ fail ถ้า KPI ใน
       `hosxp_kpis` ยังไม่มี `countingMethod()`
+- [ ] **ชุดรหัสยา (ADR 0004)** — KPI ที่นับยา/lab ต้องประกาศชุดที่ใช้ใน `app/Support/DrugCodeSetRegistry::all()` (ชื่อชุด, ป้าย, ชนิด
+      drug/lab, ค่าเสริมที่ทุกรายการต้องมี เช่น `ingredient`/`form`, จำนวนสูงสุด, KPI ที่ใช้) แล้วให้ query `use UsesDrugCodeSets;` — **ห้ามใส่ icode
+      เป็นค่าคงที่ใน query** หน้า "ตั้งค่ารหัสยา", สถานะ "ยังไม่ตั้งค่า", เมนูและป้ายจำนวน, การล้างผลเก่าเมื่อแก้ชุด ทำงานเองจาก registry
+      ต้องเพิ่มรายการเริ่มต้นของ รพ.เชียงกลางใน `database/data/chiangklang-drug-code-sets.php` (ใช้กับคำสั่งนำเข้าและ test) และ test ว่า KPI
+      เป็น "ยังไม่ตั้งค่า" เมื่อชุดว่าง (ดู `KpiNotConfiguredTest`)
 - [ ] `config/rdu.php` — เพิ่มรหัสใน `hosxp_kpis` เมื่อ query HOSxP ใช้งานได้จริง ผลที่ได้: ตัวเลขทุกจุดเปลี่ยนจาก
       HDC (ยอดทั้งปี) มาเป็น HOSxP, การ์ดไตรมาส/โดนัท/สัดส่วนรายไตรมาสแสดงผล และเปิดโซน "การวิเคราะห์เชิงลึก"
 - [ ] `resources/views/dashboard/kpi.blade.php` — เพิ่มรหัสใน `$numeratorLabel` (ข้อความ legend ของแท่งจำนวนการใช้ยา)
@@ -107,9 +112,10 @@ KPI01, KPI03, KPI04 และ KPI05 คือตัวชี้วัดที�
 | ช่วงวันที่ | OPD ใช้ `ovst.vstdate`, IPD ใช้ `ipt.dchdate` (วันจำหน่าย) | KPI04 / KPI03 |
 | หน่วยนับ | OPD นับ `COUNT(DISTINCT vn)`, IPD นับ `COUNT(DISTINCT an)` | KPI04 / KPI03 |
 | ตัดเคสทดสอบ | `hn NOT IN (SELECT hn FROM patient WHERE fname LIKE '%ทดสอบ%')` ทั้งตัวตั้ง ตัวส่วน และรายกรณี | ทุกตัว |
-| รายการรหัส | เก็บเป็น `private const` แล้วต่อด้วย `quotedList()` (ค่าคงที่ภายใน ไม่ใช่ input ผู้ใช้) | `DIAGNOSIS_CODES`, `ANTIBIOTIC_ICODES` |
+| รายการรหัสโรค | เก็บเป็น `private const` แล้วต่อด้วย `quotedList()` (ค่าคงที่ในโค้ด — ICD-10 อายุ และเกณฑ์ eGFR ไม่ให้ รพ. แก้เอง) | `DIAGNOSIS_CODES` |
+| **รายการรหัสยา / รหัส lab** | **ห้ามเป็นค่าคงที่** — อ่านจากชุดรหัสยาของ รพ. ด้วย `use UsesDrugCodeSets;` แล้วเรียก `$this->drugCodes('ชื่อชุด')` ต่อด้วย `quotedList()` (ชุดว่าง → throw `DrugCodeSetNotConfiguredException`) ใช้ `drugItems()` ตอนอธิบายวิธีนับ | `ics`, `nsaid`, `antibiotic` … (ดู `DrugCodeSetRegistry`) |
 | กรองวินิจฉัยระดับ visit | `EXISTS (SELECT 1 FROM ovstdiag … )` ผ่าน helper `diagnosisExists()` | KPI04/05 |
-| ยาปฏิชีวนะ | `drugitems.icode IN (ANTIBIOTIC_ICODES)` และ `opitemrece.qty > 0` (66 รหัสชุดเดียวกัน ยกเว้น KPI02 ที่ใช้ 28 รหัสของเภสัชกร — ADR 0003) | ทุกตัว |
+| ยาปฏิชีวนะ | `drugitems.icode IN (ชุด antibiotic)` และ `opitemrece.qty > 0` (ชุดเดียวกันทุกตัว ยกเว้น KPI02 ที่ใช้ชุด `antibiotic_fresh_wound` — ADR 0003, 0004) | ทุกตัว |
 | ตัวตั้งแบบกลับทิศ | `an NOT IN (… รายการที่ได้ยา …)` | KPI03 |
 | โครง CTE รายกรณี | `vn_list` (หรือ `an_list`) → `drug_info` (เฉพาะยาปฏิชีวนะ) → `all_drug_info` (ยาทุกชนิด) | ทุกตัว |
 | ค่ายา | `SUM(opitemrece.sum_price)` (ราคาตอนจ่ายจริง) **ห้ามใช้** `drugitems.unitprice` | ทุกตัว |
@@ -146,9 +152,9 @@ KPI01, KPI03, KPI04 และ KPI05 คือตัวชี้วัดที�
 - ชื่อแพทย์ในหน้าเว็บแสดงเป็นรหัสปกปิด `DR-XX` โดยอัตโนมัติ (ADR 0002) ไม่ต้องทำใน query
 
 ### 3.5 สิ่งที่ซ้ำกันโดยตั้งใจ (ต้องแก้ให้ตรงกันทุกไฟล์)
-`ANTIBIOTIC_ICODES`, `quotedList()` และ `maskThaiName()` ยังคัดลอกอยู่ในทั้ง 4 class ถ้าแก้รายการยาปฏิชีวนะ 66 รหัส
-ต้องแก้ทุก class (KPI02 มีรายการ 28 รหัสของตัวเอง ไม่ต้องแก้ตาม — ADR 0003) และทุกไฟล์ใน `docs/SQL_KPI/` พร้อมกัน ถ้าจะแยกเป็นส่วนกลาง ให้ทำเป็นงาน refactor แยก
-ไม่ปนกับการเพิ่ม KPI
+`maskThaiName()` ยังคัดลอกอยู่ในหลาย class (ถ้าแก้ต้องแก้ทุกไฟล์ — จะแยกเป็นส่วนกลางให้ทำเป็นงาน refactor แยก ไม่ปนกับการเพิ่ม KPI)
+`quotedList()` ย้ายไปอยู่ใน trait `UsesDrugCodeSets` แล้ว (แก้ที่เดียว) รายการรหัสยาไม่อยู่ในโค้ดอีกต่อไป — เภสัชกรของแต่ละ รพ. แก้เองที่หน้า
+"ตั้งค่ารหัสยา" (ADR 0004) ไฟล์ใน `docs/SQL_KPI/` เป็นแค่ SQL อ้างอิงของชุดรหัสยาของ รพ.เชียงกลาง
 
 ---
 

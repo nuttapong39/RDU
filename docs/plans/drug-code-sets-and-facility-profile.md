@@ -1,6 +1,6 @@
 # แผน: ชุดรหัสยาที่เภสัชกรตั้งค่าเอง + ข้อมูลสถานบริการ
 
-สถานะ: ร่างที่ผู้ใช้ยืนยันความเข้าใจร่วมแล้ว (2026-11-10) · ยังไม่ได้ implement
+สถานะ: implement ครบ Phase 1–6 แล้ว (2026-11-10) บน dev/UAT · ยังไม่ push/deploy production — ขั้นตอน deploy ดู `DEPLOYMENT.md` หัวข้อ 2.1
 อ้างอิง: [ADR 0004](../adr/0004-drug-code-sets-are-configured-per-hospital.md), [ADR 0003](../adr/0003-kpi02-follows-hdc-not-the-pharmacists-or.md), `CONTEXT.md` (ชุดรหัสยา, ยังไม่ตั้งค่า, ผู้ตั้งค่ารหัสยา, ข้อมูลสถานบริการ)
 
 ## 1. เป้าหมาย

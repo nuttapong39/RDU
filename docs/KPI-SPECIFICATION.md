@@ -240,7 +240,7 @@ Denominator:  ผู้ป่วยที่มี visit ผู้ป่วย�
 Target:       ≤ 10%
 Direction:    ต่ำดี (lower)
 Category:     PatientSafety · กลุ่มยาของตัวชี้วัด: nsaid_ckd · หน่วยนับ: patient (config rdu.kpi_count_unit)
-ยา NSAIDs:    6 รหัส ชุดเดียวกับ KPI-07 (NsaidDuplicationQuery::NSAID_ICODES — แก้ที่เดียวเปลี่ยนทั้งสองตัวชี้วัด)
+ยา NSAIDs:    ชุดรหัสยา `nsaid` (เริ่มต้นของ รพ.เชียงกลาง 6 รหัส) ชุดเดียวกับ KPI-07 — แก้ที่หน้า "ตั้งค่ารหัสยา" ที่เดียวเปลี่ยนทั้งสองตัวชี้วัด (ADR 0004)
 ข้อมูลรายกรณี: 1 แถวต่อผู้ป่วย visit ตัวแทน = visit ล่าสุดที่ได้ NSAIDs (ถ้าอยู่ในตัวเศษ) มิฉะนั้น visit โรคไตครั้งล่าสุด
               dx = รหัสระดับโรคไตของผู้ป่วยในช่วงเวลานั้น
 HOSxP Tables: ovst, ovstdiag, opitemrece, drugitems, patient, doctor, pttype, spclty, kskdepartment
@@ -269,7 +269,7 @@ Target:       ≥ 80%
 Direction:    สูงดี (higher)
 Category:     ChronicDisease · กลุ่มยาของตัวชี้วัด: metformin · หน่วยนับ: patient (config rdu.kpi_count_unit)
 ยาลดระดับน้ำตาล: 1000184 metformin, 1019001 glipizide, 1680038 pioglitazone, 1510002 Penfill Mixtard,
-              1481213 / 1483896 regular insulin, 1590023 NPH (MetforminDiabetesQuery::GLUCOSE_LOWERING_ICODES)
+              1481213 / 1483896 regular insulin, 1590023 NPH (ชุดรหัสยา `glucose_lowering` — ค่าเริ่มต้นของ รพ.เชียงกลาง แก้ได้ที่หน้า "ตั้งค่ารหัสยา")
 ข้อมูลรายกรณี: 1 แถวต่อผู้ป่วย visit ตัวแทน = visit ล่าสุดที่ได้ Metformin (ถ้าอยู่ในตัวเศษ) มิฉะนั้น visit เบาหวานครั้งล่าสุด
               dx = รหัส E11* ของผู้ป่วยในช่วงเวลานั้น · egfr / egfr_date = ผล eGFR ล่าสุดที่ใช้ตัดสิน
 HOSxP Tables: ovst, ovstdiag, opitemrece, drugitems, lab_head, lab_order (ต้อง GRANT SELECT), patient, doctor,
