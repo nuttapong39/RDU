@@ -53,7 +53,7 @@ function init(root) {
             const dirty = k.sets.some((key) => isDirty(state.sets[key]));
             const active = k.code === state.kpi;
             const off = !k.active; // switched off for this hospital
-            return `<button type="button" role="tab" aria-selected="${active}" data-kpi="${k.code}"
+            return `<button type="button" role="tab" aria-selected="${active}" data-kpi="${esc(k.code)}"
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
                 ${active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'} ${off ? 'opacity-60' : ''}">
                 <span class="w-2 h-2 rounded-full ${ok ? 'bg-emerald-500' : 'bg-slate-300'}" aria-hidden="true"></span>
@@ -122,7 +122,7 @@ function init(root) {
         const want = input.checked;
         input.disabled = true;
         try {
-            const res = await fetch(cfg.urls.kpiActive.replace('__KPI__', kpi.code), {
+            const res = await fetch(cfg.urls.kpiActive.replace('__KPI__', encodeURIComponent(kpi.code)), {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': token },
                 body: JSON.stringify({ active: want }),
@@ -146,7 +146,7 @@ function init(root) {
         const isLab = s.kind === 'lab';
 
         return `
-        <section data-set="${s.key}" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5" aria-label="${esc(s.label)}">
+        <section data-set="${esc(s.key)}" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5" aria-label="${esc(s.label)}">
             <div class="flex flex-wrap items-center gap-2 mb-3">
                 <h3 class="text-sm font-bold text-slate-800">${esc(s.label)}</h3>
                 ${shared}
@@ -181,7 +181,7 @@ function init(root) {
     }
 
     function mountSet(s) {
-        const sec = body.querySelector(`[data-set="${s.key}"]`);
+        const sec = body.querySelector(`[data-set="${esc(s.key)}"]`);
         const f = state.filters[s.key];
 
         sec.querySelector('[data-search]').addEventListener('input', (e) => {
@@ -274,7 +274,7 @@ function init(root) {
     }
 
     function refreshHeader(s) {
-        const sec = body.querySelector(`[data-set="${s.key}"]`);
+        const sec = body.querySelector(`[data-set="${esc(s.key)}"]`);
         if (!sec) return;
         const dirty = isDirty(s);
         sec.querySelector('[data-dirty]').classList.toggle('hidden', !dirty);
@@ -285,7 +285,7 @@ function init(root) {
     }
 
     function updatePickedButton(s) {
-        const btn = body.querySelector(`[data-set="${s.key}"] [data-add-picked]`);
+        const btn = body.querySelector(`[data-set="${esc(s.key)}"] [data-add-picked]`);
         if (!btn) return;
         const n = state.picked[s.key].size;
         btn.disabled = n === 0;
@@ -293,7 +293,7 @@ function init(root) {
     }
 
     function renderLeft(s) {
-        const sec = body.querySelector(`[data-set="${s.key}"]`);
+        const sec = body.querySelector(`[data-set="${esc(s.key)}"]`);
         const ul = sec.querySelector('[data-left]');
         const note = sec.querySelector('[data-left-note]');
         const f = state.filters[s.key];
@@ -338,7 +338,7 @@ function init(root) {
     }
 
     function renderRight(s) {
-        const ul = body.querySelector(`[data-set="${s.key}"] [data-right]`);
+        const ul = body.querySelector(`[data-set="${esc(s.key)}"] [data-right]`);
         ul.innerHTML = s.draft.map((i) => {
             const d = state.catalog?.[i.code];
             const title = d ? drugTitle(d) : (i.label || `รหัส ${i.code}`);
@@ -375,8 +375,14 @@ function init(root) {
         const f = state.filters[s.key];
         if (f.q.trim().length < 2) { f.labResults = []; renderLeft(s); return; }
         labTimer = setTimeout(async () => {
-            const res = await fetch(`${cfg.urls.labItems}?q=${encodeURIComponent(f.q.trim())}`, { headers: { Accept: 'application/json' } });
-            f.labResults = res.ok ? (await res.json()).items : [];
+            const q = f.q.trim();
+            try {
+                const res = await fetch(`${cfg.urls.labItems}?q=${encodeURIComponent(q)}`, { headers: { Accept: 'application/json' } });
+                if (f.q.trim() !== q) return; // the user kept typing: a newer search owns the list
+                f.labResults = res.ok ? (await res.json()).items : [];
+            } catch {
+                f.labResults = [];
+            }
             renderLeft(s);
         }, 300);
     }
@@ -384,8 +390,11 @@ function init(root) {
     async function labLabelFor(s) { // name of an already-saved lab item
         for (const item of s.draft) {
             if (item.label) continue;
-            const res = await fetch(`${cfg.urls.labItems}?q=${encodeURIComponent(item.code)}`, { headers: { Accept: 'application/json' } });
-            const hit = res.ok ? (await res.json()).items.find((r) => r.code === item.code) : null;
+            let hit = null;
+            try {
+                const res = await fetch(`${cfg.urls.labItems}?q=${encodeURIComponent(item.code)}`, { headers: { Accept: 'application/json' } });
+                hit = res.ok ? (await res.json()).items.find((r) => r.code === item.code) : null;
+            } catch { /* the name is a nicety; the code alone still works */ }
             if (hit) { item.label = hit.name; s.saved.find((i) => i.code === item.code).label = hit.name; renderRight(s); }
         }
     }

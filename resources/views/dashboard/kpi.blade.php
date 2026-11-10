@@ -148,7 +148,7 @@
             @if($item['hdc_error'] ?? false)
                 <p class="mt-1 text-red-700">ดึงข้อมูลจาก HDC ไม่ได้ในขณะนี้ จึงแสดงเป็น "ไม่มีข้อมูล" กรุณาลองใหม่ภายหลัง</p>
             @else
-                <p class="mt-1">ตัวเลขผลลัพธ์เป็น<b>ยอดรวมทั้งปีงบประมาณ {{ $year }}</b> ของหน่วยบริการ {{ config('rdu.hdc.hospcode') }}
+                <p class="mt-1">ตัวเลขผลลัพธ์เป็น<b>ยอดรวมทั้งปีงบประมาณ {{ $year }}</b> ของหน่วยบริการ {{ $facility['hospcode'] }}
                     @if($item['hdc_processed_at']) · HDC ประมวลผล {{ $item['hdc_processed_at'] }} @endif
                 </p>
             @endif
@@ -1334,6 +1334,12 @@
     }
 
     function render(d) {
+        if (!d.linked && d.facility_set === false) {
+            body.innerHTML = `<div class="status-empty py-8"><span class="msi">link_off</span>
+                <p class="font-medium text-sm">ยังไม่ได้ตั้งรหัสหน่วยบริการหรือจังหวัด จึงเทียบกับ HDC ไม่ได้</p>
+                <p class="text-xs text-slate-400 mt-1">ผู้ดูแลระบบตั้งค่าได้ที่เมนู “ข้อมูลสถานบริการ”</p></div>`;
+            return;
+        }
         if (!d.linked) {
             body.innerHTML = `<div class="status-empty py-8"><span class="msi">link_off</span>
                 <p class="font-medium text-sm">ยังไม่มีข้อมูล HDC คู่กันสำหรับตัวชี้วัดนี้</p>

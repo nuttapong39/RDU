@@ -30,4 +30,6 @@ class UnconfiguredRduDataSource implements RduDataSourceInterface
     public function getDrugCatalog(): array { return []; }
 
     public function searchLabItems(string $term, int $limit = 30): array { return []; }
+
+    public function labItemExists(string $code): bool { return false; }
 }

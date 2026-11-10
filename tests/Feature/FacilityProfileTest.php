@@ -243,6 +243,16 @@ class FacilityProfileTest extends TestCase
         $this->assertFalse(app(HdcDataService::class)->isLinked('KPI07'), 'a KPI with no HDC table stays unlinked');
     }
 
+    public function test_the_hdc_modal_says_why_when_the_hospcode_is_not_set(): void
+    {
+        $kpi = \App\Models\RduIndicator::firstOrCreate(['code' => 'KPI01'], ['name' => 'x', 'category' => 'antibiotic', 'target_value' => 40, 'target_direction' => 'lower', 'is_active' => true]);
+
+        $result = app(HdcComparisonService::class)->compare($kpi, 2569);
+
+        $this->assertFalse($result['linked']);
+        $this->assertFalse($result['facility_set']);
+    }
+
     public function test_a_district_name_is_shown_only_where_the_data_has_it(): void
     {
         $label = fn (string $hospcode, string $areacode) => (fn () => $this->label($hospcode, $areacode))

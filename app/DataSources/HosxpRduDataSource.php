@@ -107,6 +107,11 @@ class HosxpRduDataSource implements RduDataSourceInterface
         ], $rows);
     }
 
+    public function labItemExists(string $code): bool
+    {
+        return DB::connection('rdu')->selectOne('SELECT 1 AS ok FROM lab_items WHERE CAST(lab_items_code AS TEXT) = ? LIMIT 1', [$code]) !== null;
+    }
+
     /** Lab items by code or name (`lab_items` only) — a search, never the whole table. */
     public function searchLabItems(string $term, int $limit = 30): array
     {

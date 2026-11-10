@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Setting;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -22,6 +23,10 @@ class FacilityProfileService
     public const LOGO_MIMES = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'];
 
     private ?array $profile = null;
+
+    private static ?array $provinces = null;
+
+    private static ?array $districts = null;
 
     /**
      * @return array{
@@ -53,13 +58,13 @@ class FacilityProfileService
     /** @return array<string, string> code => name, 77 provinces */
     public static function provinces(): array
     {
-        return require database_path('data/th-provinces.php');
+        return self::$provinces ??= require database_path('data/th-provinces.php');
     }
 
     /** District name for an HDC `areacode`, or null when this province's districts are not in the data file. */
     public static function districtName(string $areacode): ?string
     {
-        return (require database_path('data/th-districts.php'))[substr($areacode, 0, 4)] ?? null;
+        return (self::$districts ??= require database_path('data/th-districts.php'))[substr($areacode, 0, 4)] ?? null;
     }
 
     /**
@@ -72,14 +77,17 @@ class FacilityProfileService
     {
         $logoPath = $logo ? $this->storeLogo($logo) : null;
 
-        Setting::putValue('facility.name', trim($data['name']));
-        Setting::putValue('facility.short_name', trim($data['short_name']));
-        Setting::putValue('facility.province_code', $data['province_code']);
-        // putValue skips null, so an emptied hospcode is stored as an empty string
-        Setting::putValue('facility.hospcode', (string) ($data['hospcode'] ?? ''));
-        if ($logoPath !== null) {
-            Setting::putValue('facility.logo', $logoPath);
-        }
+        // All or nothing: a half-saved profile (new name, old hospcode) must not be left behind.
+        DB::transaction(function () use ($data, $logoPath) {
+            Setting::putValue('facility.name', trim($data['name']));
+            Setting::putValue('facility.short_name', trim($data['short_name']));
+            Setting::putValue('facility.province_code', $data['province_code']);
+            // putValue skips null, so an emptied hospcode is stored as an empty string
+            Setting::putValue('facility.hospcode', (string) ($data['hospcode'] ?? ''));
+            if ($logoPath !== null) {
+                Setting::putValue('facility.logo', $logoPath);
+            }
+        });
 
         $this->flush();
     }

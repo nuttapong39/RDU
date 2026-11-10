@@ -70,4 +70,9 @@ class MockRduDataSource implements RduDataSourceInterface
     {
         return [];
     }
+
+    public function labItemExists(string $code): bool
+    {
+        return false;
+    }
 }

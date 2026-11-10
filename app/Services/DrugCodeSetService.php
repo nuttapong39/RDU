@@ -111,8 +111,10 @@ class DrugCodeSetService
         DrugCodeSetRegistry::get($key);
 
         DB::transaction(function () use ($key, $items, $expectedVersion, $userId) {
-            $set = DrugCodeSet::lockForUpdate()->find($key)
-                ?? DrugCodeSet::create(['key' => $key, 'version' => 0]);
+            // Make sure the row exists first: lockForUpdate locks nothing for a set never saved, so two first
+            // saves must not both try to create it (the second would hit the primary key and fail with a 500).
+            DrugCodeSet::query()->insertOrIgnore(['key' => $key, 'version' => 0]);
+            $set = DrugCodeSet::lockForUpdate()->findOrFail($key);
 
             if ($set->version !== $expectedVersion) {
                 throw new DrugCodeSetConflictException($key, $set->version);

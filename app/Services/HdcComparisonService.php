@@ -25,7 +25,11 @@ class HdcComparisonService
         $hospcode = $this->facility->hospcode();
 
         if (! $this->hdc->isLinked($indicator->code)) {
-            return ['linked' => false, 'kpi' => $indicator->code, 'year' => $fyYear, 'hospcode' => $hospcode];
+            return [
+                'linked' => false, 'kpi' => $indicator->code, 'year' => $fyYear, 'hospcode' => $hospcode,
+                // false = the hospital's hospcode/province are not set, so there is nothing to compare yet
+                'facility_set' => $hospcode !== '' && $this->facility->provinceCode() !== '',
+            ];
         }
 
         // Opening the modal is a deliberate user action (and "ลองใหม่" retries), so try HDC even if a

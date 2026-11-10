@@ -37,6 +37,7 @@ class DrugCodeSetSaveTest extends TestCase
             ]);
             $mock->shouldReceive('searchLabItems')->andReturnUsing(fn (string $term) => $term === '200'
                 ? [['code' => '200', 'name' => 'eGFR', 'unit' => 'mL/min']] : []);
+            $mock->shouldReceive('labItemExists')->andReturnUsing(fn (string $code) => $code === '200');
         });
     }
 

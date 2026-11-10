@@ -42,4 +42,7 @@ interface RduDataSourceInterface
      * Returns list of ['code','name','unit'].
      */
     public function searchLabItems(string $term, int $limit = 30): array;
+
+    /** Whether this exact lab item code exists in HOSxP lab_items (a search is capped, so it cannot answer this). */
+    public function labItemExists(string $code): bool;
 }

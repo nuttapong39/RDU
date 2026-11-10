@@ -169,8 +169,7 @@ class DrugCodeSetController extends Controller
         }
 
         if ($kind === DrugCodeSetRegistry::KIND_LAB) {
-            return array_values(array_filter($codes, fn (string $code) => ! collect($this->query->searchLabItems($code))
-                ->contains(fn (array $row) => $row['code'] === $code)));
+            return array_values(array_filter($codes, fn (string $code) => ! $this->query->labItemExists($code)));
         }
 
         $known = array_flip(array_column($this->query->drugCatalog(), 'icode'));

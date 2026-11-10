@@ -132,6 +132,12 @@ class RduQueryService
         return Cache::remember('rdu.drug-catalog', 3600, fn () => $this->dataSource->getDrugCatalog());
     }
 
+    /** Whether the lab item code exists in the hospital's lab_items. */
+    public function labItemExists(string $code): bool
+    {
+        return $this->dataSource->labItemExists($code);
+    }
+
     /** Lab items matching a search (for the eGFR lab item), at most 30. */
     public function searchLabItems(string $term): array
     {
