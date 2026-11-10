@@ -70,7 +70,7 @@
             </select>
 
             <button type="submit"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 bg-white hover:bg-slate-50
+                    class="rdu-btn inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 bg-white hover:bg-slate-50
                            text-slate-700 rounded-lg text-sm font-medium transition-colors cursor-pointer
                            focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1">
                 <span class="msi text-[1rem]" aria-hidden="true">refresh</span>
@@ -144,6 +144,7 @@
                 @if($status === 'not_configured')
                 <a href="{{ route('dashboard.kpi', $ind->code) }}" data-kpi-card="{{ $ind->code }}" data-not-configured
                    class="kpi-card-v2 status-na">
+                    <span class="msi kpi-watermark" aria-hidden="true">{{ $catIcons[$catKey] ?? 'category' }}</span>
                     <div class="flex items-center gap-1.5">
                         <span class="kpi-code">{{ $ind->code }}</span>
                         <span class="ml-auto text-[.7rem] font-semibold text-slate-500">ยังไม่ตั้งค่า</span>
@@ -157,6 +158,7 @@
 
                 <a href="{{ route('dashboard.kpi', $ind->code) }}" data-kpi-card="{{ $ind->code }}"
                    class="kpi-card-v2 status-{{ $status }}">
+                    <span class="msi kpi-watermark" aria-hidden="true">{{ $catIcons[$catKey] ?? 'category' }}</span>
 
                     <div class="flex items-center gap-1.5">
                         <span class="kpi-code">{{ $ind->code }}</span>

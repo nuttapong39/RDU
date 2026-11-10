@@ -18,7 +18,7 @@
         })();
     </script>
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans antialiased overflow-x-hidden">
+<body class="rdu-bg text-slate-900 font-sans antialiased overflow-x-hidden">
 
 @php
     $userName   = auth()->user()?->name ?? 'Guest';

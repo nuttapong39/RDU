@@ -181,7 +181,7 @@
             $qIsActive = $quarter === $qb['quarter'];
         @endphp
         <a href="{{ route('dashboard.kpi', ['code' => $ind->code, 'year' => $year, 'quarter' => $qb['quarter']]) }}"
-           class="group bg-white rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] cursor-pointer relative overflow-hidden
+           class="group bg-white rounded-2xl p-6 rdu-surface cursor-pointer relative overflow-hidden
                   hover:shadow-xl hover:shadow-indigo-100 hover:-translate-y-1 hover:scale-[1.02]
                   hover:ring-2 hover:ring-indigo-200 hover:bg-indigo-50/40
                   transition-all duration-200 ease-out
@@ -213,7 +213,7 @@
 
 {{-- ============ FILTER TOOLBAR ============ --}}
 <form method="GET" action="{{ route('dashboard.kpi', $ind->code) }}"
-      class="bg-white rounded-2xl px-4 py-3 mb-10 shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)]">
+      class="bg-white rounded-2xl px-4 py-3 mb-10 rdu-surface">
     <input type="hidden" name="quarter" id="quarterInput" value="{{ $quarter ?? '' }}">
 
     <div class="flex flex-wrap items-center gap-3">
@@ -222,6 +222,7 @@
         <div class="flex items-center gap-2">
             <label for="filter-year" class="text-xs text-slate-500 font-medium whitespace-nowrap">ปีงบประมาณ</label>
             <select id="filter-year" name="year"
+                    onchange="this.form.submit()"
                     class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer bg-white">
                 @foreach($yearOptions as $y)
                     <option value="{{ $y }}" @selected($y === $year)>{{ $y }}</option>
@@ -250,7 +251,7 @@
         <div class="flex items-center gap-2">
             <label for="filter-month" class="text-xs text-slate-500 font-medium whitespace-nowrap">หรือเลือกเดือน</label>
             <select id="filter-month" name="month"
-                    onchange="document.getElementById('quarterInput').value=''"
+                    onchange="document.getElementById('quarterInput').value=''; this.form.submit()"
                     class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer bg-white">
                 <option value="0" @selected(!$quarter && $month === 0)>ทั้งปี</option>
                 @foreach($monthOptions as $num => $name)
@@ -259,13 +260,10 @@
             </select>
         </div>
 
-        <button type="submit"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
-                       text-white rounded-lg text-sm font-medium transition-colors cursor-pointer
-                       focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1">
-            <span class="msi text-[1rem]">refresh</span>
-            รีเฟรช
-        </button>
+        {{-- Choosing a year, quarter or month reloads the page by itself; this button only exists when JavaScript is off --}}
+        <noscript>
+            <button type="submit" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium">แสดงผล</button>
+        </noscript>
 
         <div class="ml-auto flex items-center gap-1.5 text-xs text-slate-400">
             <span class="msi text-[.9rem]">history</span>
@@ -285,7 +283,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
 
     {{-- Metric Card --}}
-    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
+    <div class="rdu-card-hover bg-white rounded-2xl rdu-surface p-7">
         <div class="text-xs text-slate-500 mb-1 uppercase tracking-wider font-semibold">ผลลัพธ์</div>
         <div class="flex items-baseline gap-1 mb-3">
             <span class="text-5xl font-bold tabular-nums {{ $pctColor }}">
@@ -359,7 +357,7 @@
     </div>
 
     {{-- Trend Chart --}}
-    <div class="lg:col-span-2 bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] overflow-hidden">
+    <div class="rdu-card-hover lg:col-span-2 bg-white rounded-2xl rdu-surface overflow-hidden">
         <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between gap-2">
             <div class="flex items-center gap-2 font-semibold text-sm text-slate-800">
                 <span class="msi text-indigo-600">trending_up</span>
@@ -407,7 +405,7 @@
         : null;
 @endphp
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-10">
-    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
+    <div class="rdu-card-hover bg-white rounded-2xl rdu-surface p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">donut_small</span>
             สัดส่วน {{ $unit['title'] }}
@@ -432,7 +430,7 @@
         @endif
     </div>
 
-    <div class="lg:col-span-2 bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] overflow-hidden flex flex-col">
+    <div class="rdu-card-hover lg:col-span-2 bg-white rounded-2xl rdu-surface overflow-hidden flex flex-col">
         <div class="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
             <span class="msi text-indigo-600">show_chart</span>
             <span class="font-semibold text-sm text-slate-800">แนวโน้มอัตราเฉลี่ยสะสม (ปีงบประมาณ {{ $year }})</span>
@@ -450,28 +448,28 @@
 
 {{-- ============ VISIT STAT CARDS — shown for every KPI, stub or real ============ --}}
 <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
-    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
+    <div class="bg-white rounded-2xl rdu-surface p-6">
         <div class="text-xs text-slate-500 mb-1">{{ $unit['title'] }} ทั้งหมด</div>
         <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($visitStats['total_visits']) }}</div>
     </div>
-    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
+    <div class="bg-white rounded-2xl rdu-surface p-6">
         <div class="text-xs text-slate-500 mb-1">{{ $unit['title'] }} ที่ได้ {{ $drug['short'] }}</div>
         <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($visitStats['atb_visits']) }}</div>
         @if($visitStats['pct'] !== null)
             <div class="text-[.7rem] text-slate-400">{{ $visitStats['pct'] }}% ของทั้งหมด</div>
         @endif
     </div>
-    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
+    <div class="bg-white rounded-2xl rdu-surface p-6">
         {{-- Drugs dispensed in one visit — for a KPI counted in patients, that patient's representative visit --}}
         <div class="text-xs text-slate-500 mb-1">ยาเฉลี่ยต่อ VISIT</div>
         <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ $visitStats['avg_drug_items'] ?? 'N/A' }}</div>
         <div class="text-[.7rem] text-slate-400">ทุกชนิดรวมกัน</div>
     </div>
-    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
+    <div class="bg-white rounded-2xl rdu-surface p-6">
         <div class="text-xs text-slate-500 mb-1">{{ $drug['cost'] }}</div>
         <div class="text-2xl font-bold text-slate-800 tabular-nums">{{ number_format($visitStats['atb_cost'], 0) }}</div>
     </div>
-    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-6">
+    <div class="bg-white rounded-2xl rdu-surface p-6">
         <div class="text-xs text-slate-500 mb-1">ส่วนต่างจากเป้า</div>
         @if($visitStats['gap_from_target'] !== null)
             <div class="text-2xl font-bold tabular-nums {{ $visitStats['gap_is_good'] ? 'text-emerald-600' : 'text-red-600' }}">
@@ -494,7 +492,7 @@
 {{-- Doctor antibiotic rate — table, sorted worst-first by rate. Doctor identity is masked to a
      stable alias (see docs/adr/0002-doctor-identity-masked-in-web-ui-only.md); click/hover the
      alias to reveal the real name. Exports are unaffected — always real names there. --}}
-<div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7 mb-10">
+<div class="bg-white rounded-2xl rdu-surface p-7 mb-10">
     <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
         <div class="flex items-center gap-2 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">medical_services</span>
@@ -612,7 +610,7 @@
 {{-- ICD-10 ranking + drug usage, paired side by side — deliberately distinct header/icon
      from the quarterly donut further down so the two never get confused --}}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
-    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
+    <div class="rdu-card-hover bg-white rounded-2xl rdu-surface p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">local_hospital</span>
             การวินิจฉัย ICD-10 ที่พบบ่อย 10 อันดับแรก
@@ -629,7 +627,7 @@
         @endif
     </div>
 
-    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
+    <div class="rdu-card-hover bg-white rounded-2xl rdu-surface p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">bar_chart</span>
             {{ $drug['usage'] }}
@@ -648,7 +646,7 @@
 </div>
 
 {{-- ============ COVERAGE-TYPE BREAKDOWN (สิทธิ์การรักษา) ============ --}}
-<div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7 mb-10">
+<div class="bg-white rounded-2xl rdu-surface p-7 mb-10">
     <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
         <span class="msi text-indigo-600">badge</span>
         สิทธิ์การรักษา
@@ -686,7 +684,7 @@
 
 {{-- ============ DEPARTMENT + ROOM/WARD BREAKDOWN (ATB-positive visits only) ============ --}}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
-    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
+    <div class="rdu-card-hover bg-white rounded-2xl rdu-surface p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">local_hospital</span>
             แผนก (เฉพาะ {{ $unit['title'] }} ที่ได้ {{ $drug['short'] }})
@@ -712,7 +710,7 @@
         @endif
     </div>
 
-    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
+    <div class="rdu-card-hover bg-white rounded-2xl rdu-surface p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">meeting_room</span>
             {{ $ind->code === 'KPI03' ? 'หอผู้ป่วย' : 'ห้องตรวจ' }} (เฉพาะ {{ $unit['title'] }} ที่ได้ {{ $drug['short'] }})
@@ -748,7 +746,7 @@
 {{-- ============ QUARTERLY PIE CHART + DESCRIPTION CARD ============ --}}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
     {{-- Pie chart: share of antibiotic-positive cases (numerator) across the 4 quarters --}}
-    <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
+    <div class="rdu-card-hover bg-white rounded-2xl rdu-surface p-7">
         <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
             <span class="msi text-indigo-600">calendar_view_month</span>
             สัดส่วนเคส {{ $drug['short'] }} แยกรายไตรมาส (Q1–Q4 ปีงบ {{ $year }})
@@ -773,7 +771,7 @@
 
     {{-- Description card, compacted to fit the narrower column --}}
     @if($ind->numerator_desc || $ind->denominator_desc)
-        <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,.04),0_1px_8px_rgba(0,0,0,.03)] p-7">
+        <div class="rdu-card-hover bg-white rounded-2xl rdu-surface p-7">
             <div class="flex items-center gap-2 mb-3 font-semibold text-sm text-slate-800">
                 <span class="msi text-indigo-600">description</span>
                 คำนิยามตัวชี้วัด
