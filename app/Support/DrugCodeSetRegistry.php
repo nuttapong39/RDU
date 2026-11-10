@@ -72,6 +72,11 @@ final class DrugCodeSetRegistry
         return self::all()[$key] ?? throw new \InvalidArgumentException("Unknown drug code set '{$key}'");
     }
 
+    public static function exists(string $key): bool
+    {
+        return isset(self::all()[$key]);
+    }
+
     /** Set keys a KPI needs, in registry order. @return list<string> */
     public static function forKpi(string $kpiCode): array
     {

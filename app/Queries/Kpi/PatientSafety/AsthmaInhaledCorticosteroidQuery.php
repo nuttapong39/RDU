@@ -5,6 +5,7 @@ namespace App\Queries\Kpi\PatientSafety;
 use App\Queries\Kpi\CountingMethod;
 use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
+use App\Queries\Kpi\UsesDrugCodeSets;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -22,13 +23,8 @@ use Illuminate\Support\Facades\DB;
  */
 class AsthmaInhaledCorticosteroidQuery implements KpiQueryInterface, DescribesCountingMethod
 {
-    /** `drugitems.icode` of every inhaled corticosteroid the hospital dispenses — the list set by the pharmacist. */
-    private const ICS_ICODES = [
-        '1483852',  // Budesonide MDI 200 mcg/dose
-        '1590017',  // Seretide Evohaler (fluticasone + salmeterol) 25+250 mcg/dose
-        '1540020',  // Seretide Accuhaler 50+250 mcg/dose
-        '1530002',  // Seretide Accuhaler (retired code)
-    ];
+    use UsesDrugCodeSets;
+
 
     /** ICD-10 prefixes for asthma — every code starting with one counts (J45, J450, J459, J46…). */
     private const DIAGNOSIS_PREFIXES = ['J45', 'J46'];
@@ -42,7 +38,7 @@ class AsthmaInhaledCorticosteroidQuery implements KpiQueryInterface, DescribesCo
             numerator: ['ผู้ป่วยในตัวหารที่ได้รับยา ICS ตามรายการรหัสยา ในวิสิตผู้ป่วยนอกครั้งใดก็ได้ในช่วงเวลาเดียวกัน (ไม่จำเป็นต้องเป็นวิสิตที่วินิจฉัยโรคหืด)'],
             conditions: [CountingMethod::OPD_ONLY, CountingMethod::ANY_DIAGNOSIS_POSITION, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS],
             drugLabel: 'ยา Inhaled Corticosteroid (ICS)',
-            drugs: array_fill_keys(self::ICS_ICODES, null),
+            drugs: $this->drugItems('ics'),
             diagnoses: [
                 ['label' => 'โรคหืด', 'codes' => self::DIAGNOSIS_PREFIXES, 'match' => 'prefix'],
             ],
@@ -202,7 +198,7 @@ class AsthmaInhaledCorticosteroidQuery implements KpiQueryInterface, DescribesCo
                 WHERE o.vstdate BETWEEN ? AND ?
                   AND o.an IS NULL
                   AND op.qty > 0
-                  AND op.icode IN ('.$this->quotedList(self::ICS_ICODES).')
+                  AND op.icode IN ('.$this->quotedList($this->drugCodes('ics')).')
             )';
     }
 

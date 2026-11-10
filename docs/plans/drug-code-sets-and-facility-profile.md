@@ -54,6 +54,9 @@
 ## 5. Phase
 
 แต่ละ Phase: PLAN → IMPLEMENT → TEST → SECURITY REVIEW → REFACTOR → TEST AGAIN แล้ว commit แยก ไม่เข้า Phase ถัดไปถ้า test ยังไม่ผ่าน
+**กฎ UI:** ถ้า Phase ใดแก้หรือเพิ่ม UI (Blade, CSS, JS) ต้อง**ตรวจในเบราว์เซอร์ด้วย Claude in Chrome ทุกครั้ง**บน UAT (http://192.168.1.25/RDU/public) ก่อนถือว่าเสร็จ: เปิดหน้าจริง, ลองใช้งาน (ลากวาง, บันทึก, toast, สิทธิ์ที่ต่างกัน), ดูหน้าจอแคบ และเช็ค console error — rebuild assets ด้วย `npx vite build --emptyOutDir=false` ก่อน การรัน test อย่างเดียวไม่พอ ห้ามกรอกรหัสผ่านหรือกดส่งฟอร์ม login (ขอให้ผู้ใช้ login เอง) และถ้า Claude in Chrome ใช้ไม่ได้ให้แจ้งผู้ใช้ ไม่ข้ามเงียบๆ
+(Phase 1 มีหน้า `admin/drug-code-editors` และลิงก์ sidebar ที่ยังไม่ได้ตรวจในเบราว์เซอร์ — ต้องตรวจก่อน deploy)
+
 เกณฑ์เทียบ baseline: ชุด test ทั้งหมดมี ~63 failed เดิม (Faker intl, admin 403, KpiEngine 85.2, sidebar 'คุณภาพยา', DatabaseConfig) ห้ามเพิ่ม
 
 ### Phase 1 — ฐานข้อมูล สิทธิ์ และทะเบียนชุด

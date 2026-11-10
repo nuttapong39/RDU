@@ -181,6 +181,8 @@ Admin → Config Page → DatabaseConfigService → Validate → Encrypt → JSO
 
 **ห้ามเข้า Phase ถัดไปหาก Test ยังไม่ผ่าน**
 
+**แก้ไข UI (Blade/CSS/JS) ต้องตรวจในเบราว์เซอร์ด้วย Claude in Chrome ทุกครั้ง** บน UAT (`http://192.168.1.25/RDU/public`, rebuild assets ด้วย `npx vite build --emptyOutDir=false`) — เปิดหน้าจริง ลองใช้งาน ดู console error และจอแคบ; การรัน test อย่างเดียวไม่พอ ห้ามกรอกรหัสผ่าน/ส่งฟอร์ม login เอง
+
 Read-Only Tests ที่ต้องผ่านก่อน Production:
 
 | Test | Expected |

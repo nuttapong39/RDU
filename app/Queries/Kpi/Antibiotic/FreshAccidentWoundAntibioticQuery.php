@@ -5,6 +5,7 @@ namespace App\Queries\Kpi\Antibiotic;
 use App\Queries\Kpi\CountingMethod;
 use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
+use App\Queries\Kpi\UsesDrugCodeSets;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\DB;
  */
 class FreshAccidentWoundAntibioticQuery implements KpiQueryInterface, DescribesCountingMethod
 {
+    use UsesDrugCodeSets;
+
     /**
      * ICD-10 3-character categories for the injury-nature group — the pharmacist's list, without the codes that
      * EXCLUDED_PREFIXES drops anyway (S16, T20–T32), so the counting method never lists a code as both counted
@@ -47,17 +50,6 @@ class FreshAccidentWoundAntibioticQuery implements KpiQueryInterface, DescribesC
         'แผลลึกถึงกล้ามเนื้อ/เอ็น' => ['S16', 'S46', 'S56', 'S66', 'S76', 'S86', 'S96', 'S390', 'T095', 'T115', 'T135', 'T146'],
     ];
 
-    /**
-     * `drugitems.icode`: the pharmacist's 28 oral / injectable antibiotics — KPI02's own list, not the 66 codes the
-     * other antibiotic KPIs share (docs/adr/0003): it has Clindamycin, Levofloxacin and Nitrofurantoin, and no
-     * topical or non-antibiotic items.
-     */
-    private const ANTIBIOTIC_ICODES = [
-        '1000030', '1000028', '1580003', '1000034', '1610058', '1483847', '1483857', '1530013',
-        '1000060', '1460109', '1510018', '1000082', '1483877', '1530023', '1540024', '1000084',
-        '1000085', '1670021', '1670027', '1000125', '1000267', '1000140', '1640002', '1000213',
-        '1500906', '1680036', '1430203', '1000231',
-    ];
 
     /** How this KPI is counted, built from the same constants as its SQL (CONTEXT.md: วิธีนับ). */
     public function countingMethod(): CountingMethod
@@ -71,7 +63,7 @@ class FreshAccidentWoundAntibioticQuery implements KpiQueryInterface, DescribesC
             numerator: ['วิสิตในตัวหารที่ได้รับยาปฏิชีวนะชนิดกินหรือฉีดตามรายการรหัสยาอย่างน้อย 1 รายการ'],
             conditions: [CountingMethod::OPD_ONLY, CountingMethod::ANY_DIAGNOSIS_POSITION, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS],
             drugLabel: 'ยาปฏิชีวนะ',
-            drugs: array_fill_keys(self::ANTIBIOTIC_ICODES, null),
+            drugs: $this->drugItems('antibiotic_fresh_wound'),
             diagnoses: [
                 ['label' => 'ลักษณะการบาดเจ็บ (รหัสขึ้นต้นด้วย)', 'codes' => self::INJURY_PREFIXES, 'match' => 'prefix',
                  'note' => 'ชุดรหัสของ KPI02 — ต่างจาก KPI01 เช่น รวมแผลที่ตา (S05)'],
@@ -229,7 +221,7 @@ class FreshAccidentWoundAntibioticQuery implements KpiQueryInterface, DescribesC
     /** `opitemrece` row-level check: an antibiotic actually dispensed (qty > 0). */
     private function antibioticDispensed(string $alias): string
     {
-        return "$alias.qty > 0 AND $alias.icode IN (".$this->quotedList(self::ANTIBIOTIC_ICODES).')';
+        return "$alias.qty > 0 AND $alias.icode IN (".$this->quotedList($this->drugCodes('antibiotic_fresh_wound')).')';
     }
 
     /** Row-level check: an injury-nature code (INJURY_PREFIXES). */

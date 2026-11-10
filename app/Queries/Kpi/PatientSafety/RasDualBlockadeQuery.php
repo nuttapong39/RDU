@@ -5,6 +5,7 @@ namespace App\Queries\Kpi\PatientSafety;
 use App\Queries\Kpi\CountingMethod;
 use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
+use App\Queries\Kpi\UsesDrugCodeSets;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -21,15 +22,8 @@ use Illuminate\Support\Facades\DB;
  */
 class RasDualBlockadeQuery implements KpiQueryInterface, DescribesCountingMethod
 {
-    /** `drugitems.icode` → active ingredient, for every ACEI / ARB in this hospital's formulary (incl. retired codes). */
-    private const RAS_DRUGS = [
-        '1510003' => 'enalapril',  // Enalapril 5 mg
-        '1000122' => 'enalapril',  // Enalapril 20 mg
-        '1530006' => 'captopril',  // Captopril 25 mg
-        '1670015' => 'losartan',   // Losartan 50 mg
-        '1540023' => 'losartan',   // Losartan 50 mg (retired code)
-        '1570019' => 'losartan',   // Losartan(a) 50 mg (retired code)
-    ];
+    use UsesDrugCodeSets;
+
 
     /** ICD-10 prefix for essential hypertension — every code starting with it counts. */
     private const DIAGNOSIS_PREFIXES = ['I10'];
@@ -43,7 +37,7 @@ class RasDualBlockadeQuery implements KpiQueryInterface, DescribesCountingMethod
             numerator: ['วิสิตในตัวหารที่ได้ RAS blockade ตั้งแต่ 2 ตัวยาที่ต่างกัน — นับตามตัวยา (ช่อง "ตัวยา" ในตารางข้อ 6) ยาตัวเดียวกันต่างขนาดนับเป็น 1 ชนิด'],
             conditions: [CountingMethod::ANY_DIAGNOSIS_POSITION, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS, CountingMethod::ALL_VISITS],
             drugLabel: 'ยากลุ่ม RAS blockade',
-            drugs: self::RAS_DRUGS,
+            drugs: $this->drugItems('ras_blockade'),
             diagnoses: [
                 ['label' => 'โรคความดันโลหิตสูงทั่วไป', 'codes' => self::DIAGNOSIS_PREFIXES, 'match' => 'prefix'],
             ],
@@ -111,7 +105,7 @@ class RasDualBlockadeQuery implements KpiQueryInterface, DescribesCountingMethod
                 INNER JOIN drugitems d ON d.icode = o.icode
                 WHERE o.vn IN (SELECT vn FROM ras_visits WHERE ras_drugs >= 2)
                   AND o.qty > 0
-                  AND o.icode IN ('.$this->quotedList(array_keys(self::RAS_DRUGS)).')
+                  AND o.icode IN ('.$this->quotedList($this->drugCodes('ras_blockade')).')
                 GROUP BY o.vn
             ),
             all_drug_info AS (
@@ -187,18 +181,18 @@ class RasDualBlockadeQuery implements KpiQueryInterface, DescribesCountingMethod
                 WHERE o.vstdate BETWEEN ? AND ?
                   AND '.$this->diagnosisExists('o.vn').'
                   AND op.qty > 0
-                  AND op.icode IN ('.$this->quotedList(array_keys(self::RAS_DRUGS)).')
+                  AND op.icode IN ('.$this->quotedList($this->drugCodes('ras_blockade')).')
                   AND o.hn NOT IN (SELECT hn FROM patient WHERE fname LIKE \'%ทดสอบ%\')
                 GROUP BY o.vn
             )';
     }
 
-    /** SQL expression mapping an icode column to its active ingredient (RAS_DRUGS), so dose variants count once. */
+    /** SQL expression mapping an icode column to its active ingredient (the RAS set), so dose variants count once. */
     private function activeIngredient(string $icodeColumn): string
     {
         $cases = '';
-        foreach (self::RAS_DRUGS as $icode => $ingredient) {
-            $cases .= ' WHEN '.$this->quotedList([$icode]).' THEN '.$this->quotedList([$ingredient]);
+        foreach ($this->drugItems('ras_blockade') as $icode => $ingredient) {
+            $cases .= ' WHEN '.$this->quotedList([(string) $icode]).' THEN '.$this->quotedList([$ingredient]);
         }
 
         return "CASE $icodeColumn$cases END";

@@ -16,6 +16,9 @@ class DrugCodeSetFoundationTest extends TestCase
 {
     use RefreshDatabase;
 
+    // These tests start from the empty sets a new hospital has.
+    protected bool $seedDrugCodeSets = false;
+
     private function admin(): User
     {
         return $this->makeUser('nuttapong');

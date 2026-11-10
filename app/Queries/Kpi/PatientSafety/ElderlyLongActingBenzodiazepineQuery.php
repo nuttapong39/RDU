@@ -5,6 +5,7 @@ namespace App\Queries\Kpi\PatientSafety;
 use App\Queries\Kpi\CountingMethod;
 use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
+use App\Queries\Kpi\UsesDrugCodeSets;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -21,12 +22,8 @@ use Illuminate\Support\Facades\DB;
  */
 class ElderlyLongActingBenzodiazepineQuery implements KpiQueryInterface, DescribesCountingMethod
 {
-    /** `drugitems.icode` → dosage form, for every long-acting benzodiazepine the pharmacist listed. */
-    private const LONG_ACTING_BZD_DRUGS = [
-        '1000107' => 'ยาเม็ด',  // (5 mg)Diazepam (สีเหลือง)
-        '1460009' => 'ยาเม็ด',  // DiazePAM (สีขาว) 2 mg
-        '1000108' => 'ยาฉีด',   // DIAZEPAM INJ 10 mg/2ml
-    ];
+    use UsesDrugCodeSets;
+
 
     /** Elderly = at least this many full years old on the visit date (HDC's cut-off, not the general 60). */
     private const AGE_MINIMUM = 65;
@@ -40,7 +37,7 @@ class ElderlyLongActingBenzodiazepineQuery implements KpiQueryInterface, Describ
             numerator: ['วิสิตในตัวหารที่ได้ยากลุ่ม Long-acting Benzodiazepine ตามรายการรหัสยา อย่างน้อย 1 รายการ — Diazepam ทั้งยาเม็ดและยาฉีด ไม่นับ Clonazepam'],
             conditions: [CountingMethod::ALL_VISITS, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS],
             drugLabel: 'ยากลุ่ม Long-acting Benzodiazepine',
-            drugs: self::LONG_ACTING_BZD_DRUGS,
+            drugs: $this->drugItems('long_acting_bzd'),
             diagnoses: [],
             excludedDiagnoses: [],
             doctor: 'แพทย์ผู้ตรวจของวิสิตนั้น',
@@ -190,7 +187,7 @@ class ElderlyLongActingBenzodiazepineQuery implements KpiQueryInterface, Describ
     /** `opitemrece` row-level check: a long-acting benzodiazepine actually dispensed (qty > 0). */
     private function longActingBzdDispensed(string $alias): string
     {
-        return "$alias.qty > 0 AND $alias.icode IN (".$this->quotedList(array_keys(self::LONG_ACTING_BZD_DRUGS)).')';
+        return "$alias.qty > 0 AND $alias.icode IN (".$this->quotedList($this->drugCodes('long_acting_bzd')).')';
     }
 
     /**

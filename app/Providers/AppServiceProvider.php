@@ -29,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // One instance per request, so the KPI queries share a single read of each drug code set.
+        $this->app->singleton(DrugCodeSetService::class);
+
         $this->app->singleton(HosxpRduDataSource::class, function ($app) {
             return new HosxpRduDataSource([
                 'KPI01' => $app->make(AccidentWoundAntibioticQuery::class),

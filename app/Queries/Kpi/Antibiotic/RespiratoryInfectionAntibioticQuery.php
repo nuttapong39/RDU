@@ -5,6 +5,7 @@ namespace App\Queries\Kpi\Antibiotic;
 use App\Queries\Kpi\CountingMethod;
 use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
+use App\Queries\Kpi\UsesDrugCodeSets;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\DB;
  */
 class RespiratoryInfectionAntibioticQuery implements KpiQueryInterface, DescribesCountingMethod
 {
+    use UsesDrugCodeSets;
+
     /** ICD-10 codes for upper-respiratory-tract infection / acute bronchitis (+ related otitis). */
     private const DIAGNOSIS_CODES = [
         'H650', 'H651', 'H659', 'H660', 'H664', 'H669', 'H670', 'H671', 'H678',
@@ -28,18 +31,6 @@ class RespiratoryInfectionAntibioticQuery implements KpiQueryInterface, Describe
         'J210', 'J218', 'J219',
     ];
 
-    /** Same `drugitems.icode` antibiotic whitelist used by KPI01/KPI03 — hospital-provided list. */
-    private const ANTIBIOTIC_ICODES = [
-        '1000125', '1483847', '1000028', '1000030', '1500906', '1000213', '1530023', '1460340',
-        '1483916', '1483852', '1000034', '1610058', '1610031', '1000084', '1440403', '1460312',
-        '1530013', '1000082', '1483877', '1000085', '1000060', '1483876', '1483867', '1520008',
-        '1000140', '1540024', '1483857', '1000267', '1460047', '1000163', '1430203', '1510018',
-        '1483898', '1460057', '1460106', '1520010', '1570021', '1000011', '1580013', '1483849',
-        '1483788', '1510042', '1015001', '1600008', '1590006', '1640030', '1440208', '1510032',
-        '1460109', '1580003', '1000221', '1510041', '1510044', '1000202', '1000188', '1000231',
-        '1460110', '1520011', '1000126', '1460177', '1460300', '1483815', '1510004', '1510007',
-        '1530015', '1550002',
-    ];
 
     /** How this KPI is counted, built from the same constants as its SQL (CONTEXT.md: วิธีนับ). */
     public function countingMethod(): CountingMethod
@@ -50,7 +41,7 @@ class RespiratoryInfectionAntibioticQuery implements KpiQueryInterface, Describe
             numerator: ['วิสิตในตัวหารที่ได้รับยาปฏิชีวนะตามรายการรหัสยาอย่างน้อย 1 รายการ'],
             conditions: [CountingMethod::ANY_DIAGNOSIS_POSITION, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS, CountingMethod::ALL_VISITS],
             drugLabel: 'ยาปฏิชีวนะ',
-            drugs: array_fill_keys(self::ANTIBIOTIC_ICODES, null),
+            drugs: $this->drugItems('antibiotic'),
             diagnoses: [
                 ['label' => 'โรคติดเชื้อทางเดินหายใจช่วงบน / หลอดลมอักเสบเฉียบพลัน', 'codes' => self::DIAGNOSIS_CODES, 'match' => 'exact'],
             ],
@@ -108,7 +99,7 @@ class RespiratoryInfectionAntibioticQuery implements KpiQueryInterface, Describe
             INNER JOIN drugitems d ON d.icode = o.icode
             WHERE o.vn IN (SELECT vn FROM vn_list)
               AND o.qty > 0
-              AND d.icode IN ('.$this->quotedList(self::ANTIBIOTIC_ICODES).')',
+              AND d.icode IN ('.$this->quotedList($this->drugCodes('antibiotic')).')',
             [$startDate, $endDate]
         );
 
@@ -134,7 +125,7 @@ class RespiratoryInfectionAntibioticQuery implements KpiQueryInterface, Describe
                 INNER JOIN drugitems d ON d.icode = o.icode
                 WHERE o.vn IN (SELECT vn FROM vn_list)
                   AND o.qty > 0
-                  AND d.icode IN ('.$this->quotedList(self::ANTIBIOTIC_ICODES).')
+                  AND d.icode IN ('.$this->quotedList($this->drugCodes('antibiotic')).')
                 GROUP BY o.hn, o.vn
             ),
             all_drug_info AS (

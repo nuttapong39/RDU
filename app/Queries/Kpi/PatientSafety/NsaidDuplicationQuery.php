@@ -5,6 +5,7 @@ namespace App\Queries\Kpi\PatientSafety;
 use App\Queries\Kpi\CountingMethod;
 use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
+use App\Queries\Kpi\UsesDrugCodeSets;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -21,18 +22,8 @@ use Illuminate\Support\Facades\DB;
  */
 class NsaidDuplicationQuery implements KpiQueryInterface, DescribesCountingMethod
 {
-    /**
-     * `drugitems.icode` of every NSAID the hospital dispenses — the list set by the pharmacist.
-     * Public: KPI09 (CkdNsaidQuery) counts the same list, so a change here changes both KPIs.
-     */
-    public const NSAID_ICODES = [
-        '1610036',  // Ibuprofen 200 mg
-        '1483891',  // Ibuprofen 400 mg
-        '1483892',  // Ibuprofen suspension 100 mg/5 ml
-        '1610052',  // Diclofenac injection 75 mg/3 ml
-        '1000110',  // Diclofenac 25 mg tablet
-        '1000182',  // Mefenamic acid 250 mg
-    ];
+    use UsesDrugCodeSets;
+
 
     /** How this KPI is counted, built from the same constants as its SQL (CONTEXT.md: วิธีนับ). */
     public function countingMethod(): CountingMethod
@@ -43,7 +34,7 @@ class NsaidDuplicationQuery implements KpiQueryInterface, DescribesCountingMetho
             numerator: ['วิสิตในตัวหารที่ได้ NSAIDs ตั้งแต่ 2 รายการ (รหัสยา) ขึ้นไปในวิสิตเดียวกัน — Diclofenac ฉีด + Diclofenac กิน นับเป็นซ้ำซ้อน'],
             conditions: [CountingMethod::OPD_ONLY, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS, 'ไม่นับยาที่ผสมยาแก้ปวดกลุ่มอื่น (เช่น Orphenadrine + Paracetamol) และไม่นับ Aspirin'],
             drugLabel: 'NSAIDs',
-            drugs: array_fill_keys(self::NSAID_ICODES, null),
+            drugs: $this->drugItems('nsaid'),
             diagnoses: [],
             excludedDiagnoses: [],
             doctor: 'แพทย์ผู้ตรวจของวิสิตนั้น',
@@ -110,7 +101,7 @@ class NsaidDuplicationQuery implements KpiQueryInterface, DescribesCountingMetho
                 INNER JOIN drugitems d ON d.icode = o.icode
                 WHERE o.vn IN (SELECT vn FROM nsaid_visits WHERE nsaid_items >= 2)
                   AND o.qty > 0
-                  AND o.icode IN ('.$this->quotedList(self::NSAID_ICODES).')
+                  AND o.icode IN ('.$this->quotedList($this->drugCodes('nsaid')).')
                 GROUP BY o.vn
             ),
             all_drug_info AS (
@@ -185,7 +176,7 @@ class NsaidDuplicationQuery implements KpiQueryInterface, DescribesCountingMetho
                 WHERE o.vstdate BETWEEN ? AND ?
                   AND o.an IS NULL
                   AND op.qty > 0
-                  AND op.icode IN ('.$this->quotedList(self::NSAID_ICODES).')
+                  AND op.icode IN ('.$this->quotedList($this->drugCodes('nsaid')).')
                   AND o.hn NOT IN (SELECT hn FROM patient WHERE fname LIKE \'%ทดสอบ%\')
                 GROUP BY o.vn
             )';

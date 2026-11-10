@@ -5,6 +5,7 @@ namespace App\Queries\Kpi\ChronicDisease;
 use App\Queries\Kpi\CountingMethod;
 use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
+use App\Queries\Kpi\UsesDrugCodeSets;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -24,19 +25,7 @@ use Illuminate\Support\Facades\DB;
  */
 class MetforminDiabetesQuery implements KpiQueryInterface, DescribesCountingMethod
 {
-    /** The drug this KPI measures. */
-    private const METFORMIN_ICODE = '1000184';
-
-    /** Glucose-lowering drugs: getting any one of them puts a type 2 DM patient in the denominator (metformin first). */
-    private const GLUCOSE_LOWERING_ICODES = [
-        self::METFORMIN_ICODE,  // metformin 500 mg
-        '1019001',              // glipizide 5 mg
-        '1680038',              // pioglitazone 30 mg
-        '1510002',              // Penfill Mixtard
-        '1481213',              // regular insulin (priced per unit)
-        '1590023',              // NPH vial (insulin used at home)
-        '1483896',              // regular insulin 1000 iu
-    ];
+    use UsesDrugCodeSets;
 
     /** Type 2 diabetes — every code starting with it (E11, E110 … E119). */
     private const DIAGNOSIS_PREFIX = 'E11';
@@ -47,9 +36,6 @@ class MetforminDiabetesQuery implements KpiQueryInterface, DescribesCountingMeth
         'E13' => 'เบาหวานชนิดอื่นที่ระบุ ไม่ใช่ชนิดที่ 2',
         'E14' => 'ไม่ระบุชนิด จึงไม่รู้ว่าเป็นชนิดที่ 2 หรือไม่',
     ];
-
-    /** HOSxP lab item "eGFR" (mL/min/1.73m2) — not 3123 "eGFR Stage" (a stage, not a value) or 3211 (cancelled). */
-    private const EGFR_LAB_ITEM = 200;
 
     /** Metformin is contraindicated below this eGFR. */
     private const EGFR_MINIMUM = 30;
@@ -70,7 +56,7 @@ class MetforminDiabetesQuery implements KpiQueryInterface, DescribesCountingMeth
                 'ผล eGFR นับทั้งที่ตรวจตอนผู้ป่วยนอกและตอนนอนโรงพยาบาล อ่านตัวเลขหน้าผล (เช่น "19.49 R" = 19.49, "<30" = ต่ำกว่า 30) ผลที่ไม่มีตัวเลขข้ามไปใช้ผลก่อนหน้า',
             ],
             drugLabel: 'ยาลดระดับน้ำตาล (ตัวหาร) — Metformin คือยาที่วัด (ตัวตั้ง)',
-            drugs: [self::METFORMIN_ICODE => 'ยาที่วัด (ตัวตั้ง)'] + array_fill_keys(self::GLUCOSE_LOWERING_ICODES, null),
+            drugs: array_fill_keys(array_keys($this->drugItems('metformin')), 'ยาที่วัด (ตัวตั้ง)') + $this->drugItems('glucose_lowering'),
             diagnoses: [
                 ['label' => 'เบาหวานชนิดที่ 2', 'codes' => [self::DIAGNOSIS_PREFIX], 'match' => 'prefix'],
             ],
@@ -250,7 +236,7 @@ class MetforminDiabetesQuery implements KpiQueryInterface, DescribesCountingMeth
                 WHERE o.vstdate BETWEEN ? AND ?
                   AND o.an IS NULL
                   AND op.qty > 0
-                  AND op.icode IN ('.$this->quotedList(self::GLUCOSE_LOWERING_ICODES).')
+                  AND op.icode IN ('.$this->quotedList($this->drugCodes('glucose_lowering')).')
             ),
             latest_egfr AS (
                 SELECT DISTINCT ON (lh.hn)
@@ -260,7 +246,7 @@ class MetforminDiabetesQuery implements KpiQueryInterface, DescribesCountingMeth
                        lh.order_date AS egfr_date
                 FROM lab_head lh
                 INNER JOIN lab_order lo ON lo.lab_order_number = lh.lab_order_number
-                WHERE lo.lab_items_code = '.self::EGFR_LAB_ITEM.'
+                WHERE lo.lab_items_code = '.(int) $this->drugCodes('egfr_lab')[0].'
                   AND lh.order_date BETWEEN (CAST(? AS date) - INTERVAL \'12 months\' + INTERVAL \'1 day\')::date AND CAST(? AS date)
                   AND lh.hn IN (SELECT hn FROM dm_visits)
                   AND lo.lab_order_result ~ \'^\s*[<>]{0,1}\s*[0-9]\'
@@ -290,7 +276,7 @@ class MetforminDiabetesQuery implements KpiQueryInterface, DescribesCountingMeth
                 WHERE o.vstdate BETWEEN ? AND ?
                   AND o.an IS NULL
                   AND op.qty > 0
-                  AND op.icode = '.$this->quotedList([self::METFORMIN_ICODE]).'
+                  AND op.icode IN ('.$this->quotedList($this->drugCodes('metformin')).')
             )';
     }
 

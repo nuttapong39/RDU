@@ -5,6 +5,7 @@ namespace App\Queries\Kpi\PatientSafety;
 use App\Queries\Kpi\CountingMethod;
 use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
+use App\Queries\Kpi\UsesDrugCodeSets;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -21,14 +22,8 @@ use Illuminate\Support\Facades\DB;
  */
 class ChildRespiratoryNonSedatingQuery implements KpiQueryInterface, DescribesCountingMethod
 {
-    /**
-     * `drugitems.icode` → dosage form, as the pharmacist listed them. The tablet is counted too although the
-     * KPI's name says "ยาน้ำ" (agreed 2026-10-16) — older children get the tablet.
-     */
-    private const NON_SEDATING_DRUGS = [
-        '1510009' => 'ยาน้ำ',   // CETIRIZINE SYR. 5 mg/5ml
-        '1560013' => 'ยาเม็ด',  // Cetirizine 10 mg
-    ];
+    use UsesDrugCodeSets;
+
 
     /** ICD-10 prefixes for respiratory infection — every code starting with one counts (J0 = J00…J09). */
     private const DIAGNOSIS_PREFIXES = ['J0', 'J20', 'J21', 'J22'];
@@ -45,7 +40,7 @@ class ChildRespiratoryNonSedatingQuery implements KpiQueryInterface, DescribesCo
             numerator: ['วิสิตในตัวหารที่ได้ยาแก้แพ้ชนิด non-sedating ตามรายการรหัสยา อย่างน้อย 1 รายการ — นับทั้งยาน้ำและยาเม็ด'],
             conditions: [CountingMethod::OPD_ONLY, CountingMethod::ANY_DIAGNOSIS_POSITION, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS],
             drugLabel: 'ยาแก้แพ้ชนิด non-sedating',
-            drugs: self::NON_SEDATING_DRUGS,
+            drugs: $this->drugItems('non_sedating_antihistamine'),
             diagnoses: [
                 ['label' => 'โรคติดเชื้อทางเดินหายใจ', 'codes' => self::DIAGNOSIS_PREFIXES, 'match' => 'prefix',
                  'note' => 'ชุดรหัสของ KPI11 — ต่างจาก KPI04: ไม่รวมหูชั้นกลางอักเสบ (H65–H72) และไข้หวัดใหญ่ J10/J11 แต่รวม J22 และ J07–J09 ที่ขึ้นต้นด้วย J0'],
@@ -200,7 +195,7 @@ class ChildRespiratoryNonSedatingQuery implements KpiQueryInterface, DescribesCo
     /** `opitemrece` row-level check: a non-sedating antihistamine actually dispensed (qty > 0). */
     private function nonSedatingDispensed(string $alias): string
     {
-        return "$alias.qty > 0 AND $alias.icode IN (".$this->quotedList(array_keys(self::NON_SEDATING_DRUGS)).')';
+        return "$alias.qty > 0 AND $alias.icode IN (".$this->quotedList($this->drugCodes('non_sedating_antihistamine')).')';
     }
 
     /** Row-level check: a respiratory-infection code (DIAGNOSIS_PREFIXES). */

@@ -6,6 +6,8 @@ use App\DataSources\HosxpRduDataSource;
 use App\Queries\Kpi\KpiQueryInterface;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -14,6 +16,22 @@ abstract class TestCase extends BaseTestCase
         'KPI01', 'KPI02', 'KPI03', 'KPI04', 'KPI05', 'KPI07',
         'KPI08', 'KPI09', 'KPI10', 'KPI11', 'KPI12', 'KPI13',
     ];
+
+    /**
+     * Tests see the drug code sets Chiang Klang's pharmacists configured (the same lists the KPI queries used to
+     * hard-code), so a KPI counts and describes its drugs as before. A test of the "ยังไม่ตั้งค่า" behaviour sets
+     * this to false to get the empty sets a new hospital starts with (ADR 0004).
+     */
+    protected bool $seedDrugCodeSets = true;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if ($this->seedDrugCodeSets && Schema::hasTable('drug_code_sets')) {
+            Artisan::call('rdu:import-drug-code-sets');
+        }
+    }
 
     /**
      * Every KPI now has a HOSxP query, so to test how a KPI still awaiting its definition behaves (HDC stand-in

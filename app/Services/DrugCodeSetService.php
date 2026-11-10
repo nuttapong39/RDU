@@ -14,13 +14,13 @@ class DrugCodeSetService
     /** @var array<string, array<string, ?string>> */
     private array $itemsCache = [];
 
-    /** code => attribute (null when the set has none) for one set; empty when the set was never configured. */
+    /** code => attribute (null when the set has none), in the order the pharmacist listed them; empty when never configured. */
     public function items(string $key): array
     {
         DrugCodeSetRegistry::get($key);
 
         return $this->itemsCache[$key] ??= DrugCodeSet::find($key)
-            ?->items()->orderBy('code')->pluck('attribute', 'code')->all() ?? [];
+            ?->items()->orderBy('id')->pluck('attribute', 'code')->all() ?? [];
     }
 
     /** @return list<string> */

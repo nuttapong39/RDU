@@ -5,6 +5,7 @@ namespace App\Queries\Kpi\PatientSafety;
 use App\Queries\Kpi\CountingMethod;
 use App\Queries\Kpi\DescribesCountingMethod;
 use App\Queries\Kpi\KpiQueryInterface;
+use App\Queries\Kpi\UsesDrugCodeSets;
 use App\Support\FiscalDateRange;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -17,13 +18,15 @@ use Illuminate\Support\Facades\DB;
  *  - denominator = patients with an OPD visit (not admitted) diagnosed N183/N184/N185 in any position in the period;
  *  - numerator = those dispensed (qty > 0) an NSAID at ANY OPD visit in the same period — the pharmacist's
  *    query only looked at the CKD visit itself, which misses NSAIDs given at another clinic (e.g. the ER);
- *  - the NSAID list is KPI07's (NsaidDuplicationQuery::NSAID_ICODES); test patients are excluded.
+ *  - the NSAID list is KPI07's (the `nsaid` drug code set); test patients are excluded.
  * Target ≤ 10% (lower is better).
  * Each patient's detail row describes a representative visit: their latest NSAID visit if they are in the
  * numerator (so the doctor and room shown are the ones who gave the NSAID), else their latest CKD visit.
  */
 class CkdNsaidQuery implements KpiQueryInterface, DescribesCountingMethod
 {
+    use UsesDrugCodeSets;
+
     /** Chronic kidney disease stage 3, 4 and 5 — not N182 (stage 2) or N189 (stage unspecified). */
     private const DIAGNOSIS_CODES = ['N183', 'N184', 'N185'];
 
@@ -42,7 +45,7 @@ class CkdNsaidQuery implements KpiQueryInterface, DescribesCountingMethod
             numerator: ['ผู้ป่วยในตัวหารที่ได้รับ NSAIDs ตามรายการรหัสยา ในวิสิตผู้ป่วยนอกครั้งใดก็ได้ในช่วงเวลาเดียวกัน รวมวิสิตที่ไม่ได้ลงรหัสโรคไต เช่น ห้องฉุกเฉิน'],
             conditions: [CountingMethod::OPD_ONLY, CountingMethod::ANY_DIAGNOSIS_POSITION, CountingMethod::DISPENSED_ONLY, CountingMethod::EXCLUDES_TEST_PATIENTS, 'รายการ NSAIDs ชุดเดียวกับ KPI07 (แก้ที่เดียว เปลี่ยนทั้งสองตัวชี้วัด)'],
             drugLabel: 'NSAIDs',
-            drugs: array_fill_keys(NsaidDuplicationQuery::NSAID_ICODES, null),
+            drugs: $this->drugItems('nsaid'),
             diagnoses: [
                 ['label' => 'โรคไตเรื้อรังระดับ 3 ขึ้นไป', 'codes' => self::DIAGNOSIS_CODES, 'match' => 'exact'],
             ],
@@ -209,7 +212,7 @@ class CkdNsaidQuery implements KpiQueryInterface, DescribesCountingMethod
                 WHERE o.vstdate BETWEEN ? AND ?
                   AND o.an IS NULL
                   AND op.qty > 0
-                  AND op.icode IN ('.$this->quotedList(NsaidDuplicationQuery::NSAID_ICODES).')
+                  AND op.icode IN ('.$this->quotedList($this->drugCodes('nsaid')).')
             )';
     }
 
