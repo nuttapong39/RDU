@@ -26,7 +26,7 @@ class StatusSnapshotService
 
     private const DISPLAY_TIMEZONE = 'Asia/Bangkok';
 
-    public function __construct(private RduCalculationService $calcService) {}
+    public function __construct(private RduCalculationService $calcService, private DrugCodeSetService $sets) {}
 
     /**
      * Keep the statuses of a whole-year overview. Callers pass only the current fiscal year's
@@ -70,7 +70,7 @@ class StatusSnapshotService
             'code'     => $ind->code,
             'name'     => $ind->name,
             'category' => $ind->category,
-            'status'   => in_array($statuses[$ind->code] ?? null, self::STATUSES, true) ? $statuses[$ind->code] : 'na',
+            'status'   => $this->statusFor($ind->code, $statuses),
         ])->values()->all();
 
         $takenAt = $current ? $snapshot['taken_at'] : null;
@@ -81,6 +81,22 @@ class StatusSnapshotService
             'kpis'        => $kpis,
             'counts'      => $this->calcService->summarize(array_column($kpis, 'status')),
         ];
+    }
+
+    /**
+     * The recorded status, unless the KPI's configuration changed since: "not configured" is judged now, so a KPI
+     * emptied after the snapshot no longer shows an old pass/fail, and one configured since shows as "no data".
+     */
+    private function statusFor(string $code, array $statuses): string
+    {
+        $stored = $statuses[$code] ?? null;
+        $stored = in_array($stored, self::STATUSES, true) ? $stored : 'na';
+
+        if (! $this->sets->isKpiConfigured($code)) {
+            return 'not_configured';
+        }
+
+        return $stored === 'not_configured' ? 'na' : $stored;
     }
 
     /** The login form must never fail because of its decoration: no KPI list if the app database can't be read. */

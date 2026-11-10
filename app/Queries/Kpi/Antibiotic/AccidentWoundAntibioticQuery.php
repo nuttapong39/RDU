@@ -254,14 +254,6 @@ class AccidentWoundAntibioticQuery implements KpiQueryInterface, DescribesCounti
         return 'EXISTS (SELECT 1 FROM ovstdiag ext WHERE ext.vn = '.$vnColumn.' AND ('.$this->externalCauseCondition('ext.icd10').'))';
     }
 
-    /**
-     * Builds a quoted SQL literal list from a fixed internal whitelist (ICD-10 prefixes / dosage
-     * forms — class constants, never user input), so no bound parameters are needed for these.
-     */
-    private function quotedList(array $values): string
-    {
-        return implode(',', array_map(fn (string $v) => "'".str_replace("'", "''", $v)."'", $values));
-    }
 
     /** PDPA masking: title + given name shown in full (for staff readability); surname replaced entirely with "xxxx". */
     private function maskThaiName(?string $pname, ?string $fname, ?string $lname): string

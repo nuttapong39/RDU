@@ -39,4 +39,18 @@ trait UsesDrugCodeSets
     {
         return app(DrugCodeSetService::class)->items($set);
     }
+
+    /**
+     * A quoted SQL literal list for an IN (...) clause. Codes come from the hospital's editable sets, so quotes
+     * and backslashes are neutralised here; the settings page also accepts only plain code characters.
+     *
+     * @param  list<string>  $values
+     */
+    private function quotedList(array $values): string
+    {
+        return implode(',', array_map(
+            fn (string $v) => "'".str_replace(["\\", "'"], ['', "''"], $v)."'",
+            $values,
+        ));
+    }
 }

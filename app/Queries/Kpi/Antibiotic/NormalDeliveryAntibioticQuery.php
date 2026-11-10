@@ -183,14 +183,6 @@ class NormalDeliveryAntibioticQuery implements KpiQueryInterface, DescribesCount
         ]);
     }
 
-    /**
-     * Builds a quoted SQL literal list from a fixed internal whitelist (antibiotic icodes — a
-     * class constant, never user input), so no bound parameters are needed for this.
-     */
-    private function quotedList(array $values): string
-    {
-        return implode(',', array_map(fn (string $v) => "'".str_replace("'", "''", $v)."'", $values));
-    }
 
     /** PDPA masking: title + given name shown in full (for staff readability); surname replaced entirely with "xxxx". */
     private function maskThaiName(?string $pname, ?string $fname, ?string $lname): string
