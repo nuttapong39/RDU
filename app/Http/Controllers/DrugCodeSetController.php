@@ -23,7 +23,10 @@ class DrugCodeSetController extends Controller
 
     public function index(): View
     {
-        $indicators = RduIndicator::active()->ordered()->get()
+        $canEdit = DrugCodeSetService::userCanEdit(auth()->user());
+
+        // Editors also see the KPIs switched off, to switch them back on; everyone else sees the ones in use.
+        $indicators = RduIndicator::when(! $canEdit, fn ($q) => $q->active())->ordered()->get()
             ->filter(fn (RduIndicator $i) => DrugCodeSetRegistry::forKpi($i->code) !== []);
 
         $kpis = $indicators->map(fn (RduIndicator $i) => [
@@ -36,8 +39,6 @@ class DrugCodeSetController extends Controller
                 'sharedWith' => array_values(array_diff(DrugCodeSetRegistry::get($key)['kpis'], [$i->code])),
             ], DrugCodeSetRegistry::forKpi($i->code)),
         ]);
-
-        $canEdit = DrugCodeSetService::userCanEdit(auth()->user());
 
         return view('dashboard.drug-code-sets', [
             'kpis'    => $kpis,
@@ -56,6 +57,35 @@ class DrugCodeSetController extends Controller
     public function labItems(Request $request): JsonResponse
     {
         return response()->json(['items' => $this->query->searchLabItems((string) $request->query('q', ''))]);
+    }
+
+    /**
+     * Switch a KPI on or off for this hospital (rdu_indicators.is_active). Off = gone from the sidebar, overview,
+     * counting methods, login snapshot and `rdu:calculate`; its drug code sets and stored results are kept.
+     * Only KPIs that have a HOSxP query can be switched.
+     */
+    public function setActive(Request $request, string $code): JsonResponse
+    {
+        $data = $request->validate(['active' => ['required', 'boolean']]);
+
+        $indicator = RduIndicator::where('code', strtoupper($code))->firstOrFail();
+        abort_unless($indicator->hasHosxpQuery(), 404);
+
+        $was = $indicator->is_active;
+        $indicator->update(['is_active' => (bool) $data['active']]);
+
+        if ($was !== $indicator->is_active) {
+            AuditLog::record('kpi.active', [
+                'subject'   => "kpi:{$indicator->code}",
+                'old_value' => ['is_active' => $was],
+                'new_value' => ['is_active' => $indicator->is_active],
+            ]);
+        }
+
+        return response()->json([
+            'active'  => $indicator->is_active,
+            'message' => ($indicator->is_active ? 'เปิดใช้งาน ' : 'ปิดใช้งาน ').$indicator->code.' แล้ว',
+        ]);
     }
 
     /** Save one set. 409 when someone else saved it first, 422 when the content is not valid. */
@@ -184,11 +214,13 @@ class DrugCodeSetController extends Controller
                 'catalog'  => route('drug-code-sets.catalog'),
                 'labItems' => route('drug-code-sets.lab-items'),
                 'update'   => route('drug-code-sets.update', ['set' => '__SET__']),
+                'kpiActive' => route('drug-code-sets.kpi-active', ['code' => '__KPI__']),
             ],
             'kpis' => $kpis->map(fn (array $row) => [
                 'code'       => $row['indicator']->code,
                 'name'       => $row['indicator']->name,
                 'configured' => $row['configured'],
+                'active'     => (bool) $row['indicator']->is_active,
                 'sets'       => array_column($row['sets'], 'key'),
             ])->values()->all(),
             'sets' => $setKeys->mapWithKeys(function (string $key) {

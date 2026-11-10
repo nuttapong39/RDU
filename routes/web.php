@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('can:edit-drug-code-sets')->group(function () {
         Route::get('/dashboard/drug-code-sets/catalog', [DrugCodeSetController::class, 'catalog'])->name('drug-code-sets.catalog');
         Route::get('/dashboard/drug-code-sets/lab-items', [DrugCodeSetController::class, 'labItems'])->name('drug-code-sets.lab-items');
+        Route::put('/dashboard/drug-code-sets/kpi/{code}', [DrugCodeSetController::class, 'setActive'])->name('drug-code-sets.kpi-active');
         Route::put('/dashboard/drug-code-sets/{set}', [DrugCodeSetController::class, 'update'])->name('drug-code-sets.update');
     });
     Route::get('/dashboard/counting-methods', [CountingMethodController::class, 'index'])->name('dashboard.counting-methods');

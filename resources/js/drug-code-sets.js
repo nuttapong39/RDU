@@ -52,11 +52,12 @@ function init(root) {
             const ok = kpiConfigured(k);
             const dirty = k.sets.some((key) => isDirty(state.sets[key]));
             const active = k.code === state.kpi;
+            const off = !k.active; // switched off for this hospital
             return `<button type="button" role="tab" aria-selected="${active}" data-kpi="${k.code}"
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
-                ${active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}">
+                ${active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'} ${off ? 'opacity-60' : ''}">
                 <span class="w-2 h-2 rounded-full ${ok ? 'bg-emerald-500' : 'bg-slate-300'}" aria-hidden="true"></span>
-                ${esc(k.code)}${dirty ? '<span class="text-amber-400" title="มีการแก้ไขที่ยังไม่บันทึก">●</span>' : ''}
+                ${esc(k.code)}${off ? '<span class="text-xs font-normal">(ปิด)</span>' : ''}${dirty ? '<span class="text-amber-400" title="มีการแก้ไขที่ยังไม่บันทึก">●</span>' : ''}
             </button>`;
         }).join('');
     }
@@ -100,12 +101,42 @@ function init(root) {
         const kpi = cfg.kpis.find((k) => k.code === state.kpi);
         body.innerHTML = `
             <div class="mb-3">
-                <h2 class="text-base font-bold text-slate-800">${esc(kpi.code)} — ${esc(kpi.name)}</h2>
+                <div class="flex flex-wrap items-start gap-3">
+                    <h2 class="text-base font-bold text-slate-800 flex-1 min-w-0">${esc(kpi.code)} — ${esc(kpi.name)}</h2>
+                    <label class="inline-flex items-center gap-2 text-sm text-slate-700 cursor-pointer select-none shrink-0">
+                        <span>ใช้งานตัวชี้วัดนี้</span>
+                        <input type="checkbox" role="switch" data-kpi-active ${kpi.active ? 'checked' : ''} class="h-5 w-9 cursor-pointer accent-indigo-600" aria-label="ใช้งาน ${esc(kpi.code)}">
+                    </label>
+                </div>
+                ${kpi.active ? '' : '<p class="mt-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 inline-block">ปิดใช้งานอยู่ — ไม่แสดงในภาพรวม เมนู และหน้าล็อกอิน (ชุดรหัสยาและผลที่เคยคำนวณยังอยู่)</p>'}
                 <p class="text-xs text-slate-500 mt-0.5">ลากรายการจากฝั่งซ้าย (ฐานข้อมูล HOSxP — อ่านอย่างเดียว) ไปวางฝั่งขวา แล้วกด “บันทึก” ระบบจะใช้ชุดนี้นับตัวชี้วัด</p>
             </div>
             <div class="space-y-5">${kpi.sets.map((key) => setSkeleton(state.sets[key])).join('')}</div>`;
 
         kpi.sets.forEach((key) => mountSet(state.sets[key]));
+
+        body.querySelector('[data-kpi-active]').addEventListener('change', (e) => setKpiActive(kpi, e.target));
+    }
+
+    async function setKpiActive(kpi, input) {
+        const want = input.checked;
+        input.disabled = true;
+        try {
+            const res = await fetch(cfg.urls.kpiActive.replace('__KPI__', kpi.code), {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': token },
+                body: JSON.stringify({ active: want }),
+            });
+            if (!res.ok) throw new Error('save');
+            kpi.active = want;
+            toast.fire({ icon: 'success', title: (await res.json()).message });
+            renderTabs();
+            renderBody();
+        } catch {
+            input.checked = !want;
+            input.disabled = false;
+            Swal.fire({ icon: 'error', title: 'บันทึกไม่สำเร็จ', text: 'ลองใหม่อีกครั้ง', confirmButtonText: 'ตกลง' });
+        }
     }
 
     function setSkeleton(s) {
