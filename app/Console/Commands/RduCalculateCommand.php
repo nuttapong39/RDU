@@ -43,6 +43,7 @@ class RduCalculateCommand extends Command
                     'pass'    => '<fg=green>ผ่าน</>',
                     'warning' => '<fg=yellow>ใกล้เป้า</>',
                     'fail'    => '<fg=red>ไม่ผ่าน</>',
+                    'not_configured' => '<fg=gray>ยังไม่ตั้งค่า (ข้าม)</>',
                     default   => '<fg=gray>N/A</>',
                 };
                 return [

@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\SanitizesDateParams;
 use App\Models\RduIndicator;
 use App\Services\CountingMethodService;
 use App\Services\DoctorAliasService;
+use App\Services\DrugCodeSetService;
 use App\Services\RduCalculationService;
 use App\Services\RduQueryService;
 use App\Services\StatusSnapshotService;
@@ -23,6 +24,7 @@ class DashboardController extends Controller
         private DoctorAliasService $aliasService,
         private CountingMethodService $countingMethods,
         private StatusSnapshotService $statusSnapshot,
+        private DrugCodeSetService $drugSets,
     ) {}
 
     public function index(Request $request): View
@@ -95,10 +97,26 @@ class DashboardController extends Controller
         $quarter = $this->sanitizeQuarter($request->input('quarter'));
         $month   = $quarter ? 0 : $this->sanitizeMonth((int) $request->input('month', 0));
 
-        $indicator = RduIndicator::active()->where('code', strtoupper($code))->firstOrFail();
-        $trendData = $this->calcService->getTrend($indicator, $year);
-
+        $indicator     = RduIndicator::active()->where('code', strtoupper($code))->firstOrFail();
         $allIndicators = RduIndicator::active()->ordered()->get();
+
+        // No drug code sets yet: an empty page with a card and a button to the settings (CONTEXT.md: ยังไม่ตั้งค่า).
+        if (! $this->drugSets->isKpiConfigured($indicator->code)) {
+            $kpiData = $quarter
+                ? $this->calcService->getOrCalculateManyForQuarter($allIndicators, $year, $quarter)
+                : $this->calcService->getOrCalculateMany($allIndicators, $year, $month);
+
+            return view('dashboard.kpi-not-configured', [
+                'indicator'     => $indicator,
+                'missingSets'   => $this->drugSets->missingSets($indicator->code),
+                'kpiByCategory' => $kpiData->groupBy(fn ($i) => $i['indicator']->category),
+                'categories'    => $this->categories(),
+                'year'          => $year,
+                'month'         => $month,
+            ]);
+        }
+
+        $trendData = $this->calcService->getTrend($indicator, $year);
 
         if ($quarter) {
             $item        = $this->calcService->getOrCalculateQuarter($indicator, $year, $quarter);

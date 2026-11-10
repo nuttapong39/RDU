@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\FontConfigController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CountingMethodController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DrugCodeSetController;
 use App\Http\Controllers\HdcComparisonController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/kpi/{code}', [DashboardController::class, 'kpi'])->name('dashboard.kpi');
     Route::get('/dashboard/kpi/{code}/hdc', [HdcComparisonController::class, 'show'])->name('dashboard.kpi.hdc');
+    Route::get('/dashboard/drug-code-sets', [DrugCodeSetController::class, 'index'])->name('drug-code-sets.index');
     Route::get('/dashboard/counting-methods', [CountingMethodController::class, 'index'])->name('dashboard.counting-methods');
 });
 

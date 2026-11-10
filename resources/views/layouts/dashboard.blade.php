@@ -72,6 +72,18 @@
                 <span>วิธีนับทุกตัวชี้วัด</span>
             </a>
 
+            <a href="{{ route('drug-code-sets.index') }}"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
+                      {{ request()->routeIs('drug-code-sets.*') ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
+               aria-current="{{ request()->routeIs('drug-code-sets.*') ? 'page' : 'false' }}">
+                <span class="msi text-[1.1rem]" aria-hidden="true">medication</span>
+                <span>ตั้งค่ารหัสยา</span>
+                @if(($unconfiguredKpiCount ?? 0) > 0)
+                    <span class="ml-auto text-[.65rem] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700"
+                          title="ตัวชี้วัดที่ยังไม่ตั้งค่า {{ $unconfiguredKpiCount }} ตัว">{{ $unconfiguredKpiCount }}</span>
+                @endif
+            </a>
+
             {{-- KPI Groups --}}
             @if(isset($kpiByCategory))
                 @foreach($categories as $catKey => $catLabel)
@@ -89,6 +101,7 @@
                                         'pass'    => ['bg-emerald-500', 'ผ่านเกณฑ์'],
                                         'warning' => ['bg-amber-500', 'ใกล้เป้าหมาย'],
                                         'fail'    => ['bg-red-500', 'ไม่ผ่านเกณฑ์'],
+                                        'not_configured' => ['bg-slate-300 ring-1 ring-slate-400', 'ยังไม่ตั้งค่า'],
                                         default   => ['bg-slate-300', 'ไม่มีข้อมูล'],
                                     };
                                 @endphp

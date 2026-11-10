@@ -77,6 +77,12 @@
         {{-- 6. Drug codes --}}
         <section>
             <h3 class="font-semibold text-slate-800 mb-1">6. รหัสยาที่นับ — {{ $method->drugLabel }} ({{ count($cm['drugs']) }} รายการ)</h3>
+            @if(count($cm['drugs']) === 0)
+                <p class="p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-500" role="note" data-drugs-not-configured>
+                    ยังไม่ได้ตั้งค่ารหัสยาของตัวชี้วัดนี้ —
+                    <a href="{{ route('drug-code-sets.index') }}" class="text-indigo-600 hover:underline">ไปหน้าตั้งค่ารหัสยา</a>
+                </p>
+            @else
             <div class="overflow-x-auto rounded-lg border border-slate-200">
                 <table class="w-full text-xs">
                     <thead class="bg-slate-50 text-slate-600">
@@ -101,6 +107,7 @@
                     </tbody>
                 </table>
             </div>
+            @endif
         </section>
 
         {{-- 7. Diagnosis codes --}}

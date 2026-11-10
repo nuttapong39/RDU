@@ -82,7 +82,14 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // The sidebar's "ภาพรวม N ตัวชี้วัด" follows the KPIs switched on (rdu_indicators.is_active).
-        View::composer('layouts.dashboard', fn ($view) => $view->with('activeKpiCount', RduIndicator::active()->count()));
+        // A KPI not configured yet (no drug code sets) is not counted (CONTEXT.md: ยังไม่ตั้งค่า).
+        View::composer('layouts.dashboard', function ($view) {
+            $sets         = $this->app->make(DrugCodeSetService::class);
+            $codes        = RduIndicator::active()->pluck('code');
+            $unconfigured = $codes->reject(fn ($code) => $sets->isKpiConfigured($code))->count();
+
+            $view->with('activeKpiCount', $codes->count() - $unconfigured)->with('unconfiguredKpiCount', $unconfigured);
+        });
 
         Gate::define('manage-settings', fn ($user) => in_array(
             strtolower((string) $user->username),

@@ -322,6 +322,9 @@ a{text-decoration:none;color:inherit}
         <span class="st st-warning"><i aria-hidden="true"></i>ใกล้เป้าหมาย <b>{{ $counts['warning'] }}</b></span>
         <span class="st st-fail"><i aria-hidden="true"></i>ไม่ผ่านเกณฑ์ <b>{{ $counts['fail'] }}</b></span>
         <span class="st st-na"><i aria-hidden="true"></i>ไม่มีข้อมูล <b>{{ $counts['na'] }}</b></span>
+        @if(($counts['not_configured'] ?? 0) > 0)
+          <span class="st st-na"><i aria-hidden="true"></i>ยังไม่ตั้งค่า <b>{{ $counts['not_configured'] }}</b></span>
+        @endif
       </div>
       <p class="stats-note">
         @if($snapshot['takenAtText'])

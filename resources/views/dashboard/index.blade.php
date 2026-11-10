@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'ภาพรวม '.$kpiData->count().' ตัวชี้วัด RDU')
+@section('title', 'ภาพรวม '.$kpiData->where('status', '!=', 'not_configured')->count().' ตัวชี้วัด RDU')
 
 @section('content')
 
@@ -18,6 +18,8 @@
         'warning' => ['label' => 'ใกล้เป้าหมาย', 'dot' => 'bg-amber-500',   'text' => 'text-amber-600',   'bar' => 'bg-amber-500'],
         'fail'    => ['label' => 'ไม่ผ่านเกณฑ์', 'dot' => 'bg-red-500',     'text' => 'text-red-600',     'bar' => 'bg-red-500'],
         'na'      => ['label' => 'ไม่มีข้อมูล',   'dot' => 'bg-slate-400',   'text' => 'text-slate-400',   'bar' => 'bg-slate-300'],
+        // Not a verdict: shown beside the counts, never inside them (CONTEXT.md: ยังไม่ตั้งค่า).
+        'not_configured' => ['label' => 'ยังไม่ตั้งค่า', 'dot' => 'bg-slate-300', 'text' => 'text-slate-500', 'bar' => 'bg-slate-200'],
     ];
 @endphp
 
@@ -79,6 +81,7 @@
 
     <dl class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap gap-x-6 gap-y-2">
         @foreach($statusMeta as $key => $meta)
+            @continue($key === 'not_configured')
             <div class="flex items-center gap-2 {{ $summary[$key] === 0 ? 'opacity-50' : '' }}">
                 <span class="w-2 h-2 rounded-full {{ $meta['dot'] }}" aria-hidden="true"></span>
                 <dt class="text-xs text-slate-500">{{ $meta['label'] }}</dt>
@@ -86,6 +89,14 @@
                     data-status-count="{{ $key }}">{{ $summary[$key] }}</dd>
             </div>
         @endforeach
+        @if(($summary['not_configured'] ?? 0) > 0)
+            <div class="flex items-center gap-2" data-not-configured-count>
+                <span class="w-2 h-2 rounded-full bg-slate-300 ring-1 ring-slate-400" aria-hidden="true"></span>
+                <dt class="text-xs text-slate-500">ยังไม่ตั้งค่า</dt>
+                <dd class="text-lg font-bold tabular-nums leading-none text-slate-500">{{ $summary['not_configured'] }}</dd>
+                <a href="{{ route('drug-code-sets.index') }}" class="text-xs text-indigo-600 hover:underline">ตั้งค่ารหัสยา</a>
+            </div>
+        @endif
     </dl>
 </section>
 
@@ -129,6 +140,20 @@
                     $meta   = $statusMeta[$status] ?? $statusMeta['na'];
                     $unit   = $ind->countUnit();
                 @endphp
+
+                @if($status === 'not_configured')
+                <a href="{{ route('dashboard.kpi', $ind->code) }}" data-kpi-card="{{ $ind->code }}" data-not-configured
+                   class="kpi-card-v2 status-na">
+                    <div class="flex items-center gap-1.5">
+                        <span class="kpi-code">{{ $ind->code }}</span>
+                        <span class="ml-auto text-[.7rem] font-semibold text-slate-500">ยังไม่ตั้งค่า</span>
+                    </div>
+                    <p class="text-[.78rem] text-slate-600 leading-snug line-clamp-2 min-h-[2.4rem]">{{ $ind->name }}</p>
+                    <p class="text-sm text-slate-500">ยังไม่ได้ตั้งค่ารหัสยาของตัวชี้วัดนี้</p>
+                    <div class="text-[.7rem] text-slate-400">เป้า {{ $ind->targetLabel() }}</div>
+                </a>
+                @continue
+                @endif
 
                 <a href="{{ route('dashboard.kpi', $ind->code) }}" data-kpi-card="{{ $ind->code }}"
                    class="kpi-card-v2 status-{{ $status }}">

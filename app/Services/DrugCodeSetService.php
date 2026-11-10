@@ -14,6 +14,12 @@ class DrugCodeSetService
     /** @var array<string, array<string, ?string>> */
     private array $itemsCache = [];
 
+    /** @var array<string, ?\Illuminate\Support\Carbon> */
+    private array $changeCache = [];
+
+    /** @var array<string, string> */
+    private array $versionCache = [];
+
     /** code => attribute (null when the set has none), in the order the pharmacist listed them; empty when never configured. */
     public function items(string $key): array
     {
@@ -65,9 +71,35 @@ class DrugCodeSetService
         ));
     }
 
+    /**
+     * The latest time a pharmacist saved any set this KPI reads, on the settings page. A result calculated before
+     * it was counted with older drug codes, so it must not be reused. Null when none was ever edited there (the
+     * one-time import does not count: it is the baseline).
+     */
+    public function latestChangeAt(string $kpiCode): ?\Illuminate\Support\Carbon
+    {
+        if (! array_key_exists($kpiCode, $this->changeCache)) {
+            $latest = DrugCodeSet::whereIn('key', DrugCodeSetRegistry::forKpi($kpiCode))->max('changed_at');
+            $this->changeCache[$kpiCode] = $latest === null ? null : \Illuminate\Support\Carbon::parse($latest);
+        }
+
+        return $this->changeCache[$kpiCode];
+    }
+
+    /** Goes into a KPI's cache keys, so a cached count is never reused after one of its sets is saved. */
+    public function cacheVersion(string $kpiCode): string
+    {
+        return $this->versionCache[$kpiCode] ??= implode('-', array_map(
+            fn (string $key) => $this->version($key),
+            DrugCodeSetRegistry::forKpi($kpiCode)
+        )) ?: '0';
+    }
+
     public function flush(): void
     {
-        $this->itemsCache = [];
+        $this->itemsCache  = [];
+        $this->changeCache = [];
+        $this->versionCache = [];
     }
 
     /** May this user edit drug code sets? Admins always can; others only when an admin granted it. */

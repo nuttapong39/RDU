@@ -8,11 +8,15 @@ use App\Exceptions\ReadonlyDatabaseException;
 use App\Models\Hosxp\HosxpPatient;
 use App\Services\DatabaseConfigService;
 use App\Services\RduQueryService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ReadonlyDatabaseTest extends TestCase
 {
+    // RduQueryService keys its cache by the drug code sets' versions, which live in the app database.
+    use RefreshDatabase;
+
     // -------------------------------------------------------------------------
     // Layer 1: ReadonlyHosxpModel — Eloquent write blocking
     // -------------------------------------------------------------------------

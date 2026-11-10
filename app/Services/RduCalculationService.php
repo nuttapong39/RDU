@@ -17,8 +17,43 @@ class RduCalculationService
 
     public function __construct(
         private RduQueryService $queryService,
-        private HdcDataService $hdc
+        private HdcDataService $hdc,
+        private DrugCodeSetService $drugSets
     ) {}
+
+    /**
+     * A KPI whose drug code sets the hospital has not filled in cannot be counted (CONTEXT.md: ยังไม่ตั้งค่า): no
+     * numbers, no status, never persisted. It is not "no data" (counted, no visits) and not 0% (which would
+     * read as passing for a lower-is-better KPI).
+     */
+    private function notConfigured(RduIndicator $indicator): array
+    {
+        return [
+            'indicator'   => $indicator,
+            'numerator'   => 0,
+            'denominator' => 0,
+            'percentage'  => null,
+            'status'      => 'not_configured',
+            'from_cache'  => false,
+            'missing_sets' => $this->drugSets->missingSets($indicator->code),
+        ];
+    }
+
+    private function isConfigured(RduIndicator $indicator): bool
+    {
+        return $this->drugSets->isKpiConfigured($indicator->code);
+    }
+
+    /**
+     * A saved row is only reusable if no drug code set it reads was saved after it was calculated: editing a set
+     * re-counts every period, past ones too (ADR 0004). The stale row is ignored, not deleted.
+     */
+    private function isStoredCurrent(RduIndicator $indicator, RduIndicatorResult $stored): bool
+    {
+        $changedAt = $this->drugSets->latestChangeAt($indicator->code);
+
+        return $changedAt === null || ($stored->calculated_at !== null && $stored->calculated_at->gte($changedAt));
+    }
 
     /**
      * KPIs whose HOSxP query is not implemented yet show their HDC whole-year figure instead (for any
@@ -67,6 +102,10 @@ class RduCalculationService
      */
     public function calculate(RduIndicator $indicator, int $year, int $month): array
     {
+        if (! $this->isConfigured($indicator)) {
+            return $this->notConfigured($indicator);
+        }
+
         $num    = $this->queryService->getNumerator($indicator->code, $year, $month);
         $den    = $this->queryService->getDenominator($indicator->code, $year, $month);
         $pct    = self::percentage($num, $den, 2);
@@ -115,13 +154,17 @@ class RduCalculationService
             return $fallback;
         }
 
+        if (! $this->isConfigured($indicator)) {
+            return $this->notConfigured($indicator);
+        }
+
         if ($month !== 0) {
             $stored = RduIndicatorResult::where('indicator_id', $indicator->id)
                 ->where('year', $year)
                 ->where('month', $month)
                 ->first();
 
-            if ($stored !== null) {
+            if ($stored !== null && $this->isStoredCurrent($indicator, $stored)) {
                 return $this->storedResult($indicator, $stored);
             }
         }
@@ -199,8 +242,11 @@ class RduCalculationService
                 if ($fallback = $this->hdcFallback($ind, $year)) {
                     return $fallback;
                 }
+                if (! $this->isConfigured($ind)) {
+                    return $this->notConfigured($ind);
+                }
                 $result = $stored->get($ind->id);
-                if ($result !== null) {
+                if ($result !== null && $this->isStoredCurrent($ind, $result)) {
                     return $this->storedResult($ind, $result);
                 }
                 // No stored result — fall through to live query (cached by RduQueryService)
@@ -225,6 +271,10 @@ class RduCalculationService
     {
         if ($fallback = $this->hdcFallback($indicator, $year)) {
             return $fallback;
+        }
+
+        if (! $this->isConfigured($indicator)) {
+            return $this->notConfigured($indicator);
         }
 
         // Counted over the quarter's whole date range, not summed from its months — the same patient
@@ -257,6 +307,14 @@ class RduCalculationService
         $months  = $this->fiscalYearMonths($fyYear);
         $labels  = self::thaiMonthsShort();
 
+        if (! $this->isConfigured($indicator)) {
+            return array_map(fn (array $m) => [
+                'year' => $m['year'], 'month' => $m['month'], 'label' => $labels[$m['month']],
+                'pct' => null, 'num' => 0, 'den' => 0, 'status' => 'not_configured',
+                'cum_num' => 0, 'cum_den' => 0, 'cum_pct' => null,
+            ], $months);
+        }
+
         // Load all stored results for this indicator + FY in one query
         $prevYear = $fyYear - 1;
         $stored = RduIndicatorResult::where('indicator_id', $indicator->id)
@@ -272,7 +330,7 @@ class RduCalculationService
             $key    = "{$y}-{$m}";
             $result = $stored->get($key);
 
-            if ($result !== null) {
+            if ($result !== null && $this->isStoredCurrent($indicator, $result)) {
                 $graded  = $this->storedResult($indicator, $result);
                 $trend[] = [
                     'year'   => $y,

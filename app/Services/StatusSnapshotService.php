@@ -22,7 +22,7 @@ class StatusSnapshotService
 {
     private const FILE = 'status_snapshot.json';
 
-    private const STATUSES = ['pass', 'warning', 'fail', 'na'];
+    private const STATUSES = ['pass', 'warning', 'fail', 'na', 'not_configured'];
 
     private const DISPLAY_TIMEZONE = 'Asia/Bangkok';
 
@@ -57,7 +57,7 @@ class StatusSnapshotService
      *     takenAt: Carbon|null,           // when the overview recorded it, in the hospital's local time (Asia/Bangkok)
      *     takenAtText: string|null,       // the same as Thai text, e.g. "16 ต.ค. 2569 12:11 น."
      *     kpis: list<array{code: string, name: string, category: string, status: string}>,
-     *     counts: array{pass: int, warning: int, fail: int, na: int},
+     *     counts: array{pass: int, warning: int, fail: int, na: int, not_configured?: int},
      * }
      */
     public function forLogin(): array

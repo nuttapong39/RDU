@@ -174,14 +174,20 @@ class RduQueryService
         }
     }
 
+    // The sets' versions are in the key so that saving a drug code set stops the old cached counts being used (ADR 0004).
     private function cacheKey(string $kpiCode, int $year, int $month, string $type): string
     {
-        return "rdu.kpi.{$kpiCode}.{$year}.{$month}.{$type}";
+        return "rdu.kpi.{$kpiCode}.v{$this->setVersion($kpiCode)}.{$year}.{$month}.{$type}";
     }
 
     private function cacheKeyBetween(string $kpiCode, string $startDate, string $endDate, string $type): string
     {
-        return "rdu.kpi.{$kpiCode}.between.{$startDate}.{$endDate}.{$type}";
+        return "rdu.kpi.{$kpiCode}.v{$this->setVersion($kpiCode)}.between.{$startDate}.{$endDate}.{$type}";
+    }
+
+    private function setVersion(string $kpiCode): string
+    {
+        return app(DrugCodeSetService::class)->cacheVersion($kpiCode);
     }
 
     private function referenceCacheKey(string $kind, string $code): string
