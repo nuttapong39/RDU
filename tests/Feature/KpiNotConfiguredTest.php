@@ -25,11 +25,19 @@ class KpiNotConfiguredTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected bool $seed = true;
-    protected string $seeder = RduIndicatorSeeder::class;
-
     // Start with the empty sets a new hospital has; tests configure what they need.
     protected bool $seedDrugCodeSets = false;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // RefreshDatabase's $seed only runs on the first migration of a process; seed here so the class
+        // works whichever test class ran before it.
+        if (RduIndicator::count() === 0) {
+            $this->seed(RduIndicatorSeeder::class);
+        }
+    }
 
     private function user(): User
     {

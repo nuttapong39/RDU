@@ -60,4 +60,14 @@ class MockRduDataSource implements RduDataSourceInterface
     {
         return [];
     }
+
+    public function getDrugCatalog(): array
+    {
+        return [];
+    }
+
+    public function searchLabItems(string $term, int $limit = 30): array
+    {
+        return [];
+    }
 }

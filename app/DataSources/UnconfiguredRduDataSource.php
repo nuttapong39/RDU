@@ -26,4 +26,8 @@ class UnconfiguredRduDataSource implements RduDataSourceInterface
     public function getIcd10Descriptions(array $codes): array { return []; }
 
     public function getDrugDescriptions(array $icodes): array { return []; }
+
+    public function getDrugCatalog(): array { return []; }
+
+    public function searchLabItems(string $term, int $limit = 30): array { return []; }
 }

@@ -124,6 +124,23 @@ class RduQueryService
     }
 
     /**
+     * The hospital's drug list for the settings page (CONTEXT.md: ชุดรหัสยา) — `drugitems` catalogue columns only.
+     * Cached an hour: it is reference data and the page loads it once.
+     */
+    public function drugCatalog(): array
+    {
+        return Cache::remember('rdu.drug-catalog', 3600, fn () => $this->dataSource->getDrugCatalog());
+    }
+
+    /** Lab items matching a search (for the eGFR lab item), at most 30. */
+    public function searchLabItems(string $term): array
+    {
+        $term = trim($term);
+
+        return mb_strlen($term) < 2 ? [] : $this->dataSource->searchLabItems($term, 30);
+    }
+
+    /**
      * Per-code cache for static HOSxP reference data. Only names found are cached: a code with no
      * name (or a data source with none yet, e.g. before HOSxP is configured) is looked up again next time.
      *

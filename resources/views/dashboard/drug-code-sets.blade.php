@@ -15,15 +15,23 @@
         รหัสยา (icode) ที่แต่ละตัวชี้วัดใช้นับ แต่ละโรงพยาบาลมี icode ต่างกัน ตัวชี้วัดที่ยังไม่ตั้งค่าจะยังไม่แสดงผล
         ชุดรหัสยาที่ใช้ร่วมกันหลายตัวชี้วัด การแก้ไขชุดนั้นจะเปลี่ยนผลของทุกตัวที่ใช้
     </p>
-    <p class="mt-2 text-xs text-slate-500" role="note">
-        @can('edit-drug-code-sets')
-            คุณมีสิทธิ์แก้ไขชุดรหัสยา — ฟอร์มแก้ไขจะเปิดให้ใช้ในเวอร์ชันถัดไป หน้านี้แสดงสถานะปัจจุบัน
-        @else
+    @unless($canEdit)
+        <p class="mt-2 text-xs text-slate-500" role="note">
             คุณดูชุดรหัสยาได้อย่างเดียว การแก้ไขต้องได้รับสิทธิ์ "ผู้ตั้งค่ารหัสยา" จากผู้ดูแลระบบ
-        @endcan
-    </p>
+        </p>
+    @endunless
 </div>
 
+@if($canEdit)
+    <div data-drug-code-editor>
+        <div data-tabs role="tablist" aria-label="เลือกตัวชี้วัด" class="flex flex-wrap gap-2 mb-4"></div>
+        <div data-body></div>
+    </div>
+    <script type="application/json" id="drug-code-config">@json($editor, JSON_HEX_TAG | JSON_HEX_AMP)</script>
+    @push('scripts')
+        @vite('resources/js/drug-code-sets.js')
+    @endpush
+@else
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
     @foreach($kpis as $row)
         @php $ind = $row['indicator']; @endphp
@@ -55,5 +63,6 @@
         </article>
     @endforeach
 </div>
+@endif
 
 @endsection

@@ -2,13 +2,16 @@
 
 namespace App\Services;
 
+use App\Exceptions\DrugCodeSetConflictException;
 use App\Models\DrugCodeSet;
+use App\Models\DrugCodeSetItem;
 use App\Models\DrugCodeSetEditor;
 use App\Models\User;
 use App\Support\DrugCodeSetRegistry;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
-/** Reads the hospital's drug code sets from rdu_dashboard. Saving comes with the settings page (Phase 3). */
+/** Reads and saves the hospital's drug code sets in rdu_dashboard (CONTEXT.md: ชุดรหัสยา). */
 class DrugCodeSetService
 {
     /** @var array<string, array<string, ?string>> */
@@ -93,6 +96,41 @@ class DrugCodeSetService
             fn (string $key) => $this->version($key),
             DrugCodeSetRegistry::forKpi($kpiCode)
         )) ?: '0';
+    }
+
+    /**
+     * Replace a set's contents with the given items, in order. A saved set invalidates the results counted with the
+     * old codes (version in the cache keys, `changed_at` for stored rows — ADR 0004). Callers validate the content;
+     * this only guards against two people saving over each other.
+     *
+     * @param  list<array{code: string, attribute: ?string}>  $items
+     * @throws DrugCodeSetConflictException when `$expectedVersion` is not the set's current version
+     */
+    public function save(string $key, array $items, int $expectedVersion, ?int $userId): void
+    {
+        DrugCodeSetRegistry::get($key);
+
+        DB::transaction(function () use ($key, $items, $expectedVersion, $userId) {
+            $set = DrugCodeSet::lockForUpdate()->find($key)
+                ?? DrugCodeSet::create(['key' => $key, 'version' => 0]);
+
+            if ($set->version !== $expectedVersion) {
+                throw new DrugCodeSetConflictException($key, $set->version);
+            }
+
+            DrugCodeSetItem::where('set_key', $key)->delete();
+            foreach ($items as $item) {
+                DrugCodeSetItem::create([
+                    'set_key'   => $key,
+                    'code'      => (string) $item['code'],
+                    'attribute' => $item['attribute'] ?? null,
+                ]);
+            }
+
+            $set->forceFill(['version' => $set->version + 1, 'changed_at' => now(), 'updated_by' => $userId])->save();
+        });
+
+        $this->flush();
     }
 
     public function flush(): void

@@ -84,6 +84,47 @@ class HosxpRduDataSource implements RduDataSourceInterface
         ])->all();
     }
 
+    /** The drug catalogue for the settings page: `drugitems` only, SELECT only. */
+    public function getDrugCatalog(): array
+    {
+        $rows = DB::connection('rdu')->select(
+            'SELECT icode, name, strength, units, dosageform, generic_name, trade_name, drugcategory, therapeuticgroup, antibiotic, istatus
+               FROM drugitems ORDER BY name, icode'
+        );
+
+        return array_map(fn ($r) => [
+            'icode'            => trim((string) $r->icode),
+            'name'             => trim((string) $r->name),
+            'strength'         => trim((string) $r->strength),
+            'units'            => trim((string) $r->units),
+            'dosageform'       => trim((string) $r->dosageform),
+            'generic_name'     => trim((string) $r->generic_name),
+            'trade_name'       => trim((string) $r->trade_name),
+            'drugcategory'     => trim((string) $r->drugcategory),
+            'therapeuticgroup' => trim((string) $r->therapeuticgroup),
+            'antibiotic'       => trim((string) $r->antibiotic) === 'Y',
+            'active'           => trim((string) $r->istatus) !== 'N',
+        ], $rows);
+    }
+
+    /** Lab items by code or name (`lab_items` only) — a search, never the whole table. */
+    public function searchLabItems(string $term, int $limit = 30): array
+    {
+        $like = '%'.addcslashes(mb_strtolower($term), '%_\\\\').'%';
+        $rows = DB::connection('rdu')->select(
+            'SELECT lab_items_code, lab_items_name, lab_items_unit FROM lab_items
+              WHERE CAST(lab_items_code AS TEXT) LIKE ? OR LOWER(lab_items_name) LIKE ?
+              ORDER BY lab_items_name LIMIT '.max(1, min(100, $limit)),
+            [$like, $like]
+        );
+
+        return array_map(fn ($r) => [
+            'code' => trim((string) $r->lab_items_code),
+            'name' => trim((string) $r->lab_items_name),
+            'unit' => trim((string) $r->lab_items_unit),
+        ], $rows);
+    }
+
     /**
      * How a KPI is counted (CONTEXT.md: วิธีนับ), straight from its query class — null while the query
      * is a stub. Runs no SQL: the rules are code, so this works whatever data source is active.
