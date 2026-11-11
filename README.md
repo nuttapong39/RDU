@@ -18,14 +18,18 @@
 
 เลือกดูตามแบบที่คุณสะดวก:
 
-### 🎨 แบบ Interactive (แนะนำ) — install.html
+### 🏥 ติดตั้งให้โรงพยาบาลอื่น (XAMPP / Server) — แนะนำเริ่มที่นี่
+
+ขั้นตอนครบตั้งแต่เตรียมข้อมูล HOSxP, ติดตั้งแบบ XAMPP (Windows) หรือ Server (AlmaLinux), ตั้งค่าครั้งแรก, เช็กลิสต์ และแก้ปัญหา
+
+> 👉 [docs/INSTALLATION.md](./docs/INSTALLATION.md)
+
+### 🎨 แบบ Interactive — install.html (เปิดในเครื่อง)
 
 Interactive install wizard พร้อม copy-to-clipboard, step tracker, progress bar
+(เนื้อหาเก่ากว่า `docs/INSTALLATION.md` — ถ้าขัดกัน ให้ยึด `docs/INSTALLATION.md`)
 
-**ดูออนไลน์ทันที (GitHub Pages):**
-> 👉 https://nuttapong39.github.io/RDU/install.html
-
-**หรือดู offline (หลัง clone):**
+เปิดดูหลัง clone:
 ```powershell
 cd C:\xampp\htdocs\RDU
 start install.html
@@ -125,6 +129,7 @@ RDU Dashboard เชื่อมต่อ HOSxP แบบ **อ่านอย�
 
 | ไฟล์ | เนื้อหา |
 |---|---|
+| [docs/INSTALLATION.md](./docs/INSTALLATION.md) | คู่มือติดตั้งสำหรับโรงพยาบาลอื่น (XAMPP / Server) |
 | [install.html](./install.html) | Interactive install guide |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Deployment + troubleshooting คู่มือละเอียด |
 | [CLAUDE.md](./CLAUDE.md) | Project overview + coding conventions |
