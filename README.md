@@ -24,6 +24,8 @@
 
 > 👉 [docs/INSTALLATION.md](./docs/INSTALLATION.md)
 
+ติดตั้งบน Server อย่างเดียว (AlmaLinux + nginx ตั้งแต่เครื่องเปล่า): [docs/INSTALL-SERVER.md](./docs/INSTALL-SERVER.md) หรือหน้าเว็บ 👉 https://nuttapong39.github.io/RDU/install-server.html
+
 ### 🎨 แบบ Interactive — install.html (เปิดในเครื่อง)
 
 Interactive install wizard พร้อม copy-to-clipboard, step tracker, progress bar

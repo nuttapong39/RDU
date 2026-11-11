@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RDU Dashboard — ติดตั้งบน Server</title>
+<meta name="description" content="คู่มือติดตั้ง RDU Dashboard บน Server AlmaLinux 9 (nginx + PHP-FPM) ตั้งแต่เครื่องเปล่า">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--brand:#7c3aed;--brand-2:#a855f7;--ink:#1e1b2e;--muted:#6b6784;--line:#e6e0f5;--bg:#f7f4ff;--card:#fff;--code:#1b1530;--codefg:#ede9fe;--warn:#fff7e6;--warnline:#f5c46b}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--ink:#ece8fb;--muted:#a49fbd;--line:#352d56;--bg:#130f24;--card:#1c1733;--code:#0d0a1a;--warn:#2b2110;--warnline:#8a6a24}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;font-family:'Sarabun',system-ui,sans-serif;font-weight:400;color:var(--ink);background:var(--bg);line-height:1.75;-webkit-font-smoothing:antialiased}
+header{background:linear-gradient(135deg,#5b21b6,#7c3aed 55%,#a855f7);color:#fff;padding:34px 16px 30px}
+header .in{max-width:1120px;margin:0 auto}
+header h1{margin:0 0 6px;font-size:clamp(1.5rem,4vw,2.1rem);font-weight:700}
+header p{margin:0;opacity:.92;max-width:720px}
+.bar{height:4px;background:rgba(255,255,255,.25);position:sticky;top:0;z-index:5}
+.bar i{display:block;height:100%;width:0;background:#fff}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 80px;display:grid;grid-template-columns:230px minmax(0,1fr);gap:32px}
+nav{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:.92rem}
+nav a{display:block;padding:6px 10px;border-left:3px solid var(--line);color:var(--muted);text-decoration:none;border-radius:0 8px 8px 0}
+nav a:hover{color:var(--brand);background:rgba(124,58,237,.07)}
+nav a.on{color:var(--brand);border-left-color:var(--brand);font-weight:600;background:rgba(124,58,237,.09)}
+main{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:8px 28px 28px;box-shadow:0 1px 2px rgba(91,33,182,.06),0 12px 32px -14px rgba(91,33,182,.22);min-width:0}
+h2{margin:36px 0 8px;font-size:1.35rem;color:var(--brand);padding-bottom:6px;border-bottom:2px solid var(--line)}
+h3{margin:22px 0 6px;font-size:1.05rem}
+p{margin:10px 0}
+a{color:var(--brand)}
+code{font-family:'Fira Code',ui-monospace,monospace;font-size:.86em;background:rgba(124,58,237,.1);padding:1px 6px;border-radius:6px;word-break:break-word}
+.code{position:relative;margin:12px 0}
+.code pre{margin:0;background:var(--code);color:var(--codefg);border-radius:12px;padding:16px 16px;overflow:auto;font-size:.84rem;line-height:1.6}
+.code pre code{background:none;padding:0;color:inherit;font-size:inherit;word-break:normal}
+.copy{position:absolute;top:8px;right:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font:500 .75rem 'Sarabun',sans-serif;padding:3px 10px;border-radius:8px;cursor:pointer}
+.copy:hover{background:rgba(255,255,255,.22)}
+.copy.ok{background:#16a34a;border-color:#16a34a}
+blockquote{margin:14px 0;padding:10px 16px;background:var(--warn);border-left:4px solid var(--warnline);border-radius:0 10px 10px 0}
+.tbl{overflow-x:auto;margin:12px 0;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th{background:rgba(124,58,237,.1);text-align:left}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+ul,ol{padding-left:1.3em}
+ul.check{list-style:none;padding:0}
+ul.check li{margin:4px 0}
+ul.check label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;padding:6px 10px;border-radius:10px}
+ul.check label:hover{background:rgba(124,58,237,.07)}
+ul.check input{margin-top:.45em;accent-color:var(--brand);width:17px;height:17px;flex:none}
+ul.check input:checked+span{opacity:.55;text-decoration:line-through}
+.foot{margin-top:30px;color:var(--muted);font-size:.9rem}
+@media (max-width:860px){.wrap{grid-template-columns:1fr}nav{position:static;max-height:none;display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}nav a{white-space:nowrap;border-left:0;border:1px solid var(--line);border-radius:999px;background:var(--card)}main{padding:4px 16px 22px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header><div class="in">
+<h1>ติดตั้ง RDU Dashboard บน Server</h1>
+<p>AlmaLinux 9 · nginx · PHP-FPM · PostgreSQL — ตั้งแต่เครื่องเปล่าจนใช้งานได้ ทำตามลำดับจากบนลงล่าง</p>
+</div></header>
+<div class="bar"><i id="prog"></i></div>
+<div class="wrap">
+<nav id="toc" aria-label="สารบัญ"><a href="#0-เตรียมกับผู้ดูแล-hosxp-ทำก่อน-หรือขนานกัน">0. เตรียมกับผู้ดูแล HOSxP (ทำก่อน หรือขนานกัน)</a><a href="#1-ระบบพื้นฐาน">1. ระบบพื้นฐาน</a><a href="#2-php-8-3-php-fpm">2. PHP 8.3 + PHP-FPM</a><a href="#3-postgresql-16-ฐานข้อมูลของแอป-rdu-dashboard-คนละตัวกับ-hosxp">3. PostgreSQL 16 (ฐานข้อมูลของแอป rdu_dashboard — คนละตัวกับ HOSxP)</a><a href="#4-nginx">4. nginx</a><a href="#5-composer-node-js">5. Composer + Node.js</a><a href="#6-ติดตั้งแอป">6. ติดตั้งแอป</a><a href="#7-สิทธิ์ไฟล์-พลาดบ่อยที่สุด">7. สิทธิ์ไฟล์ (พลาดบ่อยที่สุด)</a><a href="#8-บัญชีชั่วคราว-cache-เปิดเว็บ">8. บัญชีชั่วคราว, cache, เปิดเว็บ</a><a href="#9-ตั้งค่าครั้งแรกในระบบ">9. ตั้งค่าครั้งแรกในระบบ</a><a href="#10-https-แนะนำ-ระบบมีหน้า-login">10. HTTPS (แนะนำ — ระบบมีหน้า login)</a><a href="#11-สำรองข้อมูล-ทำทันทีหลังใช้งาน">11. สำรองข้อมูล (ทำทันทีหลังใช้งาน)</a><a href="#อัปเดตระบบครั้งถัดไป">อัปเดตระบบครั้งถัดไป</a><a href="#เช็กลิสต์หลังติดตั้ง">เช็กลิสต์หลังติดตั้ง</a><a href="#แก้ปัญหา">แก้ปัญหา</a></nav>
+<main>
+<p>คู่มือนี้สำหรับโรงพยาบาลที่ติดตั้งบน <strong>server Linux</strong> (ไม่ใช้ XAMPP) อ่านจากบนลงล่างตามลำดับ ถ้าต้องการแบบ XAMPP ดู <a href="https://github.com/nuttapong39/RDU/blob/main/docs/INSTALLATION.md" target="_blank" rel="noopener">INSTALLATION.md</a> · รายละเอียดเชิงลึก/LXC/backup ดู <a href="https://github.com/nuttapong39/RDU/blob/main/docs/SERVER-SETUP-ALMALINUX.md" target="_blank" rel="noopener">SERVER-SETUP-ALMALINUX.md</a></p>
+<p><strong>สิ่งที่ต้องมี:</strong> AlmaLinux 9 (หรือ Rocky/RHEL 9), RAM ≥ 2 GB, ดิสก์ ≥ 10 GB, สิทธิ์ <code>sudo</code>, เครื่องออก internet ได้ (ดึง package และ GitHub), และเครื่องนี้ต่อพอร์ต 5432 ไปยังเครื่อง HOSxP ได้</p>
+<p>ค่าที่ต้องแทนในคู่มือ: <code>&lt;ADMIN_USER&gt;</code> = ผู้ใช้ Linux ของคุณ · <code>&lt;APP_DB_PASSWORD&gt;</code> = รหัสฐานข้อมูลของแอป (ตั้งเอง) · <code>&lt;DOMAIN&gt;</code> = ชื่อเว็บ เช่น <code>rdu.hospital.local</code> · <code>&lt;SERVER_IP&gt;</code> = IP เครื่องนี้</p>
+<blockquote><strong>หลักความปลอดภัย:</strong> RDU อ่านฐาน HOSxP แบบ <strong>SELECT เท่านั้น</strong> ห้ามใช้ user ที่มีสิทธิ์เขียน</blockquote>
+<h2 id="0-เตรียมกับผู้ดูแล-hosxp-ทำก่อน-หรือขนานกัน">0. เตรียมกับผู้ดูแล HOSxP (ทำก่อน หรือขนานกัน)</h2>
+<p>ขอจากผู้ดูแลฐานข้อมูล HOSxP: IP/พอร์ต, ชื่อฐานข้อมูล, user <code>rdu_readonly</code> + รหัส, และให้ <strong>อนุญาต <code>&lt;SERVER_IP&gt;</code></strong> ใน <code>pg_hba.conf</code> (<code>host &lt;db&gt; rdu_readonly &lt;SERVER_IP&gt;/32 scram-sha-256</code>) พร้อมเปิด firewall พอร์ต 5432 ให้ IP นี้ ถ้ายังไม่มี user:</p>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>CREATE USER rdu_readonly WITH PASSWORD &#x27;รหัสที่เดายาก&#x27;;
+GRANT CONNECT ON DATABASE hosxp TO rdu_readonly;
+GRANT USAGE ON SCHEMA public TO rdu_readonly;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO rdu_readonly;</code></pre></div>
+<p>เตรียมข้อมูลโรงพยาบาลไว้กรอกในระบบ: ชื่อ, ชื่อย่อ, จังหวัด, รหัสหน่วยบริการ 5 หลัก, ไฟล์โลโก้ และชื่อผู้ใช้ HOSxP ของผู้ดูแลระบบ/เภสัชกร</p>
+<h2 id="1-ระบบพื้นฐาน">1. ระบบพื้นฐาน</h2>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>sudo dnf -y update
+sudo dnf -y install epel-release dnf-plugins-core
+sudo dnf config-manager --set-enabled crb
+sudo dnf -y install git vim unzip tar curl policycoreutils-python-utils
+sudo timedatectl set-timezone Asia/Bangkok</code></pre></div>
+<p>Firewall (เปิดเฉพาะเว็บ — <strong>ไม่ต้องเปิด 5432</strong> เพราะฐานข้อมูลของแอปอยู่เครื่องเดียวกัน):</p>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>sudo systemctl enable --now firewalld
+sudo firewall-cmd --permanent --add-service=http --add-service=https
+sudo firewall-cmd --reload</code></pre></div>
+<h2 id="2-php-8-3-php-fpm">2. PHP 8.3 + PHP-FPM</h2>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>sudo dnf -y install https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+sudo dnf -y module reset php
+sudo dnf -y module enable php:remi-8.3
+sudo dnf -y install php-fpm php-cli php-common php-pgsql php-mbstring php-intl php-bcmath \
+     php-xml php-opcache php-process php-zip php-gd php-sodium
+
+# PHP-FPM รันเป็นผู้ใช้ nginx
+sudo sed -i &#x27;s/^user = .*/user = nginx/; s/^group = .*/group = nginx/&#x27; /etc/php-fpm.d/www.conf
+sudo sed -i &#x27;s/^;\?listen.owner = .*/listen.owner = nginx/; s/^;\?listen.group = .*/listen.group = nginx/&#x27; /etc/php-fpm.d/www.conf
+
+sudo tee /etc/php.d/99-rdu.ini &gt;/dev/null &lt;&lt;&#x27;EOF&#x27;
+date.timezone = Asia/Bangkok
+expose_php = Off
+memory_limit = 256M
+upload_max_filesize = 20M
+post_max_size = 20M
+opcache.enable = 1
+opcache.validate_timestamps = 0
+EOF</code></pre></div>
+<blockquote><code>opcache.validate_timestamps = 0</code> ทำให้เร็วขึ้น แต่หลังแก้โค้ดทุกครั้งต้อง <code>sudo systemctl reload php-fpm</code> (สคริปต์ deploy ทำให้เอง)</blockquote>
+<h2 id="3-postgresql-16-ฐานข้อมูลของแอป-rdu-dashboard-คนละตัวกับ-hosxp">3. PostgreSQL 16 (ฐานข้อมูลของแอป <code>rdu_dashboard</code> — คนละตัวกับ HOSxP)</h2>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>sudo dnf -y module enable postgresql:16
+sudo dnf -y install postgresql-server postgresql-contrib
+sudo postgresql-setup --initdb
+sudo systemctl enable --now postgresql</code></pre></div>
+<p>แก้ <code>/var/lib/pgsql/data/pg_hba.conf</code> ให้บรรทัด <code>host</code> ของ <code>127.0.0.1/32</code> และ <code>::1/128</code> ใช้ METHOD <code>scram-sha-256</code> แล้ว:</p>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>sudo systemctl reload postgresql
+sudo -u postgres psql &lt;&lt;&#x27;EOF&#x27;
+CREATE ROLE rdu_app LOGIN PASSWORD &#x27;&lt;APP_DB_PASSWORD&gt;&#x27;;
+CREATE DATABASE rdu_dashboard OWNER rdu_app ENCODING &#x27;UTF8&#x27; TEMPLATE template0;
+EOF</code></pre></div>
+<p>ตรวจ: <code>psql -h 127.0.0.1 -U rdu_app -d rdu_dashboard -c 'select version();'</code> ต้องได้เวอร์ชัน 16.x</p>
+<h2 id="4-nginx">4. nginx</h2>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>sudo dnf -y module enable nginx:1.24
+sudo dnf -y install nginx
+sudo systemctl enable --now nginx php-fpm</code></pre></div>
+<p>สร้าง <code>/etc/nginx/conf.d/rdu.conf</code>:</p>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>server {
+    listen 80;
+    server_name &lt;DOMAIN&gt;;
+    root /var/www/rdu/public;
+    index index.php;
+    charset utf-8;
+    server_tokens off;
+    client_max_body_size 20m;
+
+    add_header X-Frame-Options &quot;SAMEORIGIN&quot; always;
+    add_header X-Content-Type-Options &quot;nosniff&quot; always;
+
+    location / { try_files $uri $uri/ /index.php?$query_string; }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php-fpm/www.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+        fastcgi_read_timeout 120;
+    }
+
+    location ~ /\.(?!well-known) { deny all; }
+}</code></pre></div>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>sudo nginx -t        # ต้องขึ้น &quot;syntax is ok&quot;</code></pre></div>
+<p>(ยัง reload ไม่ได้จนกว่าจะมีโฟลเดอร์แอปในข้อ 6 — ถ้า <code>nginx -t</code> ผ่านก็พอ)</p>
+<h2 id="5-composer-node-js">5. Composer + Node.js</h2>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>sudo dnf -y install composer
+sudo dnf -y module enable nodejs:22
+sudo dnf -y install nodejs
+composer --version; node -v; npm -v     # Composer 2.x, Node ≥ 20.19</code></pre></div>
+<p>ให้ผู้ใช้ <code>&lt;ADMIN_USER&gt;</code> รัน <code>sudo systemctl reload php-fpm</code> ได้โดยไม่ถามรหัส (สคริปต์ deploy ใช้ขั้นนี้):</p>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>echo &#x27;&lt;ADMIN_USER&gt; ALL=(root) NOPASSWD: /usr/bin/systemctl reload php-fpm&#x27; | sudo tee /etc/sudoers.d/rdu-deploy
+sudo chmod 440 /etc/sudoers.d/rdu-deploy</code></pre></div>
+<h2 id="6-ติดตั้งแอป">6. ติดตั้งแอป</h2>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>sudo mkdir -p /var/www &amp;&amp; sudo chown &lt;ADMIN_USER&gt;:nginx /var/www
+git clone https://github.com/nuttapong39/RDU.git /var/www/rdu
+cd /var/www/rdu
+cp .env.example .env
+nano .env</code></pre></div>
+<p>แก้ <code>.env</code> อย่างน้อย:</p>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>APP_ENV=production
+APP_DEBUG=false
+APP_URL=http://&lt;DOMAIN&gt;
+LOG_CHANNEL=daily
+LOG_LEVEL=warning
+
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=rdu_dashboard          # ห้ามชี้ไป HOSxP — deploy.sh จะปฏิเสธถ้าไม่ใช่ชื่อนี้
+DB_USERNAME=rdu_app
+DB_PASSWORD=&lt;APP_DB_PASSWORD&gt;
+
+RDU_DB_PASSWORD=                   # เว้นว่าง — ตั้งรหัส HOSxP ในหน้าเว็บ
+SETTINGS_ADMIN_USERNAMES=setup,&lt;ชื่อผู้ใช้HOSxPของผู้ดูแล&gt;   # ตัวพิมพ์เล็ก คั่นด้วย ,</code></pre></div>
+<p>ติดตั้ง สร้างตาราง และ build:</p>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>chmod 640 .env
+composer install --no-dev --optimize-autoloader
+php artisan key:generate
+npm ci &amp;&amp; npm run build
+php artisan migrate --force
+php artisan db:seed --class=RduIndicatorSeeder --force</code></pre></div>
+<blockquote><strong>ห้าม <code>php artisan db:seed</code> แบบเต็ม</strong> (สร้างผู้ใช้ <code>admin/admin</code>) · <strong>ห้าม <code>migrate</code> กับฐาน HOSxP</strong><br><strong><code>APP_KEY</code> ห้ามเปลี่ยนหลังเริ่มใช้งาน</strong> — รหัส HOSxP ที่บันทึกถูกเข้ารหัสด้วยคีย์นี้</blockquote>
+<h2 id="7-สิทธิ์ไฟล์-พลาดบ่อยที่สุด">7. สิทธิ์ไฟล์ (พลาดบ่อยที่สุด)</h2>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>cd /var/www/rdu
+sudo chown -R &lt;ADMIN_USER&gt;:nginx .
+sudo find . -path ./node_modules -prune -o -path ./vendor -prune -o -path ./.git -prune -o -type d -exec chmod 775 {} +
+sudo find . -path ./node_modules -prune -o -path ./vendor -prune -o -path ./.git -prune -o -type f -exec chmod 664 {} +
+chmod +x scripts/deploy.sh
+chmod 640 .env
+
+sudo mkdir -p storage/app/private/config storage/app/private/facility
+sudo chown -R nginx:nginx storage bootstrap/cache
+sudo chmod -R ug+rwX storage bootstrap/cache
+git config core.fileMode false</code></pre></div>
+<blockquote><strong>ห้ามใช้ <code>chmod -R 775</code> กับทุกไฟล์</strong> — ไฟล์จะมีสิทธิ์ execute ทำให้ git เห็นว่าถูกแก้ แล้ว <code>deploy.sh</code> ไม่ยอม deploy<br>(ถ้าเกิดแล้วดูตารางแก้ปัญหา)</blockquote>
+<p><strong>SELinux</strong> (เครื่องจริง/VM ที่เปิด SELinux — ถ้าเป็น LXC ข้ามได้):</p>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>sudo semanage fcontext -a -t httpd_sys_rw_content_t &quot;/var/www/rdu/storage(/.*)?&quot;
+sudo semanage fcontext -a -t httpd_sys_rw_content_t &quot;/var/www/rdu/bootstrap/cache(/.*)?&quot;
+sudo restorecon -Rv /var/www/rdu
+sudo setsebool -P httpd_can_network_connect_db 1   # ให้ PHP ต่อ HOSxP (5432)
+sudo setsebool -P httpd_can_network_connect 1      # ให้ PHP เรียก HDC (HTTPS)</code></pre></div>
+<h2 id="8-บัญชีชั่วคราว-cache-เปิดเว็บ">8. บัญชีชั่วคราว, cache, เปิดเว็บ</h2>
+<p>ยังไม่ได้ตั้งค่า HOSxP จึงล็อกอินด้วยบัญชี HOSxP ไม่ได้ ให้สร้างบัญชี <code>setup</code> (ตั้งรหัสผ่านเอง อย่าใช้ <code>admin</code>):</p>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>cd /var/www/rdu
+php artisan tinker --execute=&quot;App\Models\User::create([&#x27;name&#x27;=&gt;&#x27;Setup&#x27;,&#x27;username&#x27;=&gt;&#x27;setup&#x27;,&#x27;email&#x27;=&gt;&#x27;setup@rdu.local&#x27;,&#x27;password&#x27;=&gt;Illuminate\Support\Facades\Hash::make(&#x27;ตั้งรหัสผ่านที่นี่&#x27;)]);&quot;
+php artisan config:cache &amp;&amp; php artisan route:cache &amp;&amp; php artisan view:cache
+sudo nginx -t &amp;&amp; sudo systemctl reload nginx php-fpm</code></pre></div>
+<p>ให้เครื่องผู้ใช้เข้า <code>&lt;DOMAIN&gt;</code> ได้ (A record ใน DNS ของโรงพยาบาล หรือใส่ใน hosts) แล้วเปิด <code>http://&lt;DOMAIN&gt;</code> → ต้องเห็นหน้า Login</p>
+<h2 id="9-ตั้งค่าครั้งแรกในระบบ">9. ตั้งค่าครั้งแรกในระบบ</h2>
+<ol><li>ล็อกอินด้วย <code>setup</code> → ระบบพาไปหน้า <strong>ตั้งค่าฐานข้อมูล HOSxP</strong> → กรอก host/port/ฐานข้อมูล/schema/user/รหัส → <strong>ทดสอบการเชื่อมต่อ</strong> → <strong>ตรวจสอบ Read-Only</strong> (INSERT/UPDATE/DELETE/CREATE/DROP ต้อง BLOCK ทั้งหมด) → <strong>บันทึก</strong></li><li>ออกจากระบบ แล้วล็อกอินด้วยบัญชี <strong>HOSxP</strong> ของผู้ดูแล (ต้องอยู่ใน <code>SETTINGS_ADMIN_USERNAMES</code>)</li><li>เมนู <strong>ข้อมูลสถานบริการ</strong> — ชื่อ, ชื่อย่อ, จังหวัด, รหัสหน่วยบริการ, โลโก้</li><li>เมนู <strong>ผู้ตั้งค่ารหัสยา</strong> — เพิ่มเภสัชกรเป็นผู้มีสิทธิ์</li><li>เภสัชกรเปิด <strong>ตั้งค่ารหัสยา</strong> — ลากรหัสยา (icode) ของ รพ. เข้าแต่ละชุดของแต่ละตัวชี้วัด (ตัวที่ยังไม่ตั้งแสดง "ยังไม่ตั้งค่า"); ปิดตัวชี้วัดที่ไม่ใช้ด้วยสวิตช์ "ใช้งานตัวชี้วัดนี้"</li><li><strong>ลบบัญชี <code>setup</code></strong> (<code>php artisan tinker --execute="App\Models\User::where('username','setup')-&gt;delete();"</code>) แล้วเอา <code>setup,</code> ออกจาก <code>SETTINGS_ADMIN_USERNAMES</code> ใน <code>.env</code> → <code>php artisan config:cache</code></li></ol>
+<blockquote><strong>อย่ารัน <code>php artisan rdu:import-drug-code-sets</code></strong> — คำสั่งนั้นนำเข้ารายการรหัสยาของโรงพยาบาลเชียงกลางเท่านั้น</blockquote>
+<h2 id="10-https-แนะนำ-ระบบมีหน้า-login">10. HTTPS (แนะนำ — ระบบมีหน้า login)</h2>
+<p>มีโดเมนจริง: <code>sudo dnf -y install certbot python3-certbot-nginx &amp;&amp; sudo certbot --nginx -d &lt;DOMAIN&gt;</code> ใช้ใน LAN: ขอ certificate จาก CA ภายในของโรงพยาบาล แล้วเพิ่ม <code>listen 443 ssl;</code>, <code>ssl_certificate</code>, <code>ssl_certificate_key</code> และ redirect 80 → 443 แล้วแก้ <code>APP_URL</code> เป็น <code>https://...</code> → <code>php artisan config:cache</code></p>
+<h2 id="11-สำรองข้อมูล-ทำทันทีหลังใช้งาน">11. สำรองข้อมูล (ทำทันทีหลังใช้งาน)</h2>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>sudo mkdir -p /backup/rdu &amp;&amp; sudo chown &lt;ADMIN_USER&gt; /backup/rdu
+# ฐานข้อมูลของแอป ทุกคืน 01:30 เก็บ 14 วัน
+( crontab -l 2&gt;/dev/null; echo &#x27;30 1 * * * PGPASSWORD=&quot;&lt;APP_DB_PASSWORD&gt;&quot; pg_dump -h 127.0.0.1 -U rdu_app rdu_dashboard | gzip &gt; /backup/rdu/rdu_$(date +\%F).sql.gz &amp;&amp; find /backup/rdu -name &quot;rdu_*.sql.gz&quot; -mtime +14 -delete&#x27; ) | crontab -</code></pre></div>
+<p>สำเนา <code>.env</code> และ <code>storage/app/private/config/rdu_database.json</code> เก็บ <strong>คนละที่</strong> กับ backup ฐานข้อมูล (สองไฟล์รวมกันถอดรหัส HOSxP ได้)</p>
+<h2 id="อัปเดตระบบครั้งถัดไป">อัปเดตระบบครั้งถัดไป</h2>
+<div class="code"><button class="copy" type="button" aria-label="คัดลอก">คัดลอก</button><pre><code>cd /var/www/rdu &amp;&amp; ./scripts/deploy.sh</code></pre></div>
+<p>สคริปต์ดึงโค้ดล่าสุดจาก GitHub → ติดตั้ง dependency → build → migrate → cache → reload PHP-FPM ให้เอง ปฏิเสธการทำงานถ้า <code>APP_ENV</code> ไม่ใช่ <code>production</code> หรือมีไฟล์ที่ track ใน git ถูกแก้บน server (ให้แก้โค้ดที่เครื่องพัฒนาเสมอ) ไม่แตะ <code>.env</code> และ <code>rdu_database.json</code> · ถ้ามีค่าใหม่ใน <code>.env</code> ต้องเพิ่มด้วยมือ <strong>ก่อน</strong> รัน</p>
+<h2 id="เช็กลิสต์หลังติดตั้ง">เช็กลิสต์หลังติดตั้ง</h2>
+<ul class="check"><li><label><input type="checkbox"><span><code>systemctl is-active nginx php-fpm postgresql</code> → <code>active</code> ทั้งสาม</span></label></li><li><label><input type="checkbox"><span>หน้า Login ขึ้น (CSS/ฟอนต์/ไอคอนครบ) และล็อกอินด้วยบัญชี HOSxP ได้</span></label></li><li><label><input type="checkbox"><span>"ตรวจสอบ Read-Only" → SELECT ผ่าน, ที่เหลือ BLOCK</span></label></li><li><label><input type="checkbox"><span>ชื่อ/โลโก้โรงพยาบาลแสดง, หน้าภาพรวมมีตัวเลข KPI ที่ตั้งชุดรหัสยาแล้ว</span></label></li><li><label><input type="checkbox"><span>ไม่มีบัญชี <code>setup</code> / <code>admin</code> ค้างอยู่</span></label></li><li><label><input type="checkbox"><span><code>APP_ENV=production</code>, <code>APP_DEBUG=false</code>, <code>.env</code> สิทธิ์ <code>640</code></span></label></li><li><label><input type="checkbox"><span><code>curl -sI http://&lt;DOMAIN&gt;/.env</code> → 403/404</span></label></li><li><label><input type="checkbox"><span><code>curl -sI http://&lt;DOMAIN&gt; | grep -i x-powered-by</code> → ไม่มีผลลัพธ์</span></label></li><li><label><input type="checkbox"><span><code>ls -la storage/app/private/config/</code> → <code>rdu_database.json</code> เป็น <code>-rw------- nginx nginx</code></span></label></li><li><label><input type="checkbox"><span>ตั้ง backup แล้ว และทดสอบกู้คืนอย่างน้อยหนึ่งครั้ง</span></label></li></ul>
+<h2 id="แก้ปัญหา">แก้ปัญหา</h2>
+<div class="tbl"><table><thead><tr><th>อาการ</th><th>สาเหตุ / วิธีแก้</th></tr></thead><tbody><tr><td>502 Bad Gateway</td><td><code>php-fpm</code> ไม่ทำงาน หรือ socket ไม่ตรง → <code>systemctl status php-fpm</code>; ตรวจ <code>fastcgi_pass unix:/run/php-fpm/www.sock</code></td></tr><tr><td>500 / หน้าขาว</td><td>ดู <code>storage/logs/laravel-*.log</code>; ตรวจสิทธิ์ <code>storage</code> และ <code>bootstrap/cache</code> (เจ้าของ <code>nginx</code>) และว่ารัน <code>key:generate</code> แล้ว</td></tr><tr><td>หน้าไม่มีสไตล์/ไอคอน</td><td>ยังไม่ <code>npm run build</code> หรือเครื่องผู้ใช้เข้า <code>fonts.googleapis.com</code> / <code>fonts.gstatic.com</code> ไม่ได้</td></tr><tr><td><code>could not find driver</code></td><td>ไม่ได้ติดตั้ง <code>php-pgsql</code> → <code>sudo dnf install php-pgsql &amp;&amp; sudo systemctl reload php-fpm</code></td></tr><tr><td><code>password authentication failed for user "rdu_readonly"</code></td><td>รหัสผิด หรือเปลี่ยน <code>APP_KEY</code> หลังบันทึก → กรอกในหน้าตั้งค่า HOSxP ใหม่</td></tr><tr><td><code>no pg_hba.conf entry for host ...</code></td><td>ผู้ดูแล HOSxP ยังไม่ได้อนุญาต <code>&lt;SERVER_IP&gt;</code> ใน <code>pg_hba.conf</code> / firewall 5432</td></tr><tr><td><code>Connection refused</code> / timeout ไป HOSxP (SELinux เปิด)</td><td><code>sudo setsebool -P httpd_can_network_connect_db 1</code></td></tr><tr><td>กด "บันทึก" หน้าตั้งค่า HOSxP แล้ว 500 (<code>Permission denied</code>)</td><td><code>sudo chown nginx:nginx storage/app/private/config/rdu_database.json &amp;&amp; sudo chmod 600 storage/app/private/config/rdu_database.json</code></td></tr><tr><td><code>deploy.sh</code>: "Files tracked by git were edited on the server"</td><td>เคย <code>chmod -R 775</code> → <code>git config core.fileMode false</code> หรือตั้งสิทธิ์ใหม่ตามข้อ 7</td></tr><tr><td><code>deploy.sh</code> ค้างที่ <code>sudo systemctl reload php-fpm</code></td><td>ยังไม่ได้ตั้ง sudoers ในข้อ 5</td></tr><tr><td>เมนูตั้งค่า (HOSxP / สถานบริการ) ไม่ขึ้น</td><td>ชื่อผู้ใช้ไม่อยู่ใน <code>SETTINGS_ADMIN_USERNAMES</code> (ตัวพิมพ์เล็ก) → แก้ <code>.env</code> แล้ว <code>php artisan config:cache</code></td></tr><tr><td>KPI ขึ้น "ยังไม่ตั้งค่า"</td><td>ยังไม่ได้ตั้งชุดรหัสยาของตัวชี้วัดนั้น (ข้อ 9.5)</td></tr><tr><td>แก้ <code>.env</code> แล้วไม่มีผล</td><td>รัน <code>php artisan config:cache</code> แล้ว <code>sudo systemctl reload php-fpm</code></td></tr></tbody></table></div>
+<p class="foot">คู่มือแบบ Windows / XAMPP:
+<a href="https://github.com/nuttapong39/RDU/blob/main/docs/INSTALLATION.md" target="_blank" rel="noopener">INSTALLATION.md</a> ·
+ต้นฉบับของหน้านี้: <a href="https://github.com/nuttapong39/RDU/blob/main/docs/INSTALL-SERVER.md" target="_blank" rel="noopener">docs/INSTALL-SERVER.md</a></p>
+</main>
+</div>
+<script>
+// copy buttons
+document.querySelectorAll('.code').forEach(function(b){
+  var btn=b.querySelector('.copy');
+  btn.addEventListener('click',function(){
+    var t=b.querySelector('code').innerText;
+    var done=function(){btn.textContent='คัดลอกแล้ว';btn.classList.add('ok');setTimeout(function(){btn.textContent='คัดลอก';btn.classList.remove('ok')},1500)};
+    var legacy=function(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');done()}catch(e){}document.body.removeChild(a)};
+    if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,legacy)}else{legacy()}
+  });
+});
+// remember ticked checklist items on this browser
+var boxes=document.querySelectorAll('ul.check input'),K='rdu-install-server-checks';
+try{var s=JSON.parse(localStorage.getItem(K)||'[]');boxes.forEach(function(c,i){c.checked=!!s[i]})}catch(e){}
+boxes.forEach(function(c){c.addEventListener('change',function(){try{localStorage.setItem(K,JSON.stringify([].map.call(boxes,function(x){return x.checked})))}catch(e){}})});
+// reading progress + current section in the contents list
+var heads=[].slice.call(document.querySelectorAll('main h2')),links=[].slice.call(document.querySelectorAll('#toc a')),prog=document.getElementById('prog');
+function onScroll(){
+  var h=document.documentElement,max=h.scrollHeight-h.clientHeight;
+  prog.style.width=(max>0?h.scrollTop/max*100:0)+'%';
+  var cur=0;heads.forEach(function(x,i){if(x.getBoundingClientRect().top<120)cur=i});
+  links.forEach(function(a,i){a.classList.toggle('on',i===cur)});
+}
+addEventListener('scroll',onScroll,{passive:true});onScroll();
+</script>
+</body>
+</html>
